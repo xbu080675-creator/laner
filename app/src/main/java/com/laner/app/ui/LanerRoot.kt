@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
+import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
@@ -44,6 +45,7 @@ fun LanerRoot(
     preMatchContextService: PreMatchContextService,
     competitionStructureService: CompetitionStructureService,
     liveMatchStateService: LiveMatchStateService,
+    liveSnapshotService: LiveSnapshotService,
     liveTimelineService: LiveTimelineService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
@@ -82,6 +84,7 @@ fun LanerRoot(
                     MatchPhase.LIVE_MATCH -> LiveMatchScreen(
                         scheduleService = scheduleService,
                         liveMatchStateService = liveMatchStateService,
+                        liveSnapshotService = liveSnapshotService,
                         liveTimelineService = liveTimelineService,
                         modifier = Modifier.fillMaxSize(),
                     )
