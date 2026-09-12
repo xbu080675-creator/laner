@@ -9,6 +9,7 @@ import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalHistoricalTimelineSource
+import com.laner.app.data.riot.RiotGlobalLiveSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotGlobalReplaySource
 import com.laner.app.data.riot.RiotGlobalResultSource
@@ -18,6 +19,7 @@ import com.laner.app.data.staff.NormalizedTeamStaffSource
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
+import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
@@ -40,6 +42,10 @@ class LanerAppGraph(
     private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
     private val postArchiveRepository = JsonPostMatchArchiveRepository(File(filesDir, "post/archive"))
     private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
+    private val riotGlobalLiveSource = RiotGlobalLiveSource(
+        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        identityRepository = providerIdentityRepository,
+    )
     private val riotGlobalResultSource = RiotGlobalResultSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
         identityRepository = providerIdentityRepository,
@@ -71,13 +77,19 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
+    val liveTimelineService = LiveTimelineService(liveTimelineRepository)
+
     val liveMatchStateService = LiveMatchStateService(
-        sources = emptyList(),
+        sources = listOf(riotGlobalLiveSource),
         repository = liveStateRepository,
         diagnostics = diagnostics,
     )
 
-    val liveTimelineService = LiveTimelineService(liveTimelineRepository)
+    val liveSnapshotService = LiveSnapshotService(
+        sources = listOf(riotGlobalLiveSource),
+        timelineService = liveTimelineService,
+        diagnostics = diagnostics,
+    )
 
     /**
      * Global Riot POST is the baseline across every competition present in the Riot schedule:
