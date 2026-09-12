@@ -4,7 +4,6 @@ import com.laner.core.domain.CompetitionCatalogEntry
 import com.laner.core.domain.CompetitionId
 import com.laner.core.domain.CompetitionKind
 import com.laner.core.domain.CompetitionRef
-import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.DiagnosticFailure
 import com.laner.core.domain.FreshnessClass
 import com.laner.core.domain.MatchId
@@ -43,7 +42,21 @@ class GlobalScheduleService(
 
         sources.forEach { source ->
             when (val result = source.readGlobal(context)) {
-                is ProviderRead.Success -> successes += source to result.value
+                is ProviderRead.Success -> {
+                    successes += source to result.value
+                    result.value.warnings.forEach { warning ->
+                        failures += warning
+                        diagnostics?.emit(
+                            DiagnosticEvent(
+                                module = "SRC",
+                                level = LogLevel.WARN,
+                                message = "PRE source degraded: ${source.providerId}",
+                                context = mapOf("provider" to source.providerId),
+                                failure = warning,
+                            )
+                        )
+                    }
+                }
                 is ProviderRead.Failure -> {
                     failures += result.failure
                     diagnostics?.emit(
@@ -86,7 +99,7 @@ class GlobalScheduleService(
                 message = "Global schedule load ${status.name.lowercase()}",
                 context = mapOf(
                     "sources_ok" to successes.size.toString(),
-                    "sources_failed" to failures.size.toString(),
+                    "warnings_or_failures" to failures.size.toString(),
                     "competitions" to catalog.size.toString(),
                     "matches" to matches.size.toString(),
                 ),
@@ -306,9 +319,10 @@ class GlobalScheduleService(
         val normalizedCode = code.orEmpty().trim()
         val normalizedName = name.orEmpty().trim()
         if (normalizedCode.isBlank() && normalizedName.isBlank()) return null
+        val derivedCode = canonicalToken(normalizedName).uppercase()
         return RegionRef(
-            code = normalizedCode.ifBlank { canonicalToken(normalizedName).uppercase() },
-            displayName = normalizedName.ifBlank { normalizedCode.uppercase() },
+            code = normalizedCode.ifBlank { derivedCode.ifBlank { "GLOBAL" } },
+            displayName = normalizedName.ifBlank { normalizedCode.ifBlank { "Global" }.uppercase() },
         )
     }
 
