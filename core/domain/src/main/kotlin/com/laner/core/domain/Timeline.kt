@@ -38,8 +38,8 @@ data class GameTimeline(
 
 /**
  * Provider-independent event identity used for reconnect/idempotency handling.
- * Sequence and provenance are intentionally excluded because different providers/reconnects may
- * assign different transport sequence numbers to the same factual event.
+ * Sequence, provenance and descriptive text are intentionally excluded because different
+ * providers/reconnects may assign different transport metadata to the same factual event.
  */
 fun MatchEvent.semanticKey(): String = when (this) {
     is MatchStateChanged -> listOf(
@@ -50,13 +50,13 @@ fun MatchEvent.semanticKey(): String = when (this) {
         victimId?.value.orEmpty(), teamId?.value.orEmpty(), assistingPlayerIds.map { it.value }.sorted().joinToString(","),
     )
     is ObjectiveTakenEvent -> listOf(
-        "objective", matchId.value, gameId.value, gameTimeSeconds.toString(), teamId.value, objective.name, detail.orEmpty(),
+        "objective", matchId.value, gameId.value, gameTimeSeconds.toString(), teamId.value, objective.name,
     )
     is GoldLeadChangedEvent -> listOf(
         "gold-lead", matchId.value, gameId.value, gameTimeSeconds.toString(), leadingTeamId?.value.orEmpty(), goldDifference.toString(),
     )
     is DraftChangedEvent -> listOf(
-        "draft", matchId.value, gameId?.value.orEmpty(), gameTimeSeconds?.toString().orEmpty(), action,
+        "draft", matchId.value, gameId?.value.orEmpty(), gameTimeSeconds?.toString().orEmpty(), action.name,
         teamId?.value.orEmpty(), championId.orEmpty(),
     )
 }.joinToString("|")
