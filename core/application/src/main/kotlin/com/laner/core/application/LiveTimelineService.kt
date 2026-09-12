@@ -140,6 +140,7 @@ class LiveTimelineService(
     }
 
     private fun evidenceStrength(value: EventEvidence): Int = when (value) {
+        EventEvidence.VERIFIED_FRAME -> 5
         EventEvidence.PROVIDER_EXPLICIT -> 4
         EventEvidence.VERIFIED_DELTA -> 3
         EventEvidence.LOCAL_CAPTURE -> 2
