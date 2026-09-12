@@ -17,7 +17,6 @@ import com.laner.core.domain.LiveGameSnapshot
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.PlayerId
 import com.laner.core.domain.PlayerLiveState
-import com.laner.core.domain.PlayerRole
 import com.laner.core.domain.SourceClass
 import com.laner.core.domain.SourceProvenance
 import com.laner.core.domain.TeamId
@@ -96,6 +95,7 @@ class RiotGlobalHistoricalTimelineSource(
                 var emptyWindows = 0
                 var requests = 0
                 var finished = false
+                var lastStoredSecond = -SAMPLE_SECONDS
                 val framesBySecond = linkedMapOf<Int, HistoricalTimelineFrame>()
 
                 while (requests < MAX_WINDOWS && !finished) {
@@ -122,7 +122,10 @@ class RiotGlobalHistoricalTimelineSource(
                             val frame = rawFrames.optJSONObject(index) ?: continue
                             val timestamp = parseInstant(frame.optString("rfc460Timestamp")) ?: continue
                             val elapsed = ((timestamp.toEpochMilli() - firstTimestamp.toEpochMilli()) / 1000L).toInt()
-                            if (elapsed < 0 || elapsed % SAMPLE_SECONDS != 0) continue
+                            if (elapsed < 0) continue
+                            val isFinish = frame.optString("gameState").equals("finished", ignoreCase = true)
+                            if (!isFinish && elapsed - lastStoredSecond < SAMPLE_SECONDS) continue
+
                             parseFrame(
                                 query = query,
                                 gameNumber = gameNumber,
@@ -132,8 +135,11 @@ class RiotGlobalHistoricalTimelineSource(
                                 elapsedSeconds = elapsed,
                                 observedAtEpochMillis = context.nowEpochMillis,
                                 sourceTimestampEpochMillis = timestamp.toEpochMilli(),
-                            )?.let { parsed -> framesBySecond[elapsed] = parsed }
-                            if (frame.optString("gameState").equals("finished", ignoreCase = true)) {
+                            )?.let { parsed ->
+                                framesBySecond[elapsed] = parsed
+                                lastStoredSecond = elapsed
+                            }
+                            if (isFinish) {
                                 finished = true
                                 break
                             }
