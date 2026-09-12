@@ -158,6 +158,19 @@ class LiveTimelineServiceTest {
     }
 
     @Test
+    fun timelineReadIsExposedThroughApplicationService() = runSuspend {
+        val repository = MemoryTimelineRepository()
+        val service = LiveTimelineService(repository)
+        service.ingest(snapshot(180, blueGold = 4_200), provenance(DataAuthority.OFFICIAL, 18_000L))
+
+        val loaded = assertNotNull(service.load(gameId))
+
+        assertEquals(matchId, loaded.matchId)
+        assertEquals(gameId, loaded.gameId)
+        assertEquals(4_200, loaded.snapshots.single().snapshot.blue.gold)
+    }
+
+    @Test
     fun completionIsExplicitAndIdempotent() = runSuspend {
         val repository = MemoryTimelineRepository()
         val service = LiveTimelineService(repository)

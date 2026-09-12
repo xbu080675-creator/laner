@@ -162,8 +162,28 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 **排障路径**：`LIVE lifecycle 异常 → LiveMatchStateService selected provider/freshness → LiveMatchStateReducer → lastObservedAtEpochMillis → 对应 regression test`。
 
+### `LNR-LIVE-INFRA-001` — Android persistence tests 被 JUnit4 拒绝初始化
+
+**首次发现**：LNR-014 / GitHub Actions run `34692037250`。
+
+**现象**：Architecture/Core tests PASS，但新加入的 `:app:testDebugUnitTest` 在执行 `JsonLiveMatchStateRepositoryTest` 时以 `InvalidTestClassError` 失败，Android build 因 Gate 失败被阻止。
+
+**影响范围**：Android Adapter/Persistence test harness；Repository 业务逻辑本身尚未进入测试方法执行阶段。
+
+**根因**：Kotlin expression-body `@Test` 方法将 `runBlocking` 表达式结果作为 JVM 方法返回值，JUnit4 要求测试方法返回 `void`，因此测试类初始化即失败。
+
+**修复**：所有对应 `@Test` 改为标准 block-body，在方法体内调用 `runBlocking`，保证 JVM signature 为 `void`。
+
+**修复提交**：`86ca106cf6372a4f23f4f83faaa997eef3f5bad5`。
+
+**永久门禁**：`.github/workflows/android-build.yml` 保留 `:app:testDebugUnitTest`，禁止为了绕过失败移除 Adapter/Persistence 单测步骤。
+
+**回归证据**：run `34692350405`、`34692588440` 与 final code run `34692936906` 均通过 Android Adapter unit tests。
+
+**排障路径**：`Android unit test class init fail → 检查 @Test JVM signature → 禁止 expression-body 非 Unit test → :app:testDebugUnitTest`。
+
 ---
 
 ## 当前阶段
 
-项目已进入 M1 Feature Migration。LNR-010~012 的外部 Provider/实机验收仍按各自状态等待补证；LNR-013 已建立 LIVE Core/Application 真相层，真实 LIVE Adapter / Android persistence / Composition wiring 由 LNR-014 继续迁移。
+项目已进入 M1 Feature Migration。LNR-010~012 与 LNR-014 的外部 Provider/实机验收按各自状态等待补证；LNR-013 为 LIVE Core DONE，LNR-014 的本地 persistence / Composition / LIVE Application-truth UI 已自动验证通过，Cito 在线链按用户要求 DEFERRED。下一开发轮进入 LNR-015 POST。

@@ -4,6 +4,35 @@ import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.GameId
 import com.laner.core.domain.LiveMatchState
 import com.laner.core.domain.MatchId
+import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.TeamRef
+
+/**
+ * Provider-neutral LIVE lookup context.
+ *
+ * Canonical Laner identity remains [matchId]. Team/time hints come from the normalized schedule and
+ * may be used by an Adapter to discover its own external match id. Provider raw ids never enter
+ * this query or become Domain identity.
+ */
+data class LiveMatchSourceQuery(
+    val matchId: MatchId,
+    val scheduledStartEpochMillis: Long? = null,
+    val teams: List<TeamRef> = emptyList(),
+) {
+    init {
+        require(scheduledStartEpochMillis == null || scheduledStartEpochMillis >= 0)
+        require(teams.isEmpty() || teams.size == 2) { "LIVE source lookup must contain zero or two teams" }
+        require(teams.map { it.id }.distinct().size == teams.size)
+    }
+
+    companion object {
+        fun from(series: ScheduledSeries): LiveMatchSourceQuery = LiveMatchSourceQuery(
+            matchId = series.matchId,
+            scheduledStartEpochMillis = series.startTimeEpochMillis,
+            teams = series.teams.map { it.team },
+        )
+    }
+}
 
 /**
  * Provider-neutral live observation.
@@ -35,6 +64,7 @@ data class ProviderLiveObservation(
     }
 }
 
+/** Basic source contract for providers that already know how to resolve a canonical MatchId. */
 interface LiveStateSourcePort {
     val providerId: String
     val authority: DataAuthority
@@ -43,6 +73,26 @@ interface LiveStateSourcePort {
         matchId: MatchId,
         context: SourceRequestContext,
     ): ProviderRead<ProviderLiveObservation>
+}
+
+/**
+ * Optional richer source contract for providers that need normalized schedule hints to discover
+ * their external match identity. Application supplies canonical teams/time; the Adapter still owns
+ * provider-specific lookup and never exports raw provider ids as Domain identity.
+ */
+interface TargetAwareLiveStateSourcePort : LiveStateSourcePort {
+    suspend fun readLiveState(
+        query: LiveMatchSourceQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderLiveObservation>
+
+    override suspend fun readLiveState(
+        matchId: MatchId,
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderLiveObservation> = readLiveState(
+        query = LiveMatchSourceQuery(matchId = matchId),
+        context = context,
+    )
 }
 
 interface LiveMatchStateRepository {

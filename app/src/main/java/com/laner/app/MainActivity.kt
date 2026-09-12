@@ -19,6 +19,8 @@ class MainActivity : ComponentActivity() {
                     scheduleService = appGraph.globalScheduleService,
                     preMatchContextService = appGraph.preMatchContextService,
                     competitionStructureService = appGraph.competitionStructureService,
+                    liveMatchStateService = appGraph.liveMatchStateService,
+                    liveTimelineService = appGraph.liveTimelineService,
                 )
             }
         }

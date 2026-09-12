@@ -1,6 +1,7 @@
 package com.laner.core.application
 
 import com.laner.core.domain.EventEvidence
+import com.laner.core.domain.GameId
 import com.laner.core.domain.GameTimeline
 import com.laner.core.domain.LiveGameSnapshot
 import com.laner.core.domain.MatchEvent
@@ -18,15 +19,18 @@ data class TimelineIngestResult(
 )
 
 /**
- * Provider-neutral timeline ingestion.
+ * Provider-neutral timeline ingestion and query service.
  *
  * Events are deduplicated by factual semantic identity rather than transport sequence. Out-of-order
  * arrival is accepted and the persisted timeline is re-sorted by game time. Same-second snapshots
- * are arbitrated by provenance instead of last-write-wins.
+ * are arbitrated by provenance instead of last-write-wins. UI reads through [load] and never touches
+ * a platform repository directly.
  */
 class LiveTimelineService(
     private val repository: LiveTimelineRepository,
 ) {
+    suspend fun load(gameId: GameId): GameTimeline? = repository.read(gameId)
+
     suspend fun ingest(
         snapshot: LiveGameSnapshot,
         provenance: SourceProvenance,
@@ -116,7 +120,7 @@ class LiveTimelineService(
         )
     }
 
-    suspend fun markCompleted(gameId: com.laner.core.domain.GameId): GameTimeline? {
+    suspend fun markCompleted(gameId: GameId): GameTimeline? {
         val existing = repository.read(gameId) ?: return null
         if (existing.completed) return existing
         val updated = existing.copy(completed = true)
