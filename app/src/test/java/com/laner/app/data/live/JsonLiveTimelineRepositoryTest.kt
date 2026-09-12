@@ -14,18 +14,23 @@ import com.laner.core.domain.LiveGameSnapshot
 import com.laner.core.domain.MatchId
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.MatchStateChanged
+import com.laner.core.domain.MultiKillWindowEvent
 import com.laner.core.domain.ObjectiveTakenEvent
 import com.laner.core.domain.ObjectiveType
 import com.laner.core.domain.PlayerId
 import com.laner.core.domain.PlayerLiveState
 import com.laner.core.domain.SourceClass
 import com.laner.core.domain.SourceProvenance
+import com.laner.core.domain.TeamFightWindowEvent
 import com.laner.core.domain.TeamId
 import com.laner.core.domain.TeamLiveState
 import com.laner.core.domain.TimelineSnapshotPoint
 import kotlinx.coroutines.runBlocking
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Rule
 import org.junit.Test
@@ -44,6 +49,7 @@ class JsonLiveTimelineRepositoryTest {
             val gameId = GameId("lol:game:g2")
             val blue = TeamId("lol:team:blg")
             val red = TeamId("lol:team:al")
+            val knight = PlayerId("lol:player:knight")
             val provenance = provenance("cito-rest", 50_000L, 49_900L, 3L)
             val game = GameContext(gameId, matchId, 2, blue, red)
             val snapshot = LiveGameSnapshot(
@@ -54,7 +60,7 @@ class JsonLiveTimelineRepositoryTest {
                 red = TeamLiveState(red, gold = 19_700, kills = 3, towers = 1, dragons = 0, barons = 0),
                 players = listOf(
                     PlayerLiveState(
-                        playerId = PlayerId("lol:player:knight"),
+                        playerId = knight,
                         teamId = blue,
                         level = 9,
                         kills = 2,
@@ -88,37 +94,62 @@ class JsonLiveTimelineRepositoryTest {
                         sequence = 2,
                         gameTimeSeconds = 510,
                         provenance = provenance,
-                        evidence = EventEvidence.PROVIDER_EXPLICIT,
-                        killerId = PlayerId("lol:player:knight"),
-                        victimId = PlayerId("lol:player:shanks"),
-                        assistingPlayerIds = setOf(PlayerId("lol:player:on"), PlayerId("lol:player:xun")),
+                        evidence = EventEvidence.VERIFIED_DELTA,
+                        killerId = knight,
+                        victimId = null,
                         teamId = blue,
+                        count = 2,
+                        observedWindowSeconds = 10,
+                    ),
+                    MultiKillWindowEvent(
+                        matchId = matchId,
+                        gameId = gameId,
+                        sequence = 3,
+                        gameTimeSeconds = 510,
+                        provenance = provenance.copy(authority = DataAuthority.DERIVED),
+                        playerId = knight,
+                        teamId = blue,
+                        killCount = 2,
+                        windowSeconds = 10,
+                    ),
+                    TeamFightWindowEvent(
+                        matchId = matchId,
+                        gameId = gameId,
+                        sequence = 4,
+                        gameTimeSeconds = 520,
+                        provenance = provenance.copy(authority = DataAuthority.DERIVED),
+                        blueKillDelta = 2,
+                        redKillDelta = 1,
+                        windowSeconds = 12,
                     ),
                     ObjectiveTakenEvent(
                         matchId = matchId,
                         gameId = gameId,
-                        sequence = 3,
+                        sequence = 5,
                         gameTimeSeconds = 540,
                         provenance = provenance,
                         evidence = EventEvidence.VERIFIED_DELTA,
                         teamId = blue,
                         objective = ObjectiveType.DRAGON,
-                        detail = "first dragon",
+                        detail = "dragon type unknown",
+                        count = 1,
+                        observedWindowSeconds = 10,
                     ),
                     GoldLeadChangedEvent(
                         matchId = matchId,
                         gameId = gameId,
-                        sequence = 4,
+                        sequence = 6,
                         gameTimeSeconds = 560,
                         provenance = provenance,
-                        evidence = EventEvidence.LOCAL_CAPTURE,
+                        evidence = EventEvidence.VERIFIED_DELTA,
                         leadingTeamId = blue,
                         goldDifference = 400,
+                        observedWindowSeconds = 10,
                     ),
                     DraftChangedEvent(
                         matchId = matchId,
                         gameId = gameId,
-                        sequence = 5,
+                        sequence = 7,
                         gameTimeSeconds = null,
                         provenance = provenance,
                         evidence = EventEvidence.PROVIDER_EXPLICIT,
@@ -134,6 +165,55 @@ class JsonLiveTimelineRepositoryTest {
 
             assertEquals(timeline, repository.read(gameId))
             assertFalse(directory.listFiles().orEmpty().any { it.name.endsWith(".tmp") })
+            assertEquals(2, JSONObject(directory.listFiles().single { it.extension == "json" }.readText()).getInt("schema_version"))
+        }
+    }
+
+    @Test
+    fun legacyV1TimelineReadsWithSafeDefaultsAndMigratesOnNextWrite() {
+        runBlocking {
+            val directory = temporaryFolder.newFolder("legacy-v1")
+            val repository = JsonLiveTimelineRepository(directory)
+            val timeline = minimalTimeline()
+            repository.write(timeline)
+            val file = directory.listFiles().single { it.extension == "json" }
+            val legacyProvenance = JSONObject()
+                .put("provider_id", "legacy-live")
+                .put("source_class", "LIVE_MATCH_SOURCE")
+                .put("authority", "VERIFIED_PROVIDER")
+                .put("freshness", "REALTIME")
+                .put("observed_ms", 1_000L)
+                .put("revision", 0L)
+            file.writeText(
+                JSONObject()
+                    .put("schema_version", 1)
+                    .put("match_id", timeline.matchId.value)
+                    .put("game_id", timeline.gameId.value)
+                    .put("game_number", 1)
+                    .put("completed", false)
+                    .put("snapshots", JSONArray())
+                    .put("events", JSONArray().put(
+                        JSONObject()
+                            .put("match_id", timeline.matchId.value)
+                            .put("game_id", timeline.gameId.value)
+                            .put("sequence", 1L)
+                            .put("game_time_seconds", 30)
+                            .put("provenance", legacyProvenance)
+                            .put("evidence", "VERIFIED_DELTA")
+                            .put("type", "KILL")
+                            .put("assisting_player_ids", JSONArray())
+                            .put("team_id", "lol:team:blue")
+                    ))
+                    .toString()
+            )
+
+            val loaded = requireNotNull(repository.read(timeline.gameId))
+            val kill = loaded.events.single() as KillEvent
+            assertEquals(1, kill.count)
+            assertNull(kill.observedWindowSeconds)
+
+            repository.write(loaded)
+            assertEquals(2, JSONObject(file.readText()).getInt("schema_version"))
         }
     }
 
@@ -160,7 +240,7 @@ class JsonLiveTimelineRepositoryTest {
             val timeline = minimalTimeline()
             repository.write(timeline)
             val file = directory.listFiles().orEmpty().single { it.extension == "json" }
-            file.writeText(file.readText().replace("\"schema_version\":1", "\"schema_version\":999"))
+            file.writeText(file.readText().replace("\"schema_version\":2", "\"schema_version\":999"))
 
             val error = assertThrows(IllegalArgumentException::class.java) {
                 runBlocking { repository.read(timeline.gameId) }
