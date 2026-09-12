@@ -40,8 +40,10 @@ import com.laner.core.domain.KillEvent
 import com.laner.core.domain.MatchEvent
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.MatchStateChanged
+import com.laner.core.domain.MultiKillWindowEvent
 import com.laner.core.domain.ObjectiveTakenEvent
 import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.TeamFightWindowEvent
 import com.laner.core.domain.TeamLiveState
 
 private sealed interface LiveScreenState {
@@ -351,8 +353,10 @@ private fun formatNumber(value: Int): String = if (value >= 1000) "%.1fk".format
 
 private fun eventLabel(event: MatchEvent): String = when (event) {
     is MatchStateChanged -> "${lifecycleLabel(event.previous)} → ${lifecycleLabel(event.current)}"
-    is KillEvent -> "击杀事件 · ${event.teamId?.value ?: "未知队伍"}"
-    is ObjectiveTakenEvent -> "${event.objective.name} · ${event.teamId.value}${event.detail?.let { " · $it" } ?: ""}"
-    is GoldLeadChangedEvent -> "经济差 ${event.goldDifference} · ${event.leadingTeamId?.value ?: "持平/未知"}"
+    is KillEvent -> "击杀变化 +${event.count} · ${event.teamId?.value ?: "未知队伍"}${event.observedWindowSeconds?.let { " · ${it}s采样窗" } ?: ""}"
+    is MultiKillWindowEvent -> "采样窗口多杀 +${event.killCount} · ${event.playerId.value} · ${event.windowSeconds}s"
+    is TeamFightWindowEvent -> "团战窗口 · BLUE +${event.blueKillDelta} / RED +${event.redKillDelta} · ${event.windowSeconds}s"
+    is ObjectiveTakenEvent -> "${event.objective.name} +${event.count} · ${event.teamId.value}${event.detail?.let { " · $it" } ?: ""}"
+    is GoldLeadChangedEvent -> "经济领先易手 ${event.goldDifference} · ${event.leadingTeamId?.value ?: "持平/未知"}${event.observedWindowSeconds?.let { " · ${it}s采样窗" } ?: ""}"
     is DraftChangedEvent -> "${event.action.name} · ${event.championId ?: "unknown champion"}"
 }
