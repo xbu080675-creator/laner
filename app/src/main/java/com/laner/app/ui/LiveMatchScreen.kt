@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,8 +30,16 @@ import com.laner.core.application.LiveMatchSourceQuery
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveStateLoadStatus
 import com.laner.core.application.LiveStateResolution
+import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.SourceRequestContext
+import com.laner.core.domain.DraftChangedEvent
+import com.laner.core.domain.GameTimeline
+import com.laner.core.domain.GoldLeadChangedEvent
+import com.laner.core.domain.KillEvent
+import com.laner.core.domain.MatchEvent
 import com.laner.core.domain.MatchLifecycleState
+import com.laner.core.domain.MatchStateChanged
+import com.laner.core.domain.ObjectiveTakenEvent
 import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
 import kotlin.math.abs
@@ -41,6 +50,7 @@ private sealed interface LiveScreenState {
     data class Ready(
         val match: ScheduledSeries,
         val resolution: LiveStateResolution,
+        val timeline: GameTimeline?,
     ) : LiveScreenState
     data class Failed(val message: String) : LiveScreenState
 }
@@ -49,6 +59,7 @@ private sealed interface LiveScreenState {
 fun LiveMatchScreen(
     scheduleService: GlobalScheduleService,
     liveMatchStateService: LiveMatchStateService,
+    liveTimelineService: LiveTimelineService,
     modifier: Modifier = Modifier,
 ) {
     var refreshNonce by remember { mutableIntStateOf(0) }
@@ -76,12 +87,14 @@ fun LiveMatchScreen(
                     }
                 )
             } else {
+                val resolution = liveMatchStateService.refresh(
+                    query = LiveMatchSourceQuery.from(target),
+                    context = context,
+                )
                 LiveScreenState.Ready(
                     match = target,
-                    resolution = liveMatchStateService.refresh(
-                        query = LiveMatchSourceQuery.from(target),
-                        context = context,
-                    ),
+                    resolution = resolution,
+                    timeline = resolution.state.currentGameId?.let { liveTimelineService.load(it) },
                 )
             }
         } catch (error: Throwable) {
@@ -121,6 +134,7 @@ fun LiveMatchScreen(
             is LiveScreenState.Ready -> {
                 item { LiveTargetCard(current.match) }
                 item { LiveAuthorityCard(current.resolution) }
+                item { LiveTimelineCard(current.resolution, current.timeline) }
             }
         }
     }
@@ -256,6 +270,70 @@ private fun LiveAuthorityCard(resolution: LiveStateResolution) {
 }
 
 @Composable
+private fun LiveTimelineCard(
+    resolution: LiveStateResolution,
+    timeline: GameTimeline?,
+) {
+    val gameId = resolution.state.currentGameId
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                text = "TIMELINE / 本地事件链",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(8.dp))
+            when {
+                gameId == null -> Text(
+                    text = "尚无已验证 Game identity。赛事开始本身不会创建小局 Timeline。",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                timeline == null -> Text(
+                    text = "G${resolution.state.currentGameNumber ?: "?"} 已有 identity，但本地尚无标准 Snapshot/Event。",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                else -> {
+                    Text(
+                        text = "G${timeline.gameNumber} · ${timeline.snapshots.size} snapshots · ${timeline.events.size} events${if (timeline.completed) " · COMPLETE" else ""}",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    if (timeline.events.isEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "本地 Timeline 暂无事件。",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Spacer(Modifier.height(10.dp))
+                        timeline.events.takeLast(8).forEachIndexed { index, event ->
+                            if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                            Text(
+                                text = "${eventTime(event)}  ${eventLabel(event)}",
+                                fontSize = 13.sp,
+                            )
+                            Text(
+                                text = "${event.evidence.name} · ${event.provenance.providerId}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun LiveMessageCard(title: String, body: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
@@ -294,4 +372,17 @@ private fun lifecycleLabel(state: MatchLifecycleState): String = when (state) {
     MatchLifecycleState.POST_GAME -> "本局已结束"
     MatchLifecycleState.BETWEEN_GAMES -> "场间"
     MatchLifecycleState.SERIES_COMPLETE -> "系列赛结束"
+}
+
+private fun eventTime(event: MatchEvent): String {
+    val seconds = event.gameTimeSeconds ?: return "--:--"
+    return "%02d:%02d".format(seconds / 60, seconds % 60)
+}
+
+private fun eventLabel(event: MatchEvent): String = when (event) {
+    is MatchStateChanged -> "${lifecycleLabel(event.previous)} → ${lifecycleLabel(event.current)}"
+    is KillEvent -> "击杀事件 · ${event.teamId?.value ?: "未知队伍"}"
+    is ObjectiveTakenEvent -> "${event.objective.name} · ${event.teamId.value}${event.detail?.let { " · $it" } ?: ""}"
+    is GoldLeadChangedEvent -> "经济差 ${event.goldDifference} · ${event.leadingTeamId?.value ?: "持平/未知"}"
+    is DraftChangedEvent -> "${event.action.name} · ${event.championId ?: "unknown champion"}"
 }
