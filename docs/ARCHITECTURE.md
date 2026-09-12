@@ -90,6 +90,83 @@ GLOBAL_AI_ASSIST   / 全局 AI 辅助源
 5. 来源类别与页面阶段相关但不等价，赛中可以读取赛前背景，赛后可以复用赛中事件；
 6. UI 永远不能直接连接任何 Provider。
 
+## 第四架构轴：全球赛事统一管理
+
+Laner 不再以赛区作为独立业务架构边界。
+
+禁止继续采用：
+
+```text
+LPL Module
+LCK Module
+LEC Module
+LCS Module
+...
+```
+
+各自复制比赛、队伍、选手、赛程、积分、状态机、UI 和业务规则的模式。
+
+统一采用：
+
+```text
+Global Competition Layer
+├─ Competition
+├─ Region
+├─ Season / Split / Stage
+├─ Team
+├─ Player
+├─ Match / Game
+├─ Standing / Qualification
+└─ Source Capability / Ruleset
+```
+
+其中 `Region` 只是领域属性与筛选维度，不是独立应用边界。
+
+### 全局统一原则
+
+1. 同一类比赛事实必须使用统一领域模型。
+2. 同一类业务规则只能有一个权威实现。
+3. 赛区差异通过配置、规则集、Capability、Adapter 或赛事元数据表达。
+4. 禁止复制 `LPLMatchService`、`LCKMatchService` 等仅因赛区不同而产生的平行业务实现。
+5. 数据源可以是赛区专属，但必须通过统一 Source Port / Adapter 进入全局数据管线。
+6. 页面允许按赛区、赛事、赛季筛选，但页面本身不属于某一个赛区。
+7. 跨赛区赛事（如国际赛事）必须能够复用同一 Competition / Match / Team / Player 模型。
+8. 全局管理不等于虚报全球支持；实际支持范围仍由 Provider、Capability 与测试证据决定。
+
+### 正确结构
+
+```text
+LPL Provider ─┐
+LCK Provider ─┤
+LEC Provider ─┤
+Global Provider ─┤
+Other Provider ─┘
+        ↓
+Source Adapters
+        ↓
+Normalization / Identity Resolution
+        ↓
+Global Competition Domain
+        ↓
+PRE_MATCH / LIVE_MATCH / POST_MATCH
+```
+
+赛区差异只能存在于“怎么获取、怎么解释赛事专属规则”这一层，不能污染通用比赛事实和产品结构。
+
+### 身份统一
+
+跨赛区数据必须解决统一身份问题，至少包括：
+
+- CompetitionId
+- SeasonId / StageId
+- TeamId
+- PlayerId
+- MatchId / GameId
+
+外部 Provider ID 只能作为映射字段，不得直接成为全局领域主键。
+
+未来转会、跨赛区参赛、国际赛事、队伍更名、赛事改制等，都必须通过 Identity Resolution / Alias / History 处理，而不是复制实体。
+
 ## PRE_MATCH / 赛前
 
 面向比赛正式进入进行态之前的全部观赛准备与判断，包括但不限于：赛事预告与倒计时、首发与阵容、Rank / 近期状态、转会与人员信息、历史交手、积分/排名/晋级路径、赛制、BP 前背景情报、直播入口。
@@ -141,11 +218,17 @@ External Sources / Platform APIs / Storage
 
 ## 计划中的核心域
 
+### Competition Domain
+负责全球赛事、赛区、赛季、阶段、赛制、积分与晋级关系。赛区是属性，不是独立业务实现边界。
+
+### Identity Domain
+负责队伍、选手、赛事、赛季、比赛的全局内部 ID、外部 Provider ID 映射、别名、历史更名与跨赛区身份连续性。
+
 ### Match Domain
 负责比赛、局、阶段、时间、状态转换和业务不变量，并为 Application 层提供明确的 PRE_MATCH / LIVE_MATCH / POST_MATCH 阶段映射。
 
 ### Event Domain
-负责标准化赛事事件，不关心事件来自官网、微博、OCR、API 还是 AI。
+负责标准化赛事事件，不关心事件来自哪个赛区、官网、微博、OCR、API 还是 AI。
 
 ### Data Normalization
 负责把不同来源的字段、时间、队伍、选手、赛事 ID 和状态转换为内部统一模型。
@@ -167,9 +250,10 @@ External Sources / Platform APIs / Storage
 External Provider
 → Source Adapter
 → Validation / Normalization
+→ Identity Resolution
 → Provenance
 → Conflict & Freshness Resolution
-→ Domain Event / Match State
+→ Global Competition / Match Domain
 → Repository / Cache
 → Application Query
 → PRE_MATCH / LIVE_MATCH / POST_MATCH Presentation
@@ -182,6 +266,8 @@ UI → 微博
 UI → 赛事官网
 UI → OCR Provider
 UI → AI Provider
+UI → LPL-only business implementation
+UI → LCK-only business implementation
 ```
 
 ## 状态权威
@@ -197,6 +283,7 @@ UI → AI Provider
 5. 页面只能消费阶段 ViewModel / Query，不得直读 Provider 或数据库细节。
 6. 设置、诊断等工具型页面不得与三阶段争夺业务一级结构。
 7. 页面和功能必须说明目标 Persona 与 User Question。
+8. 赛区只能作为筛选、上下文或赛事属性，不能成为一级业务页面架构边界。
 
 ## 模块约束
 
@@ -212,6 +299,9 @@ UI → AI Provider
 10. 同一领域事实不得因 Persona 不同而复制业务实现。
 11. 所有 Provider 必须声明 Source Class；不得绕过 Source Orchestration。
 12. AI 输出必须能够区分事实支撑、推断与未验证内容。
+13. 禁止以赛区为理由复制 Domain/Application 业务逻辑。
+14. 赛区专属差异必须通过 Ruleset / Capability / Adapter / Metadata 表达。
+15. 外部赛区 ID 不得直接成为全局领域主键。
 
 ## 待旧工程审计后决定
 
