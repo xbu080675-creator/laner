@@ -12,7 +12,7 @@
 
 | Task | Title | Status |
 |---|---|---|
-| LNR-000 | 工程立宪与基线初始化 | IN PROGRESS |
+| LNR-000 | 工程立宪与基线初始化 | DONE |
 | LNR-001 | 旧工程功能基线提取 | TODO |
 | LNR-002 | 旧工程架构与技术债审计 | TODO |
 | LNR-003 | 新架构冻结 | TODO |
@@ -21,6 +21,8 @@
 ## Current Truth
 
 当前仓库只包含工程治理与架构基线文档，不应被描述为“APP 已开始重写”或“已有功能可测试”。
+
+`LNR-000` 已完成远端反查并满足工程初始化 Definition of Done。
 
 ## Blocking Conditions Before Business Code
 
