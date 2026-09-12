@@ -62,7 +62,18 @@ interface PostMatchArchiveRepository {
     suspend fun save(snapshot: PostArchiveSnapshot)
 }
 
-interface PostResultSourcePort {
+/**
+ * Global POST capability contract.
+ *
+ * Region/league differences are adapter capabilities, never Application branches. A source must
+ * explicitly say whether it can serve the current canonical match. Global providers keep the
+ * default `true`; regional providers override this method. Unsupported providers are not called.
+ */
+interface PostSourceCapability {
+    fun supports(query: PostMatchQuery): Boolean = true
+}
+
+interface PostResultSourcePort : PostSourceCapability {
     val providerId: String
     val authority: DataAuthority
 
@@ -72,7 +83,7 @@ interface PostResultSourcePort {
     ): ProviderRead<SeriesResult?>
 }
 
-interface CompletedGameSourcePort {
+interface CompletedGameSourcePort : PostSourceCapability {
     val providerId: String
     val authority: DataAuthority
 
@@ -82,7 +93,7 @@ interface CompletedGameSourcePort {
     ): ProviderRead<List<CompletedGameRecord>>
 }
 
-interface PostAwardSourcePort {
+interface PostAwardSourcePort : PostSourceCapability {
     val providerId: String
     val authority: DataAuthority
 
@@ -92,7 +103,7 @@ interface PostAwardSourcePort {
     ): ProviderRead<List<VerifiedPostAward>>
 }
 
-interface ReplaySourcePort {
+interface ReplaySourcePort : PostSourceCapability {
     val providerId: String
     val authority: DataAuthority
 
