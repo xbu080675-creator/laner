@@ -33,15 +33,16 @@ sealed interface LiveMatchContextResult {
  * Single Application query for the current LIVE presentation context.
  *
  * Presentation surfaces must not duplicate schedule target selection, lifecycle refresh, gameplay
- * snapshot refresh, game identity selection, or Timeline loading. This service owns that ordering
- * while keeping lifecycle authority in [LiveMatchStateService] and gameplay validation in
- * [LiveSnapshotService].
+ * snapshot refresh, deterministic event reconciliation, game identity selection, or Timeline loading.
+ * This service owns that ordering while keeping lifecycle authority in [LiveMatchStateService],
+ * gameplay validation in [LiveSnapshotService], and event derivation in [LiveEventDerivationService].
  */
 class LiveMatchContextService(
     private val scheduleService: GlobalScheduleService,
     private val liveMatchStateService: LiveMatchStateService,
     private val liveSnapshotService: LiveSnapshotService,
     private val liveTimelineService: LiveTimelineService,
+    private val liveEventDerivationService: LiveEventDerivationService,
     private val diagnostics: DiagnosticsPort? = null,
 ) {
     suspend fun load(context: SourceRequestContext): LiveMatchContextResult {
@@ -63,7 +64,8 @@ class LiveMatchContextService(
             val liveState = liveMatchStateService.refresh(query = query, context = context)
             val snapshot = liveSnapshotService.refresh(query = query, context = context)
             val gameId = snapshot.snapshot?.game?.gameId ?: liveState.state.currentGameId
-            val timeline = gameId?.let { liveTimelineService.load(it) }
+            val rawTimeline = gameId?.let { liveTimelineService.load(it) }
+            val timeline = rawTimeline?.let { liveEventDerivationService.reconcile(it) }
 
             LiveMatchContextResult.Ready(
                 match = target,
