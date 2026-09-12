@@ -3,7 +3,7 @@
 ## Current Baseline
 
 - Repository: `xbu080675-creator/laner`
-- Working branch: `feature/lnr-014-live-adapters-persistence`
+- Working branch: `feature/lnr-015-post-results-replay`
 - Project phase: `M1 / Feature Migration`
 - Business implementation: `STARTED`
 - Functional migration: `IN PROGRESS`
@@ -29,47 +29,65 @@
 | LNR-012 | Standings / Qualification / Tournament Edition | WAITING EXTERNAL TEST |
 | LNR-013 | LIVE Match State / Provider Arbitration / Unified Event / Timeline | DONE |
 | LNR-014 | LIVE Source Adapters / Local Persistence / Composition Wiring | WAITING EXTERNAL TEST |
+| LNR-015 | Global POST Result / Archive / Historical Timeline / Replay | TESTING |
 
 ## Current Truth
 
-Laner 已形成连续的 PRE → LIVE 基础链：
+Laner 已形成连续的 PRE → LIVE → POST 基础链：
 
 1. 全球赛事目录 / 全球赛程；
 2. 单场 PRE Roster / Starting Roster Evidence / Staff / Recent Form / H2H；
 3. Tournament Edition / Standings / Championship Points boundary / Qualification mechanism；
 4. LIVE Core/Application 权威状态、来源仲裁、统一事件与 Timeline；
-5. LIVE Android 本地 State/Timeline 持久化、Composition Root、赛中 Application-truth 页面与 Timeline 只读展示。
+5. LIVE Android 本地 State/Timeline 持久化、Composition Root、赛中 Application-truth 页面；
+6. Global POST Result / Replay / Historical Timeline / device-local archive 基础链。
 
 当前已验证/已实现存在：
 
+### Core / Global Identity
 - `:core:domain` 纯 Kotlin Domain；
 - `:core:application` 纯 Kotlin Application/Port；
 - `:app` Android/Compose Composition Root；
-- PRE/LIVE/POST 三阶段 Android 壳；
+- PRE/LIVE/POST 三阶段 Android 页面；
+- Provider raw ID 不成为 MatchId/GameId；
+- `GameIdentity.canonical(matchId, gameNumber)` 为 canonical GameId 唯一生成规则；
+- `ProviderMatchIdentityRepository` 保存 canonical MatchId ↔ provider external event/match identity。
+
+### LIVE
 - `LiveMatchStateReducer / LiveMatchStateService`；
-- `GameTimeline / LiveTimelineService`，UI 通过 Application `load(gameId)` 读取 Timeline；
-- Android `JsonLiveMatchStateRepository`；
-- Android `JsonLiveTimelineRepository`；
-- LIVE local persistence `schema_version=1`；
-- SHA-256 稳定文件名、temp file + atomic replace；
-- 损坏 JSON / unsupported schema 显式失败，不静默返回空状态；
-- Snapshot/Event 显式 type/schema 序列化，不持久化 Provider raw payload；
-- LIVE target-aware query 携带 canonical MatchId、TeamRef、计划时间，Provider raw ID 不泄漏进 Domain；
-- `LanerAppGraph` 已接入本地 LIVE State/Timeline repositories 与 Application services；
-- 无实时 Source 时 `sources = emptyList()` 是合法显式降级态：`UNAVAILABLE / last-known`，不伪造赛事事实；
-- LIVE 页面通过 `GlobalScheduleService` 选目标：`EVENT_LIVE` 优先，否则只从未完成比赛选最近目标；COMPLETED 不得冒充当前 LIVE；
-- LIVE 页面展示权威 lifecycle、来源状态、本地 Timeline 快照/事件数量及最近标准事件；
-- “赛事已开始 · 游戏未开始”仍作为独立 lifecycle 展示；
-- CI 永久包含 `:app:testDebugUnitTest` Android Adapter/Persistence Gate。
+- `GameTimeline / LiveTimelineService`；
+- Android `JsonLiveMatchStateRepository / JsonLiveTimelineRepository`；
+- `schema_version=1`、SHA-256 文件名、temp + atomic replace；
+- LIVE 页面只消费 Application truth；
+- 无实时 Source 时明确 `UNAVAILABLE / last-known`；
+- Cito 在线链按用户要求 `WAITING EXTERNAL TEST / DEFERRED`。
 
-尚未完成且不得误报：
+### Global POST
+- 强类型 `SeriesResult / CompletedGameRecord / PostTeamStats / PostPlayerStats / VerifiedPostAward / ReplayAsset`；
+- `PostMatchService` 按 `PostSourceCapability` 编排来源，Application 不包含 LPL/LCK/LEC/LCP 赛区业务分支；
+- `JsonPostMatchArchiveRepository` 保存已验证 Result/Game，外部事实缺失时才 fallback；
+- archive 不参与和新 Provider 的冲突投票，不把 LOCAL cache 冒充官方事实；
+- `VerifiedAwardsMirrorSource` 提供 provenance-preserving Awards；
+- `RiotGlobalResultSource` 从 Riot global schedule 提供跨区域/国际赛事 Series Result baseline；
+- `RiotGlobalReplaySource` 从 Riot getEventDetails 提供跨区域/国际赛事 Replay metadata；
+- `RiotGlobalHistoricalTimelineSource` 从 Riot LiveStats window 按需恢复真实历史过程帧；
+- 历史 Timeline 不插值；上游不再保留历史窗口时保持缺口；
+- LIVE 与 POST 真实帧可合并到同一个 canonical GameTimeline；PRE/AI 仍被 Domain 拒绝；
+- `PostTimelineService` 二次校验 canonical MatchId/GameId/gameNumber/sourceClass，错误来源不得污染 Timeline；
+- POST 页面只有用户选择 G1/G2/... 后才触发 historical backfill，不在页面打开时暴力扫描全部小局；
+- POST 页面展示 verified Result / Replay metadata / Awards / historical frame coverage；
+- LPL TJStats 历史链只保留为区域补充 Adapter，且 credential 外部注入；它不构成主架构。
 
-- Cito credentialed REST/WSS 在线链未验收；按用户要求状态为 `WAITING EXTERNAL TEST / DEFERRED`；
-- WSS entitlement 不作假定，后续只作为 REST 基线之上的可选增强；
-- 真实实时经济/击杀/塔/龙/男爵/Player state Provider normalization 尚未迁移；
-- 真实 Provider 驱动的持续 Timeline capture 尚未外部验证；
-- RiftScreen / HUD 尚未迁移；
-- 真实赛事“场间 → 新局 → 断线重连”新架构实机验收尚待外部条件。
+## 尚未完成且不得误报
+
+- Riot `LOL_ESPORTS_API_KEY` credentialed online POST Result/EventDetails/LiveStats 链尚未形成 LNR-015 真实在线验收证据；
+- Global per-game `CompletedGameRecord` 仍要求明确 per-game winner evidence；未确认赢家时不得通过 gold/kills 推断；
+- 每局 BP / 终局装备 / 完整 objective result 尚未全球迁移；
+- Timeline 事件筛选、TeamFightWindow 聚合、VOD↔Timeline 对齐尚未完成；
+- Bilibili Replay supplement 尚未迁移；
+- Media3 / WebView 播放器属于后续 Android Adapter；
+- 真实 Android 设备上的 POST 页面与历史恢复链尚待外部验收；
+- Cito 在线链仍 DEFERRED，不影响 POST 主线。
 
 ## Verification Evidence
 
@@ -98,21 +116,29 @@ Laner 已形成连续的 PRE → LIVE 基础链：
 - run `34692037250`：Core PASS / Android unit tests FAIL，暴露 JUnit4 expression-body 非 void 测试签名；失败保留；
 - fix `86ca106cf6372a4f23f4f83faaa997eef3f5bad5`；
 - run `34692350405`：Architecture/Core/App unit/Android build 全 PASS；
-- run `34692588440`：Composition + LIVE Application-truth UI 全 PASS；
-- run `34692688208`：LIVE target selection 回归 PASS；
-- final code head `4d64749c07ce6f91bebad91de91f4fb70ed0bd04` / run `34692936906`：Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS。
+- final code run `34692936906`：Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS；
+- Cito online：`WAITING EXTERNAL TEST / DEFERRED`。
 
-LNR-014 自动可认证部分已完成；由于 Cito 在线链及真实赛事驱动尚未具备外部验收条件，任务状态为 `WAITING EXTERNAL TEST`，不阻塞后续 POST 迁移。
+### LNR-015
+- run `34693494001`：Domain/Application tests FAIL；根因是测试 fixture 使用非法错误码格式，失败保留；
+- fix `ca805e77f89bdb65311c24e5c12e3ed056d7e83a`；run `34693630753` 全 PASS；
+- global POST capability routing commit `e3de01052602d7633368acd003c1ab0fd0f14401` / run `34694930111` 全 PASS；
+- global Riot identity/result/replay baseline commit `ea9b6e576fe22f4459c0c55c89f805a3d556285e` / run `34695412163` 全 PASS；
+- run `34695777894`：Domain/Application tests FAIL，暴露 Domain `TimelineSnapshotPoint` 仍只允许 LIVE source 的真实边界遗漏；
+- root fix `f60f87be12e676e3623bac73d586a144f84b3f17`：Timeline 允许 LIVE/POST 真实事实源，仍拒绝 PRE/AI；
+- regression head `7451c302f106fa1f4d636a8ac77f1580b8dd672c` / run `34695924994` 全 PASS；
+- current code/UI head `0681c3b20f2e6cad4cd6fb52bf90a4912e299608` / run `34696081645`：Architecture / Domain+Application / Android Adapter unit tests / Android debug compile 全 PASS。
+
+## Current Delivery Boundary
+
+LNR-015 当前属于 `TESTING`：全球 POST 自动化/编译证据已经成立，但真实 credentialed Riot online fetch 与 Android real-device 仍未验收。因此收口时若代码/文档 exact-head 与 PR Gate 继续全绿，任务应进入 `WAITING EXTERNAL TEST`，而不是 `DONE`。
 
 ## Next
 
-进入 `LNR-015 — POST Result / Game Archive / Stats / Timeline Archive / Replay Domain`。
-
-优先顺序：
-1. 从旧 RiftLab 提取 Result / Completed Game / Match Detail / Historical Resolver 行为基线；
-2. 冻结 POST 强类型 Domain，避免 Series Result、Game Archive、Player Stats、Awards、Replay 互相冒充；
-3. 建立 POST Source Ports 与 Application aggregation；
-4. 复用标准 `GameTimeline` 作为赛后只读归档输入，不复制旧 MatchTimelineStore；
-5. Replay 先做 provider-neutral Domain/Port，Media3/WebView 留在 Android Adapter；
-6. 接 POST 页面真实 Application state；
-7. Provider/播放器外部验收仍按证据单独标记。
+1. 同步 `FEATURE_BASELINE / TESTING / TROUBLESHOOTING / CHANGELOG / module README`；
+2. 记录 historical Timeline source-class 失败与永久回归；
+3. final exact-head CI；
+4. PR Gate；
+5. 合并后回填 PR/merge/final CI；
+6. 进入 LNR-016 Android RiftScreen / Watch / Player / OTA；
+7. LNR-015 online Provider/real-device evidence 后续独立补证。
