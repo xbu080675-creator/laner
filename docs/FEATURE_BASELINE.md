@@ -45,12 +45,13 @@
 | PRE-022 | Patch / 规则 / 抽签 / 签位 / 赛制 | BOTH | PRE_MATCH_SOURCE | Tournament Research / Governance | Competition Research | TODO |
 | PRE-023 | 赛前选边 / 当前小局选边 | BOTH | PRE_MATCH_SOURCE | SideSelectionPrePanel | Match Setup | TODO |
 | PRE-024 | 内容覆盖度 / 缺失字段显式展示 | COACH_ANALYST | PRE_MATCH_SOURCE | ComprehensiveDataCoverage | Coverage Query | TODO |
-| PRE-025 | 官方首发图片 / OCR / AI 辅助识别 | BOTH | GLOBAL_AI_ASSIST | RosterVisionPipeline | Roster Assist Pipeline | TODO |
+| PRE-025 | 官方首发图片 / OCR / AI 辅助识别 | BOTH | GLOBAL_AI_ASSIST | RosterVisionPipeline | Roster Assist Pipeline | WAITING EXTERNAL TEST |
 
 ## PRE 验收原则
 
 - 不允许名单池顺序被伪装成官方首发。
 - 不允许无可靠来源时填造 Rank、伤病、转会、首发变化。
+- OCR / AI candidate 只能是 `DERIVED / UNVERIFIED` 辅助信息；完整五位置也不得绕过正式日期、对阵、赛事 evidence validation。
 - 所有数据必须带 provenance / authority / freshness。
 - 用户必须能从“这场比赛”继续下钻到队伍、选手、赛事、资格路径与历史事实。
 - `WAITING EXTERNAL TEST` 表示实现与自动化已具备，但真实 Provider/实机证据尚未完成；不得等价为 DONE。
@@ -175,7 +176,7 @@
 | SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | WAITING EXTERNAL TEST |
 | SH-025 | Cito REST/WebSocket optional provider | SYSTEM | ALL | CitoDataPlane | Provider Adapter | WAITING EXTERNAL TEST |
 | SH-026 | Bilibili VOD resolver | SYSTEM | POST_MATCH_SOURCE | BilibiliVodRepository | Provider Adapter | TODO |
-| SH-027 | OCR 多语言（中/日/韩） | SYSTEM | GLOBAL_AI_ASSIST | app dependencies | OCR Adapter | TODO |
+| SH-027 | OCR 多语言（中/日/韩） | SYSTEM | GLOBAL_AI_ASSIST | app dependencies | OCR Adapter | WAITING EXTERNAL TEST |
 | SH-028 | AI 输出 FACT_BACKED / INFERENCE / UNVERIFIED | BOTH | GLOBAL_AI_ASSIST | Laner LNR-008 | AI Evidence | IN PROGRESS |
 | SH-029 | 错误/来源/降级状态可视化 | BOTH | ALL | old UI source labels | Diagnostics Contract | IN PROGRESS |
 | SH-030 | 不制造假事实 / 缺失保持未知 | BOTH | ALL | legacy rules | Domain Invariant | IN PROGRESS |
