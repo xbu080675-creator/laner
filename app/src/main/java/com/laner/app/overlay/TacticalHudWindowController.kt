@@ -25,7 +25,7 @@ internal class TacticalHudWindowController(
 
     fun showEffective(): Boolean {
         val presentation = effectivePresentation()
-        if (!presentation.active) {
+        if (!presentation.isDisplayableAt(System.currentTimeMillis())) {
             hide()
             return false
         }
@@ -42,7 +42,14 @@ internal class TacticalHudWindowController(
     }
 
     fun onConfigurationChanged() {
-        view?.post { view?.render(effectivePresentation()) }
+        view?.post {
+            val presentation = effectivePresentation()
+            if (presentation.isDisplayableAt(System.currentTimeMillis())) {
+                view?.render(presentation)
+            } else {
+                hide()
+            }
+        }
     }
 
     fun destroy() {
@@ -51,7 +58,7 @@ internal class TacticalHudWindowController(
     }
 
     private fun effectivePresentation(): TacticalHudPresentation = when {
-        verifiedPresentation.active -> verifiedPresentation
+        verifiedPresentation.isDisplayableAt(System.currentTimeMillis()) -> verifiedPresentation
         previewState.active -> previewState.presentation
         else -> TacticalHudPresentation.inactive()
     }
