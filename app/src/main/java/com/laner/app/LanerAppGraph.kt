@@ -8,6 +8,7 @@ import com.laner.app.data.post.JsonPostMatchArchiveRepository
 import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
+import com.laner.app.data.riot.RiotGlobalHistoricalTimelineSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotGlobalReplaySource
 import com.laner.app.data.riot.RiotGlobalResultSource
@@ -19,6 +20,7 @@ import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
+import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
 import java.io.File
 
@@ -43,6 +45,10 @@ class LanerAppGraph(
         identityRepository = providerIdentityRepository,
     )
     private val riotGlobalReplaySource = RiotGlobalReplaySource(
+        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        identityRepository = providerIdentityRepository,
+    )
+    private val riotGlobalHistoricalTimelineSource = RiotGlobalHistoricalTimelineSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
         identityRepository = providerIdentityRepository,
     )
@@ -84,6 +90,13 @@ class LanerAppGraph(
         awardSources = listOf(verifiedAwardsMirrorSource),
         replaySources = listOf(riotGlobalReplaySource),
         archiveRepository = postArchiveRepository,
+        diagnostics = diagnostics,
+    )
+
+    /** On-demand real historical frames. Never auto-scans every game when POST opens. */
+    val postTimelineService = PostTimelineService(
+        sources = listOf(riotGlobalHistoricalTimelineSource),
+        timelineService = liveTimelineService,
         diagnostics = diagnostics,
     )
 }
