@@ -65,6 +65,11 @@ class MainActivity : ComponentActivity() {
                             riftScreenRunning = true
                         }
                     },
+                    onStartDraftHudPreview = {
+                        if (riftScreenController.startDraftPreview()) {
+                            riftScreenRunning = true
+                        }
+                    },
                     onStopRiftScreen = {
                         riftScreenController.stop()
                         riftScreenRunning = false
