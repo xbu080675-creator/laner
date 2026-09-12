@@ -123,7 +123,9 @@
 - run `34689400211`：Core semantics PASS；
 - run `34689473333`：Riot structure Adapter PASS；
 - run `34690235942`：Architecture/Core PASS，Android compile FAIL，根因为 `Files.move()` 返回 `Path` 导致 Repository `save(): Unit` 返回类型推断错误；已仅补显式 `Unit`，业务/原子写入语义不变；
-- final exact-head CI 在文档收口后重新验证。
+- final branch run `34690520095`：Architecture/Core/Android 全 PASS；
+- PR #4 run `34690577554`：Architecture/Core/Android 全 PASS；
+- 已合并 main。
 
 仍需外部验收 / 数据补全：
 - credentialed Riot Tournament/Standings 在线读取；
@@ -134,28 +136,60 @@
 其中“Championship Points 与 Standings 严格分离”和 Qualification Evidence Model 可由 Domain/自动化直接认证；team-level qualification status 仍保持 `IN PROGRESS`。
 
 ### LNR-013 — LIVE Match State / Provider Arbitration / Unified Event / Timeline
+状态：`DONE`
+
+本任务只认证 LIVE Core/Application 基础层，不代表真实 LIVE 产品链已经完成。
+
+已完成：
+- pure Kotlin `LiveMatchState` / `LiveStateSignal` / evidence / transition result；
+- `LiveMatchStateReducer` 作为 lifecycle 唯一领域规则；
+- 永久锁定 `赛事开始 != 游戏进入`；
+- 场间、新局、旧局延迟帧、future-game、Series terminal 状态边界；
+- 同 lifecycle heartbeat 只刷新 freshness，不制造伪状态变化；
+- 旧时间 observation 即使 lifecycle rank 更高，也不能推进同一局权威状态；
+- 新一局缺 gameId 时不继承上一局 gameId；
+- `LiveStateSourcePort / LiveMatchStateRepository`；
+- `LiveMatchStateService` Provider Arbitration；
+- freshness / evidence / authority / revision 仲裁；
+- 标准 `MatchStateChanged` lifecycle events；
+- `DraftActionType` 标准化，Provider 自由文本不直接成为 Domain action；
+- `GameTimeline / TimelineSnapshotPoint / semanticKey()`；
+- `LiveTimelineRepository / LiveTimelineService`；
+- reconnect semantic dedupe、out-of-order replay、same-second snapshot provenance arbitration；
+- Core module README 同步。
+
+验证证据：
+- run `34690850479`：第一版 state + arbitration 全 PASS；
+- run `34691124746`：Timeline + standardized lifecycle event 全 PASS；
+- run `34691364933` / 后续同代码链测试暴露 stale lifecycle advancement 回归，失败记录保留；
+- 修复 commit `22668b37d22be5969ec59c99ac687f57c52a1ad3` 对应 run `34691458209`：Architecture/Core/Android 全 PASS。
+
+产品功能仍未 DONE：真实 LIVE Provider、Android local persistence、Composition Root、LIVE UI/HUD 尚未接入，`FEATURE_BASELINE` 对应条目保持 `IN PROGRESS`。
+
+### LNR-014 — LIVE Source Adapters / Local Persistence / Composition Wiring
 状态：`TODO`
 
 目标：
-- 建立 LIVE 权威 Match State；
-- 保证 `赛事开始 != 游戏进入`；
-- 统一 Provider Arbitration；
-- 统一事实事件模型；
-- 处理 duplicate / out-of-order / reconnect 幂等；
-- 建立 Timeline append/replay contract；
-- 将旧 RiftLab 已实机通过的“场间未开局 vs 新局真实开局”固化成永久回归；
-- 本轮先做 Core/Application，不抢跑 RiftScreen/HUD。
+- 将真实 LIVE Provider 翻译为 `LiveStateSourcePort` / 标准 Snapshot/Event；
+- 接入至少一条可核验 LIVE Source，再按证据扩展 fallback；
+- 实现 Android device-local `LiveMatchStateRepository` / `LiveTimelineRepository`；
+- persistence 使用 schema version、原子写入、损坏数据显式失败/降级；
+- 将 `LiveMatchStateService` / `LiveTimelineService` 接入 Composition Root；
+- LIVE 页面只消费 Application state，不直接读取 Provider；
+- 为真实场间/开局/新 Game/断线重连建立外部或实机证据；
+- 不在本任务抢跑 RiftScreen HUD 的视觉增强。
 
 ## 第一批真实迁移顺序
 
 1. Global Competition Catalog / Schedule —— `LNR-010 WAITING EXTERNAL TEST`；
 2. PRE Roster / Staff / Form / H2H —— `LNR-011 WAITING EXTERNAL TEST`；
 3. Standings / Qualification / Tournament Edition —— `LNR-012 WAITING EXTERNAL TEST`；
-4. LIVE Match State / Provider Arbitration / Unified Event / Timeline —— `LNR-013 TODO`；
-5. POST Result / Stats / Replay / Archive；
-6. Android RiftScreen / Watch / Player / OTA；
-7. Local AI / OCR / Roster Assist；
-8. Compatibility Import / Full Regression / Migration Audit。
+4. LIVE Core —— `LNR-013 DONE`；
+5. LIVE Source / Persistence / Wiring —— `LNR-014 TODO`；
+6. POST Result / Stats / Replay / Archive；
+7. Android RiftScreen / Watch / Player / OTA；
+8. Local AI / OCR / Roster Assist；
+9. Compatibility Import / Full Regression / Migration Audit。
 
 ## 速度原则
 
