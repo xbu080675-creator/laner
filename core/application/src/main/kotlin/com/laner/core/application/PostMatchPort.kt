@@ -1,0 +1,73 @@
+package com.laner.core.application
+
+import com.laner.core.domain.DataAuthority
+import com.laner.core.domain.MatchId
+import com.laner.core.domain.ReplayAsset
+import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.SeriesResult
+import com.laner.core.domain.TeamRef
+import com.laner.core.domain.CompletedGameRecord
+import com.laner.core.domain.VerifiedPostAward
+
+data class PostMatchQuery(
+    val matchId: MatchId,
+    val scheduledStartEpochMillis: Long? = null,
+    val bestOf: Int? = null,
+    val teams: List<TeamRef> = emptyList(),
+) {
+    init {
+        require(scheduledStartEpochMillis == null || scheduledStartEpochMillis >= 0)
+        require(bestOf == null || bestOf > 0)
+        require(teams.isEmpty() || teams.size == 2)
+        require(teams.map { it.id }.distinct().size == teams.size)
+    }
+
+    companion object {
+        fun from(series: ScheduledSeries): PostMatchQuery = PostMatchQuery(
+            matchId = series.matchId,
+            scheduledStartEpochMillis = series.startTimeEpochMillis,
+            bestOf = series.bestOf,
+            teams = series.teams.map { it.team },
+        )
+    }
+}
+
+interface PostResultSourcePort {
+    val providerId: String
+    val authority: DataAuthority
+
+    suspend fun readResult(
+        query: PostMatchQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<SeriesResult?>
+}
+
+interface CompletedGameSourcePort {
+    val providerId: String
+    val authority: DataAuthority
+
+    suspend fun readGames(
+        query: PostMatchQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<List<CompletedGameRecord>>
+}
+
+interface PostAwardSourcePort {
+    val providerId: String
+    val authority: DataAuthority
+
+    suspend fun readAwards(
+        query: PostMatchQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<List<VerifiedPostAward>>
+}
+
+interface ReplaySourcePort {
+    val providerId: String
+    val authority: DataAuthority
+
+    suspend fun readReplays(
+        query: PostMatchQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<List<ReplayAsset>>
+}
