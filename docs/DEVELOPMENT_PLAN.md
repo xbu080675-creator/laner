@@ -61,53 +61,47 @@
 ### LNR-013 — LIVE Match State / Provider Arbitration / Unified Event / Timeline
 状态：`DONE`
 
-本任务只认证 LIVE Core/Application 基础层，不代表真实 LIVE 产品链已经完成。
-
-已完成：
-- `LiveMatchStateReducer` lifecycle authority；
-- `赛事开始 != 游戏进入`；
-- 场间 / 新局 / stale / future-game / terminal 规则；
-- Provider Arbitration；
-- 标准生命周期事件；
-- provider-neutral Timeline；
-- reconnect dedupe / out-of-order replay / provenance arbitration。
-
-最终 exact-head 与 PR Gate 均 PASS，已合并 main。
+已完成 LIVE Core/Application 真相层：lifecycle authority、`赛事开始 != 游戏进入`、场间/新局/stale/future-game/terminal、Provider Arbitration、标准生命周期事件、provider-neutral Timeline、reconnect dedupe、out-of-order replay 与 provenance arbitration。最终 exact-head 与 PR Gate 均 PASS，已合并 main。
 
 ### LNR-014 — LIVE Source Adapters / Local Persistence / Composition Wiring
-状态：`IN PROGRESS`
+状态：`WAITING EXTERNAL TEST`
 
-当前范围：
+自动可认证部分已完成：
 - Android device-local `LiveMatchStateRepository / LiveTimelineRepository`；
-- `schema_version`、原子写入、损坏数据显式失败；
+- `schema_version=1`、SHA-256 稳定文件名、原子写入、损坏/未知 schema 显式失败；
+- Snapshot / 标准事件显式 schema 序列化；
 - Android Adapter/Persistence unit-test Gate；
+- target-aware LIVE query；
 - Composition Root 接线；
 - LIVE 页面只消费 Application truth；
-- 无 Provider 时明确 `UNAVAILABLE / last-known`，不造数据；
-- Provider target query 可获取 canonical MatchId + TeamRef + start time，不从字符串 ID 猜身份。
+- `EVENT_LIVE` 优先的目标选择规则；COMPLETED 不得冒充当前 LIVE；
+- 无 Provider 时明确 `UNAVAILABLE / last-known`；
+- Timeline 通过 `LiveTimelineService.load(gameId)` 读取并展示本地标准事件，不允许 UI 直读 Repository。
 
-已完成到当前分支：
-- `JsonLiveMatchStateRepository`；
-- `JsonLiveTimelineRepository`；
-- Snapshot / 标准事件显式 schema 序列化；
-- App unit-test CI Gate；
-- `LanerAppGraph` 已接本地 LIVE State/Timeline repository 与 Application service；
-- 真实源列表为空时保持合法显式降级。
+自动验证：final code head `4d64749c07ce6f91bebad91de91f4fb70ed0bd04` / run `34692936906` 的 Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS。
 
 Cito 决策（2026-09-12）：
 - 用户当前无法进行 Cito 在线测试；
-- Cito 在线验收状态：`WAITING EXTERNAL TEST / DEFERRED`；
-- 不删除 Cito 接口/适配设计，不把未测能力描述为 SUPPORTED；
-- REST 继续作为未来 bootstrap/reconcile/fallback 基线；
-- WSS entitlement 不作假定，只作为在线条件具备后的可选增强；
-- Cito 暂缓不得阻塞本地 persistence、Composition、LIVE UI 和其它 Provider 迁移。
+- Cito 在线验收：`WAITING EXTERNAL TEST / DEFERRED`；
+- 不删除适配设计，不虚构在线证据；
+- REST 作为未来 bootstrap/reconcile/fallback 基线；
+- WSS entitlement 不作假定；
+- Cito 暂缓不阻塞后续迁移。
 
-LNR-014 当前验收调整：
-- 本地 persistence / schema / corruption / atomic write 必须自动 PASS；
-- Composition Root / 无源降级必须自动 PASS；
-- LIVE UI 不允许直接读取 Provider；
-- Cito fixture/contract 可以自动测试，但真实在线能力保持 `WAITING EXTERNAL TEST`；
-- LNR-014 是否拆分收口，以后续 Provider 可用性为准，禁止为了 DONE 虚构在线证据。
+### LNR-015 — POST Result / Game Archive / Stats / Timeline Archive / Replay Domain
+状态：`TODO`
+
+目标：
+- 强类型拆分 Series Result、Completed Game Archive、Player Stats、Objective Result、Awards、Replay；
+- 建立 `POST_MATCH_SOURCE` Ports 与 Application aggregation；
+- 复用 canonical MatchId/GameId，不允许 Provider raw ID 成为 Domain 主键；
+- 复用标准 `GameTimeline` 作为赛后归档/查询输入，不复制旧 `MatchTimelineStore`；
+- 历史补全来源必须带 provenance / authority / freshness；
+- Replay 先建立 provider-neutral Domain/Port；
+- Media3/WebView 继续属于 Android Adapter，不进入 Core；
+- POST 页面只消费 Application state。
+
+旧版主要行为证据：`CompletedGameArchive`、`MatchDetailRepository`、`LplHistoricalPostMatchResolver`、`RiotLiveStatsHistoryResolver`、`OpggHistoricalFrameResolver`、`GlobalVerifiedAwardsProvider`、`BilibiliVodRepository`、`RiotVodRepository`、`MatchTimelineStore` 以及对应 MatchDetail/Timeline/Replay UI。
 
 ## 第一批真实迁移顺序
 
@@ -115,12 +109,13 @@ LNR-014 当前验收调整：
 2. PRE Roster / Staff / Form / H2H —— `LNR-011 WAITING EXTERNAL TEST`；
 3. Standings / Qualification / Tournament Edition —— `LNR-012 WAITING EXTERNAL TEST`；
 4. LIVE Core —— `LNR-013 DONE`；
-5. LIVE Persistence / Wiring / Degraded UI —— `LNR-014 IN PROGRESS`；
-6. LIVE Provider online verification —— 条件具备后补验收；
-7. POST Result / Stats / Replay / Archive；
-8. Android RiftScreen / Watch / Player / OTA；
-9. Local AI / OCR / Roster Assist；
-10. Compatibility Import / Full Regression / Migration Audit。
+5. LIVE Persistence / Wiring / Degraded UI —— `LNR-014 WAITING EXTERNAL TEST`；
+6. POST Result / Stats / Replay / Archive —— `LNR-015 TODO`；
+7. Android RiftScreen / Watch / Player / OTA；
+8. Local AI / OCR / Roster Assist；
+9. Compatibility Import / Full Regression / Migration Audit。
+
+Cito 在线验收作为 LNR-014 外部补证项独立回填，不阻塞第 6 项及以后迁移。
 
 ## 速度原则
 
