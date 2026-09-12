@@ -6,6 +6,19 @@ All notable project changes must be recorded here at release or milestone level.
 
 ### M1 Feature Migration
 
+#### LNR-020 — RiftScreen / Draft HUD Android Overlay
+- Rebuilt the legacy RiftScreen behavior on process-level Application services instead of copying the legacy `MatchSessionStore` architecture.
+- Added system-overlay Foreground Service presentation using canonical schedule/lifecycle/snapshot/Timeline truth only.
+- Restored RiftScreen `MINI / COMPACT / EXPANDED`, drag, close, foreground auto-hide and background presentation behavior.
+- Added a full-screen Draft HUD driven only by canonical `DRAFT` lifecycle and `DraftChangedEvent` facts; provider payloads never reach the HUD.
+- Added persistent Edit/Lock layout controls: module drag, scale, alpha, visibility, reset and independent portrait/landscape profiles.
+- Lock mode now applies real `FLAG_NOT_TOUCHABLE` to the full-screen HUD while keeping the edge control dock usable.
+- Added an Android-only Draft HUD preview fixture for layout testing. It is explicitly `LOCAL PREVIEW · NOT FACT` and cannot enter Core, repositories or Timeline.
+- Kept side-selection and role/matchup uncertainty honest: schedule order is left/right only, and absent role/matchup evidence is not inferred.
+- Preserved CI failure history: the first foundation run exposed an obsolete UI-private target-selector test; later the Draft HUD run exposed one incorrect test assertion. Both were fixed without hiding the failed runs.
+- PR run `34705512479` at code head `871e1a0ad257c465dc51720df46fb66cceeae7cc` passed Architecture / Core / App Unit / Android build / APK upload and produced artifact `10301324396` (`sha256:ac2953bc1a29ebaead91958a689909e4bae6c3374a795d5ab3956398ec81d424`).
+- Real Android system-overlay permission/drag/orientation/touch-through behavior remains `WAITING EXTERNAL TEST`; CI PASS is not device evidence.
+
 #### LNR-019 — Global LIVE Snapshot / Timeline / Match HUD
 - Added provider-neutral `LiveSnapshotSourcePort` and `LiveSnapshotService`, deliberately separate from lifecycle authority.
 - Added Riot global LiveStats gameplay-frame adapter using canonical provider identity mapping + EventDetails active game + latest real LiveStats frame.
