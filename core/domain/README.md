@@ -1,7 +1,7 @@
 # `:core:domain`
 
 ## 职责
-纯 Kotlin 赛事领域核心。定义全局赛事身份、比赛生命周期、三阶段、来源证据、赛程事实、标准事件与业务不变量。
+纯 Kotlin 赛事领域核心。定义全局赛事身份、比赛生命周期、三阶段、来源证据、赛程事实、赛前上下文、标准事件与业务不变量。
 
 ## 输入
 仅接受领域值对象与标准化事实；不得接收 Android、Compose、HTTP、数据库或 Provider SDK 类型。
@@ -20,6 +20,11 @@
 - `SourceProvenance` / `FactCandidate`
 - `CompetitionKind` / `ScheduleState`
 - `CompetitionCatalogEntry` / `ScheduledSeries` / `ScheduledTeam`
+- `TeamRosterPool`
+- `OfficialStartingRoster`
+- `StartingRosterResolution`
+- `StaffMember` / `TeamStaffSnapshot`
+- `RecentSeries` / `TeamPreMatchContext`
 - `MatchState` / `LiveGameSnapshot`
 - `MatchEvent`
 
@@ -29,6 +34,10 @@
 - `ScheduledSeries` 必须恰好包含两个不同 Team。
 - Schedule facts 必须来自 `PRE_MATCH_SOURCE`。
 - Domain 不接受 Provider raw ID 作为跨源业务语义；稳定身份由内部 ID 表达。
+- Roster Pool 与 Official Starting Roster 是不同事实类型，名单池不得自动升级为首发。
+- Official Starting Roster 必须恰好五名不同选手，并完整覆盖 TOP/JUNGLE/MID/BOT/SUPPORT。
+- 同级冲突官方首发必须保留冲突状态，不允许静默覆盖。
+- Recent Series 的 W/L 必须带明确 perspective。
 
 ## 日志
 N/A：Domain 无平台日志实现。诊断由 Application/Adapter 在边界记录。
