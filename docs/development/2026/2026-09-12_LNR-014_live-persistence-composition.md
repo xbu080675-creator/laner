@@ -5,6 +5,8 @@
 - Baseline branch: `main`
 - Baseline commit: `b3423f2f2fd66758a20059110e541543f209f082`
 - Working branch: `feature/lnr-014-live-adapters-persistence`
+- PR: `#6`
+- Merge commit: `dad441aa64f2f7983c123315a40dc8edbc369a47`
 - Final task status: `WAITING EXTERNAL TEST`
 
 ## 1. Request / Goal
@@ -83,7 +85,7 @@ Snapshot / MatchStateChanged / Kill / Objective / GoldLead / Draft 等标准事�
 
 `LiveMatchSourceQuery` 携带 canonical MatchId、两队 TeamRef、计划开始时间。Adapter 可用这些事实发现自己的外部 match identity，但 Provider raw ID 不成为 Domain identity。
 
-### D8 — 当前目标选择属于 UI/Application presentation policy，不属于游戏状态证明
+### D8 — 当前目标选择属于 presentation policy，不属于游戏状态证明
 
 LIVE 页面先从标准赛程确定候选目标：`EVENT_LIVE` 优先；无 EVENT_LIVE 时仅从非 COMPLETED 中选最近比赛。这个选择只决定“查看哪场”，绝不能证明 `IN_GAME`。
 
@@ -119,6 +121,7 @@ UI 通过 `LiveTimelineService.load(gameId)` 读取本地 Timeline，不直接�
 - `core/application/src/test/kotlin/com/laner/core/application/LiveTimelineServiceTest.kt`
 - `docs/DEVELOPMENT_PLAN.md`
 - `docs/IMPLEMENTATION_STATUS.md`
+- `docs/TROUBLESHOOTING.md`
 
 ## 6. Tests / Verification
 
@@ -140,15 +143,16 @@ UI 通过 `LiveTimelineService.load(gameId)` 读取本地 Timeline，不直接�
 ### Preserved failure evidence
 - run `34692037250`: Architecture/Core PASS；Android unit tests FAIL；Android assemble skipped。
 - 根因：Kotlin expression-body `@Test` 方法产生 JUnit4 不兼容的非-void method signature，引发 `InvalidTestClassError`。
-- fix commit：`86ca106cf6372a4f23f4f83faaa997eef3f5bad5`，改为标准 block-body tests。
+- fix commit：`86ca106cf6372a4f23f4f83faaa997eef3f5bad5`。
 
 ### Successful evidence
 - run `34692350405` @ `afa4bf7f...`：Architecture/Core/App unit tests/Android build PASS；
 - run `34692588440` @ `88fa4dd5...`：Composition + LIVE Application-truth UI 全 PASS；
 - run `34692688208` @ `b4fdb616...`：LIVE target selection 回归 PASS；
-- final code head `4d64749c07ce6f91bebad91de91f4fb70ed0bd04` / run `34692936906`：Architecture Gate / Domain+Application Tests / Android Adapter Unit Tests / Android Debug Compile 全 PASS。
-
-文档收口后的 exact-head / PR Gate 仍需在合并前再次通过并回填。
+- code head `4d64749c07ce6f91bebad91de91f4fb70ed0bd04` / run `34692936906`：全 PASS；
+- final branch head `838b6f7143d87d476a7874cd682be157f1f52708` / run `34693150443`：全 PASS；
+- PR #6 run `34693236484`：Architecture / Domain+Application / Android Adapter Unit Tests / Android Debug Compile 全 PASS；
+- merged to `main` as `dad441aa64f2f7983c123315a40dc8edbc369a47`。
 
 ## 7. Security / Data / Compatibility
 
@@ -156,7 +160,7 @@ UI 通过 `LiveTimelineService.load(gameId)` 读取本地 Timeline，不直接�
 - 未新增 secret 到 Git/logs/fixtures；
 - corrupt/unsupported local data 不静默吞；
 - v1 为首个 LIVE persistence schema，无历史 destructive migration；
-- Cito absence 只降级 LIVE，不应破坏 PRE/POST 或本地 archive；
+- Cito absence 只降级 LIVE，不破坏 PRE/POST 或本地 archive；
 - Provider raw payload 不进入持久化标准事件。
 
 ## 8. Known Issues / Follow-ups
@@ -170,7 +174,7 @@ UI 通过 `LiveTimelineService.load(gameId)` 读取本地 Timeline，不直接�
 
 ## 9. Rollback
 
-- Revert LNR-014 PR 可移除新 persistence/composition/LIVE UI；
+- Revert PR #6 / merge commit 可移除本轮 persistence/composition/LIVE UI；
 - persisted LIVE v1 files 隔离在 app files `live/` 路径，不是远端事实源；
 - 本任务没有破坏性迁移既有用户数据。
 
@@ -184,6 +188,7 @@ UI 通过 `LiveTimelineService.load(gameId)` 读取本地 Timeline，不直接�
 - secret handling: `PASS`；
 - Android Adapter tests in CI: `PASS`；
 - failed test history preserved: `PASS`；
+- exact-head + PR Gate: `PASS`；
 - Cito unsupported online claim avoided: `PASS`；
 - automated local scope: `PASS`；
 - external Cito/real-source scope: `WAITING EXTERNAL TEST / DEFERRED`；
