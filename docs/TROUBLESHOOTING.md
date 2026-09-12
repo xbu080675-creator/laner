@@ -82,13 +82,35 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **排障路径**：`单测失败且 production compile PASS → 先核对断言与需求语义 → 不为迎合错误断言篡改生产逻辑`。
 
+### `LNR-UI-LIVE-004` — 新增 Tactical sealed event 后 LIVE Timeline UI 未同步穷举
+首次发现：LNR-021 / run `34709821178`。
+
+**现象**：Architecture boundary PASS；Domain/Application tests PASS；Android Adapter Unit 阶段在 production `:app:compileDebugKotlin` 失败；Android debug compile 与 APK upload 被 Gate 正确阻断。
+
+**编译错误**：`LiveMatchScreen.kt:eventLabel()` 的 sealed `when` 未新增 `MultiKillWindowEvent` / `TeamFightWindowEvent` 分支。
+
+**根因**：LNR-021 扩展了 Domain `MatchEvent` sealed hierarchy，但已有 Presentation timeline formatter 没有在同一切片同步穷举。事件模型/派生测试已通过，失败面属于 Android Presentation 编译完整性。
+
+**修复**：commit `403bba4e874ad37978179618e84dceaafb9f06f8` 补齐两个标准事件的展示分支，不通过 `else` 隐藏未来新增事件遗漏。
+
+**永久回归**：保持 `MatchEvent` formatter 的 exhaustive `when`；CI `:app:testDebugUnitTest` / `:app:compileDebugKotlin` 必须在每次 Domain sealed event 扩展时执行。后续 implementation baseline run `34710012697` 已 Architecture/Core/App Unit/Android compile/APK upload 全 PASS。
+
+**排障路径**：`Core PASS + Android compile sealed-when fail → 检查 Domain sealed hierarchy 新增类型 → 同步所有 Presentation exhaustive mapper → 不用 catch-all else 掩盖遗漏`。
+
+### LNR-021 Tactical stale-card 防护
+Tactical HUD 同时使用：
+- 游戏时间 TTL：标准事件只在 canonical current game second 的 25s 内可候选；
+- wall-clock freshness：Verified presentation 自 event provenance `observedAtEpochMillis` 起最多 30s 可显示。
+
+原因：Provider 断流时 game clock / latest snapshot 可能冻结，如果只有游戏时间 TTL，旧 Tactical card 会永久停留。`TacticalHudPresentation.isDisplayableAt()` 是永久回归入口；Preview 明确不使用 Provider freshness，因为它固定是 `LOCAL PREVIEW · NOT FACT`。
+
 ### `LNR-APP-LIVE-003` — Current LIVE Context Query 意外失败
 LNR-020 合规整改新增。`LiveMatchContextService` 是当前 LIVE 上下文唯一 Application 编排入口；若 Schedule/Target/Lifecycle/Snapshot/Timeline 组合链出现非业务降级类异常，返回 typed `Failed` 并通过 `[Laner:LIVE]` 记录 `LNR-APP-LIVE-003`。UI/Overlay 不得自行复制相同编排作为 fallback。
 
 永久回归：`LiveMatchContextServiceTest.unexpectedApplicationFailureIsDiagnosedWithStableCode`。
 
 ### `LNR-OVR-WINDOW-001~004` — Android Overlay WindowManager
-LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock WindowManager 操作统一经过 `OverlayWindowHost`：
+LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD WindowManager 操作统一经过 `OverlayWindowHost`：
 - `001` add 失败；
 - `002` update 失败；
 - `003` remove 失败；
@@ -97,7 +119,7 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock WindowManager 
 日志统一 `[Laner:OVERLAY]`，上下文至少包含 `window / operation / error_type`；禁止无 `onFailure` 的静默 `runCatching`。永久回归 `OverlayWindowOperationTest` 锁定错误码唯一性与 retryability 分类。Android ROM/权限/Window token 的真实行为仍必须实机验证。
 
 ### `LNR-OVR-REFRESH-001` — Overlay Presentation Mapping 失败
-`LiveMatchContextService` 成功返回后，如果 Rift/Draft Presentation Mapper 自身抛出异常，Foreground Service 不得静默停止轮询。记录 `[Laner:OVERLAY] / LNR-OVR-REFRESH-001`，并退化为“读取失败 + 错误码”的等待态；不得制造赛事事实。
+`LiveMatchContextService` 成功返回后，如果 Rift/Draft/Tactical Presentation Mapper 自身抛出异常，Foreground Service 不得静默停止轮询。记录 `[Laner:OVERLAY] / LNR-OVR-REFRESH-001`，并退化为“读取失败 + 错误码”的等待态；不得制造赛事事实。
 
 ### Riot Global LIVE 设备诊断码
 - `LNR-SRC-LIVE-002`：Riot API Key 未配置（Lifecycle）。
@@ -119,4 +141,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock WindowManager 
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。LNR-020 功能代码已经合入主线并保持 Android 真机项 `WAITING EXTERNAL TEST`；当前正在完成 `INC-LNR-020-001` 合规整改。整改通过、状态落账和主线 Gate 完成前，不进入 Tactical HUD。Cito 继续 DEFERRED。
+M1 Feature Migration。LNR-020 已完成并通过独立合规整改；Block 1 冻结。LNR-021 正在完成 Tactical HUD + live event layer 的最终 Gate/PR 收口。自动实现覆盖 LIVE-014 / LIVE-015 / LIVE-030，但真实 Riot online 与 Android overlay 行为继续保持 `WAITING EXTERNAL TEST`。Cito 继续 DEFERRED。
