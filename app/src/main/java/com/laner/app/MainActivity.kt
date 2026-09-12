@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
                     liveMatchStateService = appGraph.liveMatchStateService,
                     liveTimelineService = appGraph.liveTimelineService,
                     postMatchService = appGraph.postMatchService,
+                    postTimelineService = appGraph.postTimelineService,
                 )
             }
         }
