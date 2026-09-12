@@ -6,34 +6,44 @@ All notable project changes must be recorded here at release or milestone level.
 
 ### M1 Feature Migration
 
+#### LNR-017 — Starting Roster Vision / Staged Diagnostics
+- Preserved schema-v3 normalized `announcements` instead of dropping official image-post discovery metadata.
+- Added Application-owned starting-roster assist stages so the device can distinguish no announcement, announcement discovered, OCR failure, OCR partial, complete-but-unverified OCR and formal normalized evidence availability.
+- Added bundled ML Kit Latin/Chinese/Japanese/Korean OCR for deterministic first-run device tests without Play Services model download.
+- Added geometry-aware two-column lineup extraction with role anchors and strict player-handle noise filtering.
+- Locked truth boundary: OCR authority is `DERIVED`; even complete five-role OCR never becomes Official Starting Roster without normalized date/matchup evidence validation.
+- Added PRE 60-second low-frequency roster-assist refresh, manual recheck and visible `LNR-SRC-PRE-010~013` diagnostics.
+- Bumped Android test build to `2.0.0-dev.4 / versionCode 4`.
+- Preserved run `34700136865` failure (wrong ML Kit Latin options package + Compose cross-module nullable smart cast) and run `34700236839` failure (new app tests incorrectly used `kotlin.test` instead of project JUnit4).
+- code head `3879249053832c606f30a6122c31269db9327812` / run `34700457400`: Architecture / Core / App unit / Android build / APK upload PASS; artifact `10300252185`.
+- Real official-post discovery, image download, Android OCR and final lineup evidence transition remain `WAITING EXTERNAL TEST` until tonight's device test.
+
+#### LNR-016 — Testable Android Platform / Riot Global LIVE
+- Added Riot Global LIVE baseline instead of an empty LIVE source list.
+- Added runtime process-memory Riot credential input and direct device-visible LIVE diagnostic codes.
+- CI now uploads installable debug APKs after all gates pass.
+- BLG/AL and T1/GEN fixtures share the same global discovery/parser path; no regional business branch was added.
+- final feature run `34698280239` and PR #8 run `34698393156` passed all gates + APK upload; merge `c7cb479175d6e64560d4478418a3ba73c36ddbce`.
+- Real BLG vs AL Riot online/device validation remains `WAITING EXTERNAL TEST`.
+
 #### LNR-015 — Global POST foundation
 - Added strongly separated POST facts: Series Result, Completed Game, Player Stats, Awards, Replay Metadata and Historical Timeline; none may silently infer another.
 - Added global canonical GameId rule `(canonical MatchId, gameNumber)` and ADR-003; provider event/match/game IDs remain mapping/provenance metadata.
 - Added `PostMatchService` with capability-based Global-first source orchestration. Application contains no LPL/LCK/LEC/LCP business branches; regional sources are supplements only.
-- Added fallback-only `PostMatchArchiveRepository` and Android atomic JSON persistence. Archive fills missing facts but does not vote against fresh providers or overwrite last-good on conflict.
-- Added `ProviderMatchIdentityRepository` for canonical↔provider identity mapping.
-- Added verified Awards mirror; MVP/POG cannot be derived from KDA/damage.
-- Added Riot global Series Result baseline and Riot global Replay metadata shared by regional and international competitions; LCK and Worlds fixtures exercise the same parsers.
-- Added Riot global historical LiveStats Timeline recovery. Only real Riot frames are retained; no interpolation. Finished frames are preserved even outside normal sampling cadence.
-- Reused canonical `GameTimeline` for LIVE and POST facts through `PostTimelineService`; POST wrong Match/Game identity is rejected before persistence.
-- Added POST UI for completed-match selection, verified Awards, Replay metadata and explicit per-game historical Timeline recovery. Opening POST does not automatically scan all historical windows.
-- Kept LPL TJStats as an optional regional supplement with externally injected credential; legacy hard-coded auth was not migrated.
-- Preserved honest gaps: global per-game CompletedGame winner/stat completeness remains IN PROGRESS where no explicit winner evidence exists; economic/kills/towers never infer winner.
-- CI failure `34693494001` exposed an invalid test ErrorCode fixture; fixed without weakening ErrorCode validation, run `34693630753` PASS.
-- CI failure `34695777894` exposed a Domain/Application Timeline source-class mismatch; Domain now accepts LIVE/POST factual Timeline sources while rejecting PRE/AI. run `34695924994` PASS.
-- Global capability routing run `34694930111` PASS; global identity/result/replay run `34695412163` PASS; final POST code/UI head run `34696081645` PASS.
-- Real Riot credentialed online fetch and Android device POST verification remain `WAITING EXTERNAL TEST`; automated fixtures are not reported as online evidence.
+- Added fallback-only POST archive, provider identity mapping, verified Awards, Riot global Result/Replay and global historical LiveStats Timeline.
+- Added POST Compose and explicit per-game historical backfill; no automatic whole-series historical scan.
+- Preserved true CI failures and permanent regressions; PR #7 merged as `0ed5cdfa882b74cdb1b7a6e87dd6ee60856f40ca`.
+- Real Riot online fetch and Android device POST verification remain `WAITING EXTERNAL TEST`.
 
 #### LNR-014 — LIVE Android infrastructure
 - Added Android local LIVE State/Timeline repositories with schema versioning, atomic replacement, corruption/unsupported-schema failure and full event round-trip tests.
 - Added `:app:testDebugUnitTest` as a permanent CI Gate.
 - Wired LIVE Application truth and Timeline read UI; no realtime source is a valid explicit `UNAVAILABLE` state.
-- Cito online REST/WSS validation remains `DEFERRED / WAITING EXTERNAL TEST` by current external test constraints.
+- Cito online REST/WSS validation remains `DEFERRED / WAITING EXTERNAL TEST`.
 
 #### LNR-013 — LIVE Core/Application
 - Added authoritative LIVE lifecycle reducer, provider arbitration, standardized state events and provider-neutral Timeline.
 - Locked intermission/new-game/stale-order/terminal-series behavior and semantic Timeline dedupe.
-- Historical failure and regression evidence is retained in `docs/TROUBLESHOOTING.md` and the immutable task record.
 
 #### LNR-010~012 — PRE migration
 - Added global competition catalogue/schedule, PRE roster/starting/staff/form/H2H, Tournament Edition/Standings/Qualification foundations with provenance, evidence and honest degradation.
