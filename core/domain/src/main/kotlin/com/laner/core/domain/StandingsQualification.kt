@@ -57,9 +57,7 @@ data class TournamentStandingsSnapshot(
         require(entries.map { it.team.id }.distinct().size == entries.size) {
             "A team may appear only once in one standings section"
         }
-        require(entries.map { it.ordinal }.distinct().size == entries.size) {
-            "Standings ordinals must be unique inside one section"
-        }
+        // Tied ordinals are valid in real standings tables (for example 1,2,2,4).
         require(provenance.sourceClass == SourceClass.PRE_MATCH_SOURCE) {
             "Standings facts must come from PRE_MATCH_SOURCE"
         }
