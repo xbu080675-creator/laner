@@ -2,6 +2,7 @@ package com.laner.core.domain
 
 enum class EventEvidence {
     PROVIDER_EXPLICIT,
+    VERIFIED_FRAME,
     VERIFIED_DELTA,
     LOCAL_CAPTURE,
     DERIVED_WINDOW,
