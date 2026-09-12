@@ -19,16 +19,19 @@
 | LNR-004 | 工程骨架与 CI Gate | TODO |
 | LNR-005 | 三阶段一级架构轴确立 | DONE |
 | LNR-006 | 用户角色 × 比赛阶段产品矩阵 | DONE |
+| LNR-007 | 极简 × 酷炫体验北极星 | DONE |
 
 ## Current Truth
 
-当前仓库只包含工程治理、产品模型与架构基线文档，不应被描述为“APP 已开始重写”或“已有功能可测试”。
+当前仓库只包含工程治理、产品模型、UX 原则与架构基线文档，不应被描述为“APP 已开始重写”或“已有功能可测试”。
 
 `LNR-000` 已完成远端反查并满足工程初始化 Definition of Done。
 
 `LNR-005` 已确立：所有用户可见业务页面、主路由、赛事查询、HUD 与展示必须以 `PRE_MATCH / LIVE_MATCH / POST_MATCH`（赛前 / 赛中 / 赛后）为一级产品与架构分类轴；共享基础能力不构成第四业务阶段。
 
 `LNR-006` 已确立：功能设计必须从 `Persona × Match Phase × User Question` 推导。当前 Persona 为 `SPECTATOR` 与 `COACH_ANALYST`；两者共享同一领域事实与业务逻辑，仅在 Presentation / Query 层产生不同信息密度。
+
+`LNR-007` 已确立：Laner 的体验北极星为“极简 + 酷炫”，但清晰、快速、不打扰观赛始终优先；赛前视觉节奏安静，赛中临场感最强，赛后主动降节奏转向复盘。
 
 ## Blocking Conditions Before Business Code
 
