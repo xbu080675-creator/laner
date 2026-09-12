@@ -24,8 +24,8 @@ android {
         applicationId = "com.riftlab.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.0-dev.2"
+        versionCode = 3
+        versionName = "2.0.0-dev.3"
         buildConfigField("String", "LOL_ESPORTS_API_KEY", "\"$escapedLolEsportsApiKey\"")
         buildConfigField("String", "LPL_TJSTATS_AUTH", "\"$escapedLplTjstatsAuth\"")
     }
