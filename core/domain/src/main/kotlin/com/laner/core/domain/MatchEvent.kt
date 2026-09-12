@@ -2,6 +2,7 @@ package com.laner.core.domain
 
 enum class EventEvidence {
     PROVIDER_EXPLICIT,
+    VERIFIED_FRAME,
     VERIFIED_DELTA,
     LOCAL_CAPTURE,
     DERIVED_WINDOW,
@@ -15,6 +16,14 @@ enum class ObjectiveType {
     HERALD,
     ATAKHAN,
     TOWER,
+    OTHER,
+}
+
+enum class DraftActionType {
+    PICK,
+    BAN,
+    LOCK,
+    UNDO,
     OTHER,
 }
 
@@ -94,12 +103,9 @@ data class DraftChangedEvent(
     override val gameTimeSeconds: Int?,
     override val provenance: SourceProvenance,
     override val evidence: EventEvidence,
-    val action: String,
+    val action: DraftActionType,
     val teamId: TeamId?,
     val championId: String?,
 ) : MatchEvent {
-    init {
-        validateEventPosition(sequence, gameTimeSeconds)
-        require(action.isNotBlank())
-    }
+    init { validateEventPosition(sequence, gameTimeSeconds) }
 }

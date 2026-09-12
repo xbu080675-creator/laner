@@ -61,10 +61,10 @@
 
 | ID | 功能 | Persona | Source | Legacy evidence | Laner 归属 | Migration |
 |---|---|---|---|---|---|---|
-| LIVE-001 | EVENT_LIVE / GAME_LIVE / BETWEEN_GAMES 生命周期 | BOTH | LIVE_MATCH_SOURCE | README / dev.60 / 2026-09-12 legacy real-device intermission PASS | Match State Engine | TODO |
-| LIVE-002 | 赛事开始 != 游戏开始 | BOTH | LIVE_MATCH_SOURCE | dev.60 / RiftLabApp / 2026-09-12 legacy real-device intermission PASS | Match State Engine | TODO |
-| LIVE-003 | Riot/LPL/Cito 等多实时源 | SYSTEM | LIVE_MATCH_SOURCE | data providers | Source Orchestration | TODO |
-| LIVE-004 | 来源优先级、降级、fallback | SYSTEM | LIVE_MATCH_SOURCE | MatchSessionStore/providers | Source Arbitration | TODO |
+| LIVE-001 | EVENT_LIVE / GAME_LIVE / BETWEEN_GAMES 生命周期 | BOTH | LIVE_MATCH_SOURCE | README / dev.60 / 2026-09-12 legacy real-device intermission PASS | Match State Engine | IN PROGRESS |
+| LIVE-002 | 赛事开始 != 游戏开始 | BOTH | LIVE_MATCH_SOURCE | dev.60 / RiftLabApp / 2026-09-12 legacy real-device intermission PASS | Match State Engine | IN PROGRESS |
+| LIVE-003 | Riot/LPL/Cito 等多实时源 | SYSTEM | LIVE_MATCH_SOURCE | data providers | Source Orchestration | IN PROGRESS |
+| LIVE-004 | 来源优先级、降级、fallback | SYSTEM | LIVE_MATCH_SOURCE | MatchSessionStore/providers | Source Arbitration | IN PROGRESS |
 | LIVE-005 | 实时经济 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
 | LIVE-006 | 实时击杀 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
 | LIVE-007 | 防御塔 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
@@ -73,13 +73,13 @@
 | LIVE-010 | 选手等级 / CS / KDA | BOTH | LIVE_MATCH_SOURCE | Live player rows | Player Live State | TODO |
 | LIVE-011 | 终局前装备/Item Spike | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Player Live State | TODO |
 | LIVE-012 | BP / Draft 实时状态 | BOTH | LIVE_MATCH_SOURCE | OfficialDraftProvider | Draft Domain | TODO |
-| LIVE-013 | 统一事件模型 | BOTH | LIVE_MATCH_SOURCE | dev.72 / RiftLabApp | Event Domain | TODO |
+| LIVE-013 | 统一事件模型 | BOTH | LIVE_MATCH_SOURCE | dev.72 / RiftLabApp | Event Domain | IN PROGRESS |
 | LIVE-014 | Kill / MultiKill / TeamFightWindow | BOTH | LIVE_MATCH_SOURCE | Timeline model | Event Domain | TODO |
 | LIVE-015 | GoldLeadChange | BOTH | LIVE_MATCH_SOURCE | Timeline | Event Domain | TODO |
 | LIVE-016 | Pause / Resume（可确认时） | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Match State | TODO |
-| LIVE-017 | 本地 Timeline 持续采集 | BOTH | LIVE_MATCH_SOURCE | MatchTimelineStore/Capture | Timeline Repository | TODO |
-| LIVE-018 | 状态周期快照 + 关键事件额外落点 | COACH_ANALYST | LIVE_MATCH_SOURCE | dev.34 | Timeline Capture | TODO |
-| LIVE-019 | Timeline 证据等级 / 不猜无法确认配对 | BOTH | LIVE_MATCH_SOURCE | dev.34 / RiftLabApp | Evidence Model | TODO |
+| LIVE-017 | 本地 Timeline 持续采集 | BOTH | LIVE_MATCH_SOURCE | MatchTimelineStore/Capture | Timeline Repository | IN PROGRESS |
+| LIVE-018 | 状态周期快照 + 关键事件额外落点 | COACH_ANALYST | LIVE_MATCH_SOURCE | dev.34 | Timeline Capture | IN PROGRESS |
+| LIVE-019 | Timeline 证据等级 / 不猜无法确认配对 | BOTH | LIVE_MATCH_SOURCE | dev.34 / RiftLabApp | Evidence Model | IN PROGRESS |
 | LIVE-020 | 本地局势解释 / Insight | SPECTATOR | GLOBAL_AI_ASSIST | LocalLiveInsightEngine | AI Assist | TODO |
 | LIVE-021 | 本地 AI 模型运行时 | SYSTEM | GLOBAL_AI_ASSIST | LocalAiCore/LiteRT-LM | AI Runtime Adapter | TODO |
 | LIVE-022 | GPU/OpenCL 优先 + CPU fallback | SYSTEM | GLOBAL_AI_ASSIST | dev.90 | AI Runtime Capability | TODO |
@@ -103,6 +103,7 @@
 - 事件重复、乱序、重连必须幂等处理。
 - 赛中 UI 必须自动跟随 Match State，不由页面自行猜状态。
 - 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线，证据见 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`。
+- LNR-013 已完成上述能力的 Core/Application contract 与回归测试；在真实 LIVE Adapter、Android persistence、Composition wiring 完成前，对应产品条目保持 `IN PROGRESS`。
 
 ---
 

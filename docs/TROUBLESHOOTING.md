@@ -126,7 +126,7 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 ---
 
-## LIVE_MATCH 已锁定回归行为
+## LIVE_MATCH
 
 ### Legacy 场间识别行为
 
@@ -134,8 +134,36 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 迁移 LIVE-001 / LIVE-002 时若出现“场间提前进入 IN_GAME”“上一局结束仍卡在 IN_GAME”“新局开始未切换 Game”等现象，必须视为迁移回归，而不是新产品语义。
 
+### `LNR-LIVE-CORE-001` — 新鲜 IN_GAME 心跳后被旧 POST_GAME 推进
+
+**首次发现**：LNR-013 / GitHub Actions run `34691364933`。
+
+**现象**：同一 Game 已在较新时间点收到 `IN_GAME` heartbeat，但随后到达时间更早的延迟 `POST_GAME` observation 时，Reducer 仍可能把权威 lifecycle 推进到 `POST_GAME`。
+
+**影响范围**：LIVE Match State Core；会造成乱序网络/Provider 延迟下的提前结算、场间误判，并进一步污染 Timeline/HUD。
+
+**首查模块**：`core/domain/.../LiveState.kt` → `LiveMatchStateReducer.reduce()`。
+
+**复现**：
+1. 当前 G1 = `IN_GAME`；
+2. 收到 observation time=20_000 的 G1 `IN_GAME` heartbeat；
+3. 再收到 observation time=15_000 的 G1 `POST_GAME`；
+4. 正确结果必须保持 `IN_GAME` 且第二条返回 `STALE_OBSERVATION`。
+
+**根因**：最初 stale 判定额外要求 `lifecycleRank(signal) <= lifecycleRank(current)`；因此虽然 `POST_GAME` 的 observation 时间更旧，但因为 lifecycle rank 更高，错误绕过 stale 判断。
+
+**修复**：同一 Game 中，只要 lifecycle-changing observation 的 `observedAtEpochMillis` 早于当前权威 `lastObservedAtEpochMillis`，一律视为 `STALE_OBSERVATION`；“看起来更靠后的 lifecycle”不能覆盖更晚时间的事实。
+
+**修复任务/提交**：LNR-013，commit `22668b37d22be5969ec59c99ac687f57c52a1ad3`。
+
+**永久回归**：`LiveMatchStateReducerTest.delayedPostGameAfterNewerInGameHeartbeatIsIgnored`。
+
+**回归证据**：GitHub Actions run `34691458209`：Architecture Gate / Domain+Application Tests / Android Debug Compile 全 PASS。
+
+**排障路径**：`LIVE lifecycle 异常 → LiveMatchStateService selected provider/freshness → LiveMatchStateReducer → lastObservedAtEpochMillis → 对应 regression test`。
+
 ---
 
 ## 当前阶段
 
-项目已进入 M1 Feature Migration。LNR-010 与 LNR-011 的自动化代码验证均已通过；真实 Provider 在线拉取/Android 实机展示仍为 `WAITING EXTERNAL TEST`。
+项目已进入 M1 Feature Migration。LNR-010~012 的外部 Provider/实机验收仍按各自状态等待补证；LNR-013 已建立 LIVE Core/Application 真相层，真实 LIVE Adapter / Android persistence / Composition wiring 由 LNR-014 继续迁移。
