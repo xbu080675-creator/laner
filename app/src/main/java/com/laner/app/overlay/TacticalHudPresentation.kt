@@ -34,7 +34,15 @@ data class TacticalHudPresentation(
     val evidence: List<TacticalHudEvidence>,
     val players: List<TacticalHudPlayer>,
     val sourceLabel: String,
+    val validUntilEpochMillis: Long? = null,
 ) {
+    fun isDisplayableAt(nowEpochMillis: Long): Boolean {
+        if (!active) return false
+        if (sourceMode == TacticalHudSourceMode.PREVIEW) return true
+        val validUntil = validUntilEpochMillis ?: return false
+        return nowEpochMillis <= validUntil
+    }
+
     companion object {
         fun inactive(): TacticalHudPresentation = TacticalHudPresentation(
             active = false,
@@ -47,6 +55,7 @@ data class TacticalHudPresentation(
             evidence = emptyList(),
             players = emptyList(),
             sourceLabel = "NO TACTICAL EVENT",
+            validUntilEpochMillis = null,
         )
     }
 }
@@ -54,6 +63,7 @@ data class TacticalHudPresentation(
 /** Display-only mapper. It explains canonical events; it never derives match facts in Presentation. */
 object TacticalHudPresentationMapper {
     const val EVENT_TTL_SECONDS = 25
+    const val VERIFIED_WALL_CLOCK_TTL_MILLIS = 30_000L
 
     fun from(
         match: ScheduledSeries,
@@ -151,6 +161,7 @@ object TacticalHudPresentationMapper {
             evidence = baseEvidence.take(4),
             players = playerIds.distinct().take(3).map { playerPresentation(it, state) },
             sourceLabel = "${event.evidence.name} · ${event.provenance.providerId}",
+            validUntilEpochMillis = event.provenance.observedAtEpochMillis + VERIFIED_WALL_CLOCK_TTL_MILLIS,
         )
     }
 
