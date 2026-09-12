@@ -25,11 +25,11 @@ sealed interface MatchEvent {
     val gameTimeSeconds: Int?
     val provenance: SourceProvenance
     val evidence: EventEvidence
+}
 
-    init {
-        require(sequence >= 0)
-        require(gameTimeSeconds == null || gameTimeSeconds >= 0)
-    }
+private fun validateEventPosition(sequence: Long, gameTimeSeconds: Int?) {
+    require(sequence >= 0) { "Event sequence must be non-negative" }
+    require(gameTimeSeconds == null || gameTimeSeconds >= 0) { "Game time must be non-negative" }
 }
 
 data class MatchStateChanged(
@@ -41,7 +41,9 @@ data class MatchStateChanged(
     override val evidence: EventEvidence,
     val previous: MatchLifecycleState,
     val current: MatchLifecycleState,
-) : MatchEvent
+) : MatchEvent {
+    init { validateEventPosition(sequence, gameTimeSeconds) }
+}
 
 data class KillEvent(
     override val matchId: MatchId,
@@ -54,7 +56,9 @@ data class KillEvent(
     val victimId: PlayerId?,
     val assistingPlayerIds: Set<PlayerId> = emptySet(),
     val teamId: TeamId?,
-) : MatchEvent
+) : MatchEvent {
+    init { validateEventPosition(sequence, gameTimeSeconds) }
+}
 
 data class ObjectiveTakenEvent(
     override val matchId: MatchId,
@@ -66,7 +70,9 @@ data class ObjectiveTakenEvent(
     val teamId: TeamId,
     val objective: ObjectiveType,
     val detail: String? = null,
-) : MatchEvent
+) : MatchEvent {
+    init { validateEventPosition(sequence, gameTimeSeconds) }
+}
 
 data class GoldLeadChangedEvent(
     override val matchId: MatchId,
@@ -77,7 +83,9 @@ data class GoldLeadChangedEvent(
     override val evidence: EventEvidence,
     val leadingTeamId: TeamId?,
     val goldDifference: Int,
-) : MatchEvent
+) : MatchEvent {
+    init { validateEventPosition(sequence, gameTimeSeconds) }
+}
 
 data class DraftChangedEvent(
     override val matchId: MatchId,
@@ -90,5 +98,8 @@ data class DraftChangedEvent(
     val teamId: TeamId?,
     val championId: String?,
 ) : MatchEvent {
-    init { require(action.isNotBlank()) }
+    init {
+        validateEventPosition(sequence, gameTimeSeconds)
+        require(action.isNotBlank())
+    }
 }
