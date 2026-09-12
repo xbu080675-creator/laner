@@ -3,6 +3,7 @@ package com.laner.app
 import com.laner.app.data.archive.JsonTournamentEditionArchiveRepository
 import com.laner.app.data.live.JsonLiveMatchStateRepository
 import com.laner.app.data.live.JsonLiveTimelineRepository
+import com.laner.app.data.post.JsonPostMatchArchiveRepository
 import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
@@ -32,6 +33,7 @@ class LanerAppGraph(
     private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(File(filesDir, "archive"))
     private val liveStateRepository = JsonLiveMatchStateRepository(File(filesDir, "live/state"))
     private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
+    private val postArchiveRepository = JsonPostMatchArchiveRepository(File(filesDir, "post/archive"))
 
     val globalScheduleService = GlobalScheduleService(listOf(riotPreMatchSource), diagnostics)
 
@@ -62,13 +64,15 @@ class LanerAppGraph(
     /**
      * Result/game/replay capabilities remain explicit until verified adapters are added. Awards can
      * already use the provenance-preserving mirror because they do not require provider raw IDs or
-     * private credentials. Empty capabilities do not borrow PRE facts or fabricate POST records.
+     * private credentials. Verified Result/Game facts are cached locally after arbitration so POST
+     * can recover them later without pretending the cache is a new source authority.
      */
     val postMatchService = PostMatchService(
         resultSources = emptyList(),
         gameSources = emptyList(),
         awardSources = listOf(verifiedAwardsMirrorSource),
         replaySources = emptyList(),
+        archiveRepository = postArchiveRepository,
         diagnostics = diagnostics,
     )
 }
