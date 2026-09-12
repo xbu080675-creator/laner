@@ -192,7 +192,7 @@ class PostMatchServiceTest {
     )
 
     private fun failure(provider: String): DiagnosticFailure = DiagnosticFailure(
-        code = ErrorCode("LNR-SRC-POST-TEST"),
+        code = ErrorCode("LNR-SRC-POST-999"),
         message = "$provider failed",
         retryable = true,
     )
