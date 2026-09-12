@@ -4,6 +4,9 @@ import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.DiagnosticFailure
 import com.laner.core.domain.ErrorCode
 import com.laner.core.domain.ScheduleState
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -199,8 +202,8 @@ class GlobalScheduleServiceTest {
     private fun <T> runSuspend(block: suspend () -> T): T {
         var result: Result<T>? = null
         block.startCoroutine(
-            object : kotlin.coroutines.Continuation<T> {
-                override val context = kotlin.coroutines.EmptyCoroutineContext
+            object : Continuation<T> {
+                override val context = EmptyCoroutineContext
                 override fun resumeWith(value: Result<T>) {
                     result = value
                 }
@@ -209,6 +212,3 @@ class GlobalScheduleServiceTest {
         return requireNotNull(result).getOrThrow()
     }
 }
-
-private fun <T> (suspend () -> T).startCoroutine(continuation: kotlin.coroutines.Continuation<T>) =
-    kotlin.coroutines.startCoroutine(continuation)
