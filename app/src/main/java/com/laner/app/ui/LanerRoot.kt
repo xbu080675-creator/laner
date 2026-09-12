@@ -36,12 +36,14 @@ import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.StartingRosterAssistService
 import com.laner.core.domain.MatchPhase
 
 @Composable
 fun LanerRoot(
     scheduleService: GlobalScheduleService,
     preMatchContextService: PreMatchContextService,
+    startingRosterAssistService: StartingRosterAssistService,
     competitionStructureService: CompetitionStructureService,
     liveMatchStateService: LiveMatchStateService,
     liveTimelineService: LiveTimelineService,
@@ -80,6 +82,12 @@ fun LanerRoot(
             ) { phase ->
                 when (phase) {
                     MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                        StartingRosterAssistPanel(
+                            scheduleService = scheduleService,
+                            assistService = startingRosterAssistService,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(10.dp))
                         CompetitionStructurePanel(service = competitionStructureService, modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(12.dp))
                         PreMatchScreen(
