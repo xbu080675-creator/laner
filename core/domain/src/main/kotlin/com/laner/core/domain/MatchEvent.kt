@@ -18,6 +18,14 @@ enum class ObjectiveType {
     OTHER,
 }
 
+enum class DraftActionType {
+    PICK,
+    BAN,
+    LOCK,
+    UNDO,
+    OTHER,
+}
+
 sealed interface MatchEvent {
     val matchId: MatchId
     val gameId: GameId?
@@ -94,12 +102,9 @@ data class DraftChangedEvent(
     override val gameTimeSeconds: Int?,
     override val provenance: SourceProvenance,
     override val evidence: EventEvidence,
-    val action: String,
+    val action: DraftActionType,
     val teamId: TeamId?,
     val championId: String?,
 ) : MatchEvent {
-    init {
-        validateEventPosition(sequence, gameTimeSeconds)
-        require(action.isNotBlank())
-    }
+    init { validateEventPosition(sequence, gameTimeSeconds) }
 }
