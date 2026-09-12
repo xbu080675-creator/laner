@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
                     preMatchContextService = appGraph.preMatchContextService,
                     competitionStructureService = appGraph.competitionStructureService,
                     liveMatchStateService = appGraph.liveMatchStateService,
+                    liveSnapshotService = appGraph.liveSnapshotService,
                     liveTimelineService = appGraph.liveTimelineService,
                     postMatchService = appGraph.postMatchService,
                     postTimelineService = appGraph.postTimelineService,
