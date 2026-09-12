@@ -54,7 +54,8 @@
 - 共享能力没有被错误建成第四业务阶段；
 - UI 不自行判断阶段；
 - 同一领域事实不会因观众/教练视图不同而复制业务实现；
-- Presentation 能从统一 Application Query 派生观众层和教练/分析层信息密度。
+- Presentation 能从统一 Application Query 派生观众层和教练/分析层信息密度；
+- UI/UX 满足 `docs/UX_PRINCIPLES.md` 的“极简优先、酷炫服务信息”的强约束。
 
 ### LNR-004 — 工程骨架与 CI Gate
 状态：`TODO`
@@ -85,6 +86,16 @@ Feature = Persona × Match Phase × User Question
 产物：
 - `docs/PRODUCT_PERSPECTIVE_MATRIX.md`
 - `docs/ARCHITECTURE.md` 产品设计约束更新
+- 本任务开发留档
+
+### LNR-007 — 极简 × 酷炫体验北极星
+状态：`DONE`
+
+目标：将“极简、酷炫”定义为 Laner 的统一交互与视觉准则，其中信息清晰、操作效率和不打扰观赛优先于视觉表现。
+
+产物：
+- `docs/UX_PRINCIPLES.md`
+- `docs/PROJECT_SCOPE.md` 体验原则更新
 - 本任务开发留档
 
 ## M1 — Core Migration
