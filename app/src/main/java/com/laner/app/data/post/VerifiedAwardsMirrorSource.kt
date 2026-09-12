@@ -9,13 +9,11 @@ import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.DiagnosticFailure
 import com.laner.core.domain.ErrorCode
 import com.laner.core.domain.FreshnessClass
-import com.laner.core.domain.GameId
 import com.laner.core.domain.PlayerId
 import com.laner.core.domain.PlayerRef
 import com.laner.core.domain.PlayerRole
 import com.laner.core.domain.SourceClass
 import com.laner.core.domain.SourceProvenance
-import com.laner.core.domain.TeamId
 import com.laner.core.domain.VerifiedPostAward
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -167,7 +165,8 @@ class VerifiedAwardsMirrorSource(
         }
         return VerifiedPostAward(
             matchId = query.matchId,
-            gameId = gameNumber?.let { GameId("${query.matchId.value}:game:$it") },
+            gameId = null,
+            gameNumber = gameNumber,
             kind = kind,
             player = PlayerRef(
                 id = PlayerId("lol:player:${canonicalToken(playerName)}"),
