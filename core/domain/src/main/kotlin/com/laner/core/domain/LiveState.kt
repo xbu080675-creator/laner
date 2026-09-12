@@ -142,7 +142,17 @@ object LiveMatchStateReducer {
         }
 
         if (current.lifecycle == signal.lifecycle && sameGameIdentity(current, signal)) {
-            return LiveStateTransitionResult.Ignored(current, LiveStateIgnoreReason.DUPLICATE)
+            val refreshed = if (signal.observedAtEpochMillis > current.lastObservedAtEpochMillis) {
+                current.copy(
+                    currentGameId = signal.gameId ?: current.currentGameId,
+                    currentGameNumber = signal.gameNumber ?: current.currentGameNumber,
+                    lastObservedAtEpochMillis = signal.observedAtEpochMillis,
+                    provenance = signal.provenance,
+                )
+            } else {
+                current
+            }
+            return LiveStateTransitionResult.Ignored(refreshed, LiveStateIgnoreReason.DUPLICATE)
         }
 
         if (signal.observedAtEpochMillis < current.lastObservedAtEpochMillis &&
