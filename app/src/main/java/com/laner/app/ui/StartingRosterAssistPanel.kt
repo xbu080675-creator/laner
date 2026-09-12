@@ -122,8 +122,9 @@ private fun RosterAssistDetails(snapshot: StartingRosterAssistSnapshot) {
 
     snapshot.inspections.firstOrNull()?.let { inspection ->
         Spacer(Modifier.height(5.dp))
-        if (inspection.error != null) {
-            Text("OCR · ${inspection.error.take(120)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        val inspectionError = inspection.error
+        if (inspectionError != null) {
+            Text("OCR · ${inspectionError.take(120)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
         } else {
             val roles = inspection.roleCandidates.filterValues { it.isNotEmpty() }.keys.joinToString("/")
             Text(
