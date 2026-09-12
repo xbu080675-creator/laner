@@ -41,15 +41,31 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **永久证据**：run `34697846793` Architecture / Core / App unit / Android build PASS，并成功生成 APK artifact `10299088400`。
 
-**排障路径**：`Android test build compile fail → RiotCredentialPanel → Compose Text/when parser → :app:testDebugUnitTest → :app:assembleDebug → APK artifact`。
+### `LNR-LIVE-TEST-002` — Live Snapshot Core 测试错误引入未配置测试依赖
+首次发现：LNR-019 的初始误编号 branch / run `34699837518`。
+
+**现象**：Architecture Gate PASS；`:core:application:compileTestKotlin` FAIL；Android Adapter/build/APK 被 Gate 正确跳过。
+
+**根因**：新建 `LiveSnapshotServiceTest` 错误使用 `kotlinx.coroutines.runBlocking` 与 `org.junit.*`，而 `:core:application` 的既有测试契约使用 `kotlin.test` + 本地 `Continuation` suspend harness。生产 `LiveSnapshotService` 未进入失败路径。
+
+**修复**：commit `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5` 将测试改为既有 Core harness，不新增无必要依赖、不改生产逻辑。
+
+**永久回归**：`LiveSnapshotServiceTest` 覆盖 valid canonical ingest、raw/noncanonical GameId rejection、wrong-team rejection。
+
+**回归证据**：run `34699942180` Architecture / Domain+Application / Android Adapter unit / Android build / APK upload 全 PASS。
+
+**排障路径**：`Core test compile fail → 检查本模块既有 test framework → 禁止为单测随意增加依赖 → :core:application:test`。
 
 ### Riot Global LIVE 设备诊断码
-- `LNR-SRC-LIVE-002`：Riot API Key 未配置。
+- `LNR-SRC-LIVE-002`：Riot API Key 未配置（Lifecycle）。
 - `LNR-SRC-LIVE-003`：目标缺少双方队伍或 scheduled start。
 - `LNR-SRC-LIVE-004`：无法从 Riot global schedule 唯一定位 event / identity 缺失。
-- `LNR-SRC-LIVE-005`：EventDetails / LiveStats 等 Riot LIVE 请求失败。
+- `LNR-SRC-LIVE-005`：EventDetails / LiveStats 等 Riot LIVE lifecycle 请求失败。
+- `LNR-SRC-LIVE-006`：Riot API Key 未配置（Gameplay Snapshot）。
+- `LNR-SRC-LIVE-007`：Riot LIVE Snapshot EventDetails/LiveStats 请求或解析失败。
+- `LNR-APP-LIVE-002`：Provider snapshot 的 canonical Match/Game/team identity 校验失败；不得写入 Timeline。
 
-LNR-016 测试版会在赛中权威状态卡直接显示上述错误码和 message，便于无 adb 实机定位。错误码出现不等于允许 UI 自行修正事实。
+设备错误码只用于定位，UI 不得绕过 Application 修正赛事事实。
 
 ## POST_MATCH
 
@@ -60,4 +76,4 @@ LNR-016 测试版会在赛中权威状态卡直接显示上述错误码和 messa
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。LNR-016 正在交付首个可直接实机验证 Riot Global LIVE 的 Android 测试包；Cito 继续 DEFERRED。Fixture/CI PASS 不冒充 BLG vs AL 真实在线 PASS。
+M1 Feature Migration。LNR-019 正在收口 Global LIVE Snapshot / canonical Timeline / LIVE 可视化测试包；真实 BLG vs AL 在线结果仍必须由 Android 实机补证，Fixture/CI PASS 不等价于 online PASS。Cito 继续 DEFERRED。
