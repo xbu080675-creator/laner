@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.sp
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchSourceQuery
 import com.laner.core.application.LiveMatchStateService
+import com.laner.core.application.LiveSnapshotLoadStatus
+import com.laner.core.application.LiveSnapshotQuery
+import com.laner.core.application.LiveSnapshotResolution
+import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveStateLoadStatus
 import com.laner.core.application.LiveStateResolution
 import com.laner.core.application.LiveTimelineService
@@ -36,12 +40,16 @@ import com.laner.core.domain.DraftChangedEvent
 import com.laner.core.domain.GameTimeline
 import com.laner.core.domain.GoldLeadChangedEvent
 import com.laner.core.domain.KillEvent
+import com.laner.core.domain.LiveGameSnapshot
 import com.laner.core.domain.MatchEvent
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.MatchStateChanged
 import com.laner.core.domain.ObjectiveTakenEvent
+import com.laner.core.domain.PlayerLiveState
 import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.TeamId
+import com.laner.core.domain.TeamLiveState
 import kotlin.math.abs
 
 private sealed interface LiveScreenState {
@@ -50,6 +58,7 @@ private sealed interface LiveScreenState {
     data class Ready(
         val match: ScheduledSeries,
         val resolution: LiveStateResolution,
+        val snapshotResolution: LiveSnapshotResolution?,
         val timeline: GameTimeline?,
     ) : LiveScreenState
     data class Failed(val message: String) : LiveScreenState
@@ -59,6 +68,7 @@ private sealed interface LiveScreenState {
 fun LiveMatchScreen(
     scheduleService: GlobalScheduleService,
     liveMatchStateService: LiveMatchStateService,
+    liveSnapshotService: LiveSnapshotService,
     liveTimelineService: LiveTimelineService,
     modifier: Modifier = Modifier,
 ) {
@@ -91,10 +101,27 @@ fun LiveMatchScreen(
                     query = LiveMatchSourceQuery.from(target),
                     context = context,
                 )
+                val snapshotResolution = if (resolution.state.lifecycle == MatchLifecycleState.IN_GAME) {
+                    val gameId = resolution.state.currentGameId
+                    val gameNumber = resolution.state.currentGameNumber
+                    if (gameId != null && gameNumber != null) {
+                        liveSnapshotService.refresh(
+                            query = LiveSnapshotQuery(
+                                matchId = target.matchId,
+                                gameId = gameId,
+                                gameNumber = gameNumber,
+                                teams = target.teams.map { it.team },
+                            ),
+                            context = context,
+                        )
+                    } else null
+                } else null
                 LiveScreenState.Ready(
                     match = target,
                     resolution = resolution,
-                    timeline = resolution.state.currentGameId?.let { liveTimelineService.load(it) },
+                    snapshotResolution = snapshotResolution,
+                    timeline = snapshotResolution?.timeline
+                        ?: resolution.state.currentGameId?.let { liveTimelineService.load(it) },
                 )
             }
         } catch (error: Throwable) {
@@ -109,31 +136,17 @@ fun LiveMatchScreen(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            LiveHeaderCard(onRefresh = { refreshNonce += 1 })
-        }
+        item { LiveHeaderCard(onRefresh = { refreshNonce += 1 }) }
         when (val current = state) {
             LiveScreenState.Loading -> item {
-                LiveMessageCard(
-                    title = "正在建立赛中上下文",
-                    body = "先从标准赛程确定比赛目标，再读取 Application LIVE truth。",
-                )
+                LiveMessageCard("正在建立赛中上下文", "从全球赛程确定目标，再读取 Riot Global LIVE 与 Application truth。")
             }
-            is LiveScreenState.NoTarget -> item {
-                LiveMessageCard(
-                    title = "暂无赛中目标",
-                    body = current.reason,
-                )
-            }
-            is LiveScreenState.Failed -> item {
-                LiveMessageCard(
-                    title = "赛中状态读取失败",
-                    body = current.message,
-                )
-            }
+            is LiveScreenState.NoTarget -> item { LiveMessageCard("暂无赛中目标", current.reason) }
+            is LiveScreenState.Failed -> item { LiveMessageCard("赛中状态读取失败", current.message) }
             is LiveScreenState.Ready -> {
                 item { LiveTargetCard(current.match) }
                 item { LiveAuthorityCard(current.resolution) }
+                item { LiveDataCard(current.match, current.snapshotResolution) }
                 item { LiveTimelineCard(current.resolution, current.timeline) }
             }
         }
@@ -152,22 +165,12 @@ private fun LiveHeaderCard(onRefresh: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "LIVE / 赛中",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                )
+                Text("LIVE / 赛中", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("比赛发生什么，为什么", fontSize = 21.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "比赛发生什么，为什么",
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "页面只消费 Application truth；没有可验证 LIVE Source 时明确降级，不生成假数据。",
+                    "刷新会重新读取全球赛程、赛事状态与最新可验证 LiveStats 真帧；失败会明确展示，不用缓存冒充新数据。",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -181,29 +184,12 @@ private fun LiveHeaderCard(onRefresh: () -> Unit) {
 private fun LiveTargetCard(match: ScheduledSeries) {
     val left = match.teams.getOrNull(0)?.team?.code.orEmpty()
     val right = match.teams.getOrNull(1)?.team?.code.orEmpty()
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
-            Text(
-                text = "MATCH TARGET / 当前目标",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Text("MATCH TARGET / 当前目标", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = "$left  vs  $right",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = match.competition.name,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text("$left  vs  $right", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(match.competition.name, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -211,120 +197,130 @@ private fun LiveTargetCard(match: ScheduledSeries) {
 @Composable
 private fun LiveAuthorityCard(resolution: LiveStateResolution) {
     val state = resolution.state
-    val statusText = when (resolution.status) {
-        LiveStateLoadStatus.READY -> "READY"
-        LiveStateLoadStatus.DEGRADED -> "DEGRADED"
-        LiveStateLoadStatus.CONFLICT -> "CONFLICT"
-        LiveStateLoadStatus.UNAVAILABLE -> "UNAVAILABLE"
-    }
+    val statusText = resolution.status.name
     val body = when (resolution.status) {
-        LiveStateLoadStatus.UNAVAILABLE ->
-            "当前没有已验证的实时 Provider。Cito 在线验收暂缓；若本地存在 last-known state 会保留，否则保持未知。"
-        LiveStateLoadStatus.CONFLICT ->
-            "不同事实发生冲突，Application 已阻止静默覆盖。"
-        LiveStateLoadStatus.DEGRADED ->
-            "部分来源不可用或证据不足，当前状态按降级语义展示。"
-        LiveStateLoadStatus.READY ->
-            "当前状态已通过 LIVE Source Arbitration。"
+        LiveStateLoadStatus.UNAVAILABLE -> "当前 Riot Global LIVE 没有返回可验证事实；本地 last-known 只保留，不冒充新状态。"
+        LiveStateLoadStatus.CONFLICT -> "不同事实发生冲突，Application 已阻止静默覆盖。"
+        LiveStateLoadStatus.DEGRADED -> "部分来源不可用或证据不足，当前状态按降级语义展示。"
+        LiveStateLoadStatus.READY -> "当前状态已通过 LIVE Source Arbitration。"
     }
 
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
-            Text(
-                text = "AUTHORITATIVE STATE / 权威状态",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Text("AUTHORITATIVE STATE / 权威状态", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = lifecycleLabel(state.lifecycle),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "Source $statusText · ${resolution.selectedProviderId ?: "NO VERIFIED SOURCE"}",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            state.currentGameNumber?.let { gameNumber ->
+            Text(lifecycleLabel(state.lifecycle), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("Source $statusText · ${resolution.selectedProviderId ?: "NO VERIFIED SOURCE"}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            state.currentGameNumber?.let { Text("当前 G$it", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+            if (resolution.failures.isNotEmpty()) {
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "当前 G$gameNumber",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
+                Text("${resolution.failures.first().code.value} · ${resolution.failures.first().message}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = body,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Spacer(Modifier.height(8.dp))
+            Text(body, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun LiveTimelineCard(
-    resolution: LiveStateResolution,
-    timeline: GameTimeline?,
-) {
-    val gameId = resolution.state.currentGameId
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+private fun LiveDataCard(match: ScheduledSeries, resolution: LiveSnapshotResolution?) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
+            Text("VERIFIED FRAME / 实时数据", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            if (resolution == null) {
+                Text("当前还没有进入已验证 IN_GAME；赛事开始本身不会伪造实时经济/KDA。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                return@Column
+            }
             Text(
-                text = "TIMELINE / 本地事件链",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                "${resolution.status.name} · ${resolution.selectedProviderId ?: "NO VERIFIED FRAME"}",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            val snapshot = resolution.snapshot
+            if (snapshot == null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    resolution.failures.firstOrNull()?.let { "${it.code.value} · ${it.message}" }
+                        ?: "Riot LIVE 已识别比赛，但当前窗口尚未取得可验证 gameplay frame。",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
+            Spacer(Modifier.height(8.dp))
+            val elapsed = snapshot.elapsedSeconds
+            Text(
+                text = "G${snapshot.game.gameNumber} · ${elapsed?.let { "%02d:%02d".format(it / 60, it % 60) } ?: "时间未知"}",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            val blueCode = teamCode(match, snapshot.game.blueTeamId)
+            val redCode = teamCode(match, snapshot.game.redTeamId)
+            TeamFrameRow(blueCode, snapshot.blue)
+            TeamFrameRow(redCode, snapshot.red)
+            val blueGold = snapshot.blue.gold
+            val redGold = snapshot.red.gold
+            if (blueGold != null && redGold != null) {
+                val diff = blueGold - redGold
+                val lead = when {
+                    diff > 0 -> "$blueCode +${diff}g"
+                    diff < 0 -> "$redCode +${-diff}g"
+                    else -> "经济持平"
+                }
+                Text("经济差：$lead", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            }
+            if (snapshot.players.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Text("选手实时状态", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                snapshot.players.forEach { player -> PlayerFrameRow(player, teamCode(match, player.teamId)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TeamFrameRow(code: String, state: TeamLiveState) {
+    Text(
+        text = "$code · ${state.gold?.let { "$it g" } ?: "经济?"} · ${state.kills?.let { "$it 杀" } ?: "击杀?"} · ${state.towers?.let { "$it 塔" } ?: "塔?"} · ${state.dragons?.let { "$it 龙" } ?: "龙?"} · ${state.barons?.let { "$it 男爵" } ?: "男爵?"}",
+        fontSize = 13.sp,
+    )
+}
+
+@Composable
+private fun PlayerFrameRow(player: PlayerLiveState, teamCode: String) {
+    val handle = player.playerId.value.substringAfterLast(':').replace('-', ' ')
+    val kda = if (player.kills != null && player.deaths != null && player.assists != null) {
+        "${player.kills}/${player.deaths}/${player.assists}"
+    } else "KDA ?"
+    Text(
+        text = "$teamCode · $handle · ${player.championId ?: "英雄?"} · Lv${player.level ?: "?"} · $kda · CS ${player.creepScore ?: "?"} · ${player.gold?.let { "$it g" } ?: "经济?"}",
+        fontSize = 12.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun LiveTimelineCard(resolution: LiveStateResolution, timeline: GameTimeline?) {
+    val gameId = resolution.state.currentGameId
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Text("TIMELINE / 本地事件链", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
             when {
-                gameId == null -> Text(
-                    text = "尚无已验证 Game identity。赛事开始本身不会创建小局 Timeline。",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                timeline == null -> Text(
-                    text = "G${resolution.state.currentGameNumber ?: "?"} 已有 identity，但本地尚无标准 Snapshot/Event。",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                gameId == null -> Text("尚无已验证 Game identity。赛事开始本身不会创建小局 Timeline。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                timeline == null -> Text("G${resolution.state.currentGameNumber ?: "?"} 已有 identity，但本地尚无标准 Snapshot/Event。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 else -> {
-                    Text(
-                        text = "G${timeline.gameNumber} · ${timeline.snapshots.size} snapshots · ${timeline.events.size} events${if (timeline.completed) " · COMPLETE" else ""}",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Text("G${timeline.gameNumber} · ${timeline.snapshots.size} snapshots · ${timeline.events.size} events${if (timeline.completed) " · COMPLETE" else ""}", fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     if (timeline.events.isEmpty()) {
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "本地 Timeline 暂无事件。",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Text("当前已有 gameplay snapshot；标准事件提取仍按独立事件源/Delta 证据规则进入 Timeline。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         Spacer(Modifier.height(10.dp))
                         timeline.events.takeLast(8).forEachIndexed { index, event ->
                             if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                            Text(
-                                text = "${eventTime(event)}  ${eventLabel(event)}",
-                                fontSize = 13.sp,
-                            )
-                            Text(
-                                text = "${event.evidence.name} · ${event.provenance.providerId}",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Text("${eventTime(event)}  ${eventLabel(event)}", fontSize = 13.sp)
+                            Text("${event.evidence.name} · ${event.provenance.providerId}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -335,11 +331,7 @@ private fun LiveTimelineCard(
 
 @Composable
 private fun LiveMessageCard(title: String, body: String) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
             Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(7.dp))
@@ -348,19 +340,18 @@ private fun LiveMessageCard(title: String, body: String) {
     }
 }
 
-internal fun selectLiveTarget(
-    matches: List<ScheduledSeries>,
-    nowEpochMillis: Long,
-): ScheduledSeries? {
-    val live = matches
-        .filter { it.state == ScheduleState.EVENT_LIVE }
-        .minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
+internal fun selectLiveTarget(matches: List<ScheduledSeries>, nowEpochMillis: Long): ScheduledSeries? {
+    val live = matches.filter { it.state == ScheduleState.EVENT_LIVE }.minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
     if (live != null) return live
-
-    return matches
-        .filter { it.state != ScheduleState.COMPLETED }
-        .minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
+    return matches.filter { it.state != ScheduleState.COMPLETED }.minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
 }
+
+private fun teamCode(match: ScheduledSeries, teamId: TeamId): String = match.teams
+    .firstOrNull { it.team.id == teamId }
+    ?.team
+    ?.code
+    ?.takeIf { it.isNotBlank() }
+    ?: teamId.value.substringAfterLast(':').uppercase()
 
 private fun lifecycleLabel(state: MatchLifecycleState): String = when (state) {
     MatchLifecycleState.UNKNOWN -> "状态未知"
