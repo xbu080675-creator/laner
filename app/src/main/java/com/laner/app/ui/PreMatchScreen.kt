@@ -114,10 +114,9 @@ fun PreMatchScreen(
 
     val contextState by produceState<ContextLoadState>(
         initialValue = ContextLoadState.Idle,
-        key1 = preMatchContextService,
-        key2 = scheduleSnapshot,
-        key3 = selectedMatchId,
-        key4 = refreshNonce,
+        key1 = scheduleSnapshot,
+        key2 = selectedMatchId,
+        key3 = refreshNonce,
     ) {
         val snapshot = scheduleSnapshot
         val match = snapshot?.matches?.firstOrNull { it.matchId.value == selectedMatchId }
