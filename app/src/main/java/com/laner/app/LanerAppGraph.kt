@@ -13,6 +13,7 @@ import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveTimelineService
+import com.laner.core.application.PostMatchService
 import com.laner.core.application.PreMatchContextService
 import java.io.File
 
@@ -20,32 +21,17 @@ class LanerAppGraph(
     filesDir: File,
 ) {
     private val diagnostics = AndroidDiagnosticsPort()
-    private val riotPreMatchSource = RiotGlobalPreMatchSource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
-    )
-    private val riotTeamRosterSource = RiotTeamRosterSource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
-    )
-    private val riotCompetitionStructureSource = RiotCompetitionStructureSource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
-    )
+    private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
+    private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
+    private val riotCompetitionStructureSource = RiotCompetitionStructureSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
     private val official2026QualificationSource = Official2026QualificationSource()
     private val normalizedStartingRosterSource = NormalizedStartingRosterSource()
     private val normalizedTeamStaffSource = NormalizedTeamStaffSource()
-    private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(
-        directory = File(filesDir, "archive"),
-    )
-    private val liveStateRepository = JsonLiveMatchStateRepository(
-        directory = File(filesDir, "live/state"),
-    )
-    private val liveTimelineRepository = JsonLiveTimelineRepository(
-        directory = File(filesDir, "live/timeline"),
-    )
+    private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(File(filesDir, "archive"))
+    private val liveStateRepository = JsonLiveMatchStateRepository(File(filesDir, "live/state"))
+    private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
 
-    val globalScheduleService = GlobalScheduleService(
-        sources = listOf(riotPreMatchSource),
-        diagnostics = diagnostics,
-    )
+    val globalScheduleService = GlobalScheduleService(listOf(riotPreMatchSource), diagnostics)
 
     val preMatchContextService = PreMatchContextService(
         rosterSources = listOf(riotTeamRosterSource),
@@ -63,20 +49,23 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
-    /**
-     * LIVE composition is intentionally valid without a network provider.
-     *
-     * Cito online verification is deferred. Keeping the source list empty produces an explicit
-     * UNAVAILABLE/last-known-state result instead of fabricating LIVE facts. A verified adapter can
-     * be added here later without changing Core lifecycle authority or local persistence contracts.
-     */
     val liveMatchStateService = LiveMatchStateService(
         sources = emptyList(),
         repository = liveStateRepository,
         diagnostics = diagnostics,
     )
 
-    val liveTimelineService = LiveTimelineService(
-        repository = liveTimelineRepository,
+    val liveTimelineService = LiveTimelineService(liveTimelineRepository)
+
+    /**
+     * POST composition is valid before concrete providers arrive. Empty capabilities produce an
+     * explicit UNAVAILABLE snapshot instead of reusing PRE scores or inventing historical facts.
+     */
+    val postMatchService = PostMatchService(
+        resultSources = emptyList(),
+        gameSources = emptyList(),
+        awardSources = emptyList(),
+        replaySources = emptyList(),
+        diagnostics = diagnostics,
     )
 }
