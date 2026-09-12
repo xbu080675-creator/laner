@@ -114,7 +114,10 @@ Riot raw tournament id 只保留在 Adapter 内临时映射。Domain 使用稳�
 - `app/src/main/java/com/laner/app/LanerAppGraph.kt`
 - `app/src/main/java/com/laner/app/MainActivity.kt`
 - `app/src/main/java/com/laner/app/ui/LanerRoot.kt`
-- delivery/status documentation during task closeout.
+- `docs/CHANGELOG.md`
+- `docs/DEVELOPMENT_PLAN.md`
+- `docs/FEATURE_BASELINE.md`
+- `docs/IMPLEMENTATION_STATUS.md`
 
 ### Deleted
 
@@ -151,7 +154,8 @@ Riot raw tournament id 只保留在 Adapter 内临时映射。Domain 使用稳�
 - run `34690235942`: Architecture Gate PASS / Domain+Application Tests PASS / Android Compile **FAIL**。
   - 根因：`Files.move(...)` 返回 `Path`，使 `withContext` 推断的 `save()` 返回类型不再满足 `TournamentEditionArchiveRepository.save(): Unit`。
   - 修复：原子写入逻辑不变，仅在 block 尾部显式返回 `Unit`。
-- 修复后的 final-head CI：待最终运行结果回填。
+- branch final-head run `34690520095`: Architecture Gate PASS / Domain+Application Tests PASS / Android Compile PASS。
+- PR exact-head run `34690577554`: Architecture Gate PASS / Domain+Application Tests PASS / Android Compile PASS。
 
 ### Not executed / external evidence still required
 
@@ -178,20 +182,20 @@ Riot raw tournament id 只保留在 Adapter 内临时映射。Domain 使用稳�
 
 ## 10. Rollback
 
-- Revert LNR-012 PR/merge commit 即可移除本任务全部结构域功能。
+- Revert PR #4 / merge commit `07d2b4a3d5094b81a72316bc8f0eba6486d4adb0` 即可移除本任务全部结构域功能。
 - 本地 `tournament_editions_v1.json` 属缓存档案；回滚版本不依赖该文件。
 - 不涉及远程数据库 migration。
 
 ## 11. Final Repository Evidence
 
 - Branch: `feature/lnr-012-standings-qualification`
-- PR: closeout 后回填
-- Merge commit: closeout 后回填
-- Final CI: closeout 后回填
+- Final branch head: `7680b8d640bc57006838bbcf2b5998166f82643a`
+- PR: `#4`
+- Merge commit: `07d2b4a3d5094b81a72316bc8f0eba6486d4adb0`
+- Final branch CI: `34690520095` PASS
+- Final PR CI: `34690577554` PASS
 
 ## 12. Status Sync
-
-计划同步：
 
 - `PRE-016 Standings`: `WAITING EXTERNAL TEST`
 - `PRE-017 Championship Points 与 Standings 分离`: `DONE`
@@ -210,8 +214,10 @@ LNR-012 task status 以“本轮架构/数据链已形成，但真实 Provider/�
 - Standings / Championship Points / Qualification / Edition 分离：`PASS`。
 - 不迁移过时静态积分冒充当前值：`PASS`。
 - Persistence 有 schema version：`PASS`。
-- Persistence 写入要求原子替换：`PASS`（compile/runtime real-device 仍需最终/外部证据）。
+- Persistence 写入要求原子替换：`PASS`（compile PASS；runtime real-device 仍待外部证据）。
 - FAIL 历史已记录：`PASS`。
-- Final exact-head CI：`TESTING`。
+- Final exact-head CI：`PASS`。
+- PR exact-head CI：`PASS`。
+- Commit + Push + PR + Merge：`PASS`。
 
-结论：`TESTING`，最终 CI、PR、merge 完成后才能正式收口。
+结论：`WAITING EXTERNAL TEST`。本任务工程闭环完成；真实 Provider/Android 实机与未获得的新鲜 Championship Points / team-level qualification facts 继续按功能条目跟踪，不冒充 DONE。
