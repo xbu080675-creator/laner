@@ -65,12 +65,18 @@ fun LanerRoot(
                 label = "laner-phase",
             ) { phase ->
                 when (phase) {
-                    MatchPhase.PRE_MATCH -> PreMatchScreen(
-                        scheduleService = scheduleService,
-                        preMatchContextService = preMatchContextService,
-                        competitionStructureService = competitionStructureService,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                        CompetitionStructurePanel(
+                            service = competitionStructureService,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        PreMatchScreen(
+                            scheduleService = scheduleService,
+                            preMatchContextService = preMatchContextService,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     MatchPhase.LIVE_MATCH,
                     MatchPhase.POST_MATCH -> PhaseEmptyState(phase)
                 }
