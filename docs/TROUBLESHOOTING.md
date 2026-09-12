@@ -104,6 +104,8 @@ Tactical HUD 同时使用：
 
 原因：Provider 断流时 game clock / latest snapshot 可能冻结，如果只有游戏时间 TTL，旧 Tactical card 会永久停留。`TacticalHudPresentation.isDisplayableAt()` 是永久回归入口；Preview 明确不使用 Provider freshness，因为它固定是 `LOCAL PREVIEW · NOT FACT`。
 
+最终自动证据：feature head `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5` 的 push run `34712441374` 与 PR run `34712444119` 均全 Gate PASS；PR #15 merge `6c72a748a23758c975d78a78e80092b16d225d34` 后 main run `34712560708` 也全 Gate PASS。真机断流退场仍为 `WAITING EXTERNAL TEST`。
+
 ### `LNR-APP-LIVE-003` — Current LIVE Context Query 意外失败
 LNR-020 合规整改新增。`LiveMatchContextService` 是当前 LIVE 上下文唯一 Application 编排入口；若 Schedule/Target/Lifecycle/Snapshot/Timeline 组合链出现非业务降级类异常，返回 typed `Failed` 并通过 `[Laner:LIVE]` 记录 `LNR-APP-LIVE-003`。UI/Overlay 不得自行复制相同编排作为 fallback。
 
@@ -127,7 +129,7 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 - `LNR-SRC-LIVE-004`：无法从 Riot global schedule 唯一定位 event / identity 缺失。
 - `LNR-SRC-LIVE-005`：EventDetails / LiveStats 等 Riot LIVE lifecycle 请求失败。
 - `LNR-SRC-LIVE-006`：Riot API Key 未配置（Gameplay Snapshot）。
-- `LNR-SRC-LIVE-007`：Riot LIVE Snapshot EventDetails/LiveStats 请求或解析失败。
+- `LNR-SRC-LIVE-007`：Gameplay Snapshot EventDetails/LiveStats 请求或解析失败。
 - `LNR-APP-LIVE-002`：Provider snapshot 的 canonical Match/Game/team identity 校验失败；不得写入 Timeline。
 
 设备错误码只用于定位，UI 不得绕过 Application 修正赛事事实。
@@ -141,4 +143,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。LNR-020 已完成并通过独立合规整改；Block 1 冻结。LNR-021 正在完成 Tactical HUD + live event layer 的最终 Gate/PR 收口。自动实现覆盖 LIVE-014 / LIVE-015 / LIVE-030，但真实 Riot online 与 Android overlay 行为继续保持 `WAITING EXTERNAL TEST`。Cito 继续 DEFERRED。
+M1 Feature Migration。Block 1 / LNR-020 已冻结。Block 2 / LNR-021 工程交付已通过 PR #15 合入主线，final feature push/PR Gate 与 post-merge main Gate 均 PASS；功能状态保持 `WAITING EXTERNAL TEST`。下一步不是 Block 3，而是按用户规定对 Block 2 独立复查工程宪法；若发现偏离，先记录并整改，复查闭环后才能冻结 Block 2。Cito 继续 DEFERRED。
