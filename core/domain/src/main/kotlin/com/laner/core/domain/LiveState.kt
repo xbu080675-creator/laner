@@ -155,9 +155,7 @@ object LiveMatchStateReducer {
             return LiveStateTransitionResult.Ignored(refreshed, LiveStateIgnoreReason.DUPLICATE)
         }
 
-        if (signal.observedAtEpochMillis < current.lastObservedAtEpochMillis &&
-            lifecycleRank(signal.lifecycle) <= lifecycleRank(current.lifecycle)
-        ) {
+        if (signal.observedAtEpochMillis < current.lastObservedAtEpochMillis) {
             return LiveStateTransitionResult.Ignored(current, LiveStateIgnoreReason.STALE_OBSERVATION)
         }
 
@@ -237,18 +235,6 @@ object LiveMatchStateReducer {
         MatchLifecycleState.BETWEEN_GAMES -> to in NEXT_GAME_ENTRY_STATES + MatchLifecycleState.SERIES_COMPLETE
         MatchLifecycleState.SERIES_COMPLETE -> false
         MatchLifecycleState.UNKNOWN -> to != MatchLifecycleState.UNKNOWN
-    }
-
-    private fun lifecycleRank(state: MatchLifecycleState): Int = when (state) {
-        MatchLifecycleState.PRE_EVENT -> 0
-        MatchLifecycleState.EVENT_LIVE_PRE_GAME -> 1
-        MatchLifecycleState.DRAFT -> 2
-        MatchLifecycleState.LOADING -> 3
-        MatchLifecycleState.IN_GAME -> 4
-        MatchLifecycleState.POST_GAME -> 5
-        MatchLifecycleState.BETWEEN_GAMES -> 6
-        MatchLifecycleState.SERIES_COMPLETE -> 7
-        MatchLifecycleState.UNKNOWN -> -1
     }
 
     private val NEXT_GAME_BOUNDARY_STATES = setOf(
