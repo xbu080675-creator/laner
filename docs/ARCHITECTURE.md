@@ -31,7 +31,44 @@ POST_MATCH  / 赛后
 
 无法明确归属的页面或功能，不得直接加入主产品结构，必须先完成架构评审。
 
-### 赛前 PRE_MATCH
+## 第二产品设计轴：用户角色 × 当下问题
+
+三阶段只回答“现在处于什么时候”，还必须继续回答“谁正在看、他现在最想知道什么”。
+
+Laner 的功能来源统一定义为：
+
+```text
+Feature = Persona × Match Phase × User Question
+```
+
+当前核心 Persona：
+
+- `SPECTATOR`：普通观众 / 深度观众；
+- `COACH_ANALYST`：教练 / 分析人员 / 高阶复盘用户。
+
+完整问题矩阵见 `docs/PRODUCT_PERSPECTIVE_MATRIX.md`。
+
+任何新功能在进入开发计划前，必须明确：Persona、Phase、User Question、Decision Value、Evidence、Presentation、Broadcast Redundancy、Acceptance。
+
+无法说明“用户此刻为什么需要它”的功能，不得仅因为“这个数据能拿到”就进入正式开发。
+
+### 同一事实，两种展示密度
+
+不得为观众和教练复制两套底层业务逻辑。标准结构：
+
+```text
+Domain Fact / Event / Match State
+              ↓
+        Application Query
+          ↙           ↘
+ Spectator View   Coach/Analyst View
+```
+
+观众层默认：结论优先、中文解释、低认知负担、视觉化。
+
+教练层默认：证据优先、结构化、可筛选、可追溯、展示样本与置信度。
+
+## PRE_MATCH / 赛前
 
 面向比赛正式进入进行态之前的全部观赛准备与判断，包括但不限于：
 
@@ -45,7 +82,7 @@ POST_MATCH  / 赛后
 - BP 前可获得的背景情报；
 - 直播入口与观赛准备。
 
-### 赛中 LIVE_MATCH
+## LIVE_MATCH / 赛中
 
 面向赛事已经开始但系列赛尚未正式结束的全部实时能力。赛中内部仍必须区分：
 
@@ -73,7 +110,7 @@ POST_MATCH  / 赛后
 - 沙盘 / 局势表达；
 - 实时异常与关键节点提示。
 
-### 赛后 POST_MATCH
+## POST_MATCH / 赛后
 
 面向小局或系列赛已经结束后的结果沉淀与复盘，包括但不限于：
 
@@ -86,7 +123,7 @@ POST_MATCH  / 赛后
 - 历史赛事归档；
 - 可回放的事件与状态快照。
 
-### 跨阶段公共能力
+## 跨阶段公共能力
 
 以下能力可以被三个阶段共同使用，但它们不是第四个产品阶段：
 
@@ -200,6 +237,7 @@ POST_MATCH
 4. 比赛阶段切换必须由 Match State 驱动，不允许页面各自判断。
 5. 页面只能消费阶段 ViewModel / Query，不得直接读取 Provider 或数据库细节。
 6. 设置、诊断等工具型页面可独立存在，但不得与赛前 / 赛中 / 赛后争夺业务一级结构。
+7. 页面和功能必须说明目标 Persona 与 User Question；禁止仅按“有什么数据”组织产品。
 
 ## 模块约束
 
@@ -212,6 +250,7 @@ POST_MATCH
 7. 高频轮询必须有频率预算、退避和日志限频。
 8. 关键状态变化必须可追溯到来源和时间。
 9. 所有业务页面必须通过 PRE_MATCH / LIVE_MATCH / POST_MATCH 三阶段归类审查。
+10. 同一领域事实不得因 Persona 不同而复制业务实现。
 
 ## 待旧工程审计后决定
 
