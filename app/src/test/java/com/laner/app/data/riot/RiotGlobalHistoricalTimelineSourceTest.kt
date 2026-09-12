@@ -10,7 +10,6 @@ import com.laner.core.domain.TeamId
 import com.laner.core.domain.TeamRef
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class RiotGlobalHistoricalTimelineSourceTest {
@@ -69,18 +68,16 @@ class RiotGlobalHistoricalTimelineSourceTest {
             }"""
         )
 
-        val historical = assertNotNull(
-            source.parseFrame(
-                query = query,
-                gameNumber = 2,
-                frame = frame,
-                metadata = metadata,
-                providerTeamMap = mapping,
-                elapsedSeconds = 600,
-                observedAtEpochMillis = 20_000L,
-                sourceTimestampEpochMillis = 19_500L,
-            )
-        )
+        val historical = source.parseFrame(
+            query = query,
+            gameNumber = 2,
+            frame = frame,
+            metadata = metadata,
+            providerTeamMap = mapping,
+            elapsedSeconds = 600,
+            observedAtEpochMillis = 20_000L,
+            sourceTimestampEpochMillis = 19_500L,
+        ) ?: error("fixture should produce a historical frame")
 
         val snapshot = historical.snapshot
         assertEquals(GameIdentity.canonical(query.matchId, 2), snapshot.game.gameId)
