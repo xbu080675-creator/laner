@@ -120,7 +120,7 @@ class PostMatchService(
                 }
                 candidates.reduceOrNull { best, next -> if (prefer(next.provenance, best.provenance)) next else best }
             }
-            .sortedWith(compareBy({ it.gameId?.value ?: "" }, { it.kind.name }))
+            .sortedWith(compareBy({ it.gameNumber ?: Int.MIN_VALUE }, { it.gameId?.value ?: "" }, { it.kind.name }))
 
         val replays = replaySources.flatMap { source ->
             when (val read = source.readReplays(query, context)) {
@@ -228,8 +228,11 @@ class PostMatchService(
         result.winnerTeamId?.value ?: "",
     ).joinToString("|")
 
-    private fun awardSlot(award: VerifiedPostAward): String =
-        "${award.kind.name}|${award.gameId?.value ?: "series"}"
+    private fun awardSlot(award: VerifiedPostAward): String = listOf(
+        award.kind.name,
+        award.gameId?.value ?: "",
+        award.gameNumber?.toString() ?: "series",
+    ).joinToString("|")
 
     private fun replayKey(asset: ReplayAsset): String = listOf(
         asset.provider.name,
