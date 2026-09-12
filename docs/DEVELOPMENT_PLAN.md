@@ -1,154 +1,115 @@
 # Laner Development Plan
 
 ## 任务编号
+正式任务使用 `LNR-###`。完整迁移状态以 `docs/FEATURE_BASELINE.md` 为功能验收清单；工程状态以本文件、`IMPLEMENTATION_STATUS.md` 与不可变开发记录共同约束。
 
-正式任务使用 `LNR-###`。
+## M0 — Project / Product Foundation
 
-## M0 — Project Foundation / Migration Foundation
+| Task | Scope | Status |
+|---|---|---|
+| LNR-000 | 工程立宪与基线初始化 | DONE |
+| LNR-001 | 旧工程功能基线提取 | DONE |
+| LNR-002 | 旧架构与技术债审计 | DONE |
+| LNR-003 | 新架构冻结 | DONE |
+| LNR-004 | 工程骨架与 CI Gate | DONE |
+| LNR-005 | PRE/LIVE/POST 一级架构轴 | DONE |
+| LNR-006 | Persona × Phase × User Question | DONE |
+| LNR-007 | 极简 × 酷炫 UX 北极星 | DONE |
+| LNR-008 | 四类 Source 架构 | DONE |
+| LNR-009 | 全球赛事统一管理 | DONE |
 
-### LNR-000 — 工程立宪与基线初始化
-状态：`DONE`
-
-### LNR-001 — 旧工程功能基线提取
-状态：`DONE`
-产物：`docs/FEATURE_BASELINE.md`。
-
-### LNR-002 — 旧工程架构与技术债审计
-状态：`DONE`
-产物：`docs/LEGACY_ARCHITECTURE_AUDIT.md`。
-
-### LNR-003 — 新架构冻结
-状态：`DONE`
-产物：`docs/ARCHITECTURE_FREEZE.md`。
-
-### LNR-004 — 工程骨架与 CI Gate
-状态：`DONE`
-
-### LNR-005 — 三阶段一级架构轴确立
-状态：`DONE`
-
-### LNR-006 — 用户角色 × 比赛阶段产品矩阵
-状态：`DONE`
-
-### LNR-007 — 极简 × 酷炫体验北极星
-状态：`DONE`
-
-### LNR-008 — 四类数据/API 源架构
-状态：`DONE`
-
-### LNR-009 — 全球赛事统一管理架构
-状态：`DONE`
+固定原则：**全局管理、全局接管；Region 只是数据维度，不是业务模块边界。**
 
 ## M1 — Feature Migration
 
-完整迁移状态以 `docs/FEATURE_BASELINE.md` 为唯一功能清单。迁移按工程依赖推进，但用户产品结构始终保持赛前 / 赛中 / 赛后。
-
-### LNR-010 — 全球赛事目录与赛程中心
+### LNR-010 — Global Catalogue / Schedule
 状态：`WAITING EXTERNAL TEST`
 
-已实现 Global Competition Catalog / Schedule、Riot PRE Adapter、PRE 真实赛程 UI、来源状态/降级与安全 credential 注入。自动 Gate 已通过；真实 credential/实机仍待验收。
+Global Competition Catalog / Schedule、Riot PRE Adapter、真实赛程 UI、来源状态与安全 credential 注入已自动验证；真实 Provider/实机继续补证。
 
 ### LNR-011 — PRE Roster / Staff / Form / H2H
 状态：`WAITING EXTERNAL TEST`
 
-已实现 Roster Pool、Official Starting Roster Evidence、Staff、Recent Form、H2H 及 PRE 页面消费。自动 Gate 已通过；真实数据配送与实机仍待验收。
+Roster Pool、Official Starting Roster Evidence、Staff、Recent Form、H2H 与 PRE 页面已完成自动链路；真实配送/实机待验收。
 
 ### LNR-012 — Standings / Qualification / Tournament Edition
 状态：`WAITING EXTERNAL TEST`
 
-已实现四类事实强类型分离、Riot standings/tournament Adapter、Qualification evidence、Tournament Edition 本地 archive 与 PRE Panel。自动 Gate/PR Gate 已通过；在线与 team-level qualification 证据仍待补齐。
+Standings、Championship Points boundary、Qualification evidence、Tournament Edition archive/UI 已自动验证；在线和 team-level qualification 证据待补。
 
-### LNR-013 — LIVE Match State / Provider Arbitration / Unified Event / Timeline
+### LNR-013 — LIVE Core / Arbitration / Event / Timeline
 状态：`DONE`
 
-已完成 LIVE Core/Application 真相层：lifecycle authority、`赛事开始 != 游戏进入`、场间/新局/stale/future-game/terminal、Provider Arbitration、标准生命周期事件、provider-neutral Timeline、reconnect dedupe、out-of-order replay 与 provenance arbitration。最终 exact-head 与 PR Gate 均 PASS，已合并 main。
+权威 lifecycle、`赛事开始 != 游戏进入`、场间/新局、stale/future-game/terminal、Provider Arbitration、标准事件和 canonical Timeline 已完成并合并。
 
-### LNR-014 — LIVE Source Adapters / Local Persistence / Composition Wiring
+### LNR-014 — LIVE Persistence / Composition / UI
 状态：`WAITING EXTERNAL TEST`
 
-自动可认证部分已完成：
-- Android device-local `LiveMatchStateRepository / LiveTimelineRepository`；
-- `schema_version=1`、SHA-256 稳定文件名、原子写入、损坏/未知 schema 显式失败；
-- Snapshot / 标准事件显式 schema 序列化；
-- Android Adapter/Persistence unit-test Gate；
-- target-aware LIVE query；
-- Composition Root 接线；
-- LIVE 页面只消费 Application truth；
-- `EVENT_LIVE` 优先的目标选择规则；COMPLETED 不得冒充当前 LIVE；
-- 无 Provider 时明确 `UNAVAILABLE / last-known`；
-- Timeline 通过 `LiveTimelineService.load(gameId)` 读取并展示本地标准事件，不允许 UI 直读 Repository。
-
-自动验证：final code head `4d64749c07ce6f91bebad91de91f4fb70ed0bd04` / run `34692936906` 的 Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS。
-
-Cito 决策（2026-09-12）：
-- 用户当前无法进行 Cito 在线测试；
-- Cito 在线验收：`WAITING EXTERNAL TEST / DEFERRED`；
-- 不删除适配设计，不虚构在线证据；
-- REST 作为未来 bootstrap/reconcile/fallback 基线；
-- WSS entitlement 不作假定；
-- Cito 暂缓不阻塞后续迁移。
+Android LIVE state/timeline 持久化、schema/atomic write、Application truth UI、target-aware query 与 no-provider degradation 已完成自动验证。Cito online 为 `DEFERRED / WAITING EXTERNAL TEST`，不阻塞迁移。
 
 ### LNR-015 — Global POST Result / Archive / Historical Timeline / Replay
+状态：`WAITING EXTERNAL TEST`
+
+PR #7 已合并 main。已交付：
+- 强类型 Series Result / Completed Game / Stats / Awards / Replay / Historical Timeline 边界；
+- Global-first `PostSourceCapability` orchestration；
+- canonical GameId 与 Provider identity mapping；
+- fallback-only POST archive；
+- verified Awards；
+- Riot global Result / Replay；
+- Riot historical LiveStats Timeline；
+- POST Compose 与按局 backfill。
+
+PR Gate `34696964926` PASS，merge `0ed5cdfa882b74cdb1b7a6e87dd6ee60856f40ca`。真实 Riot online 与 Android device POST 仍待验收。
+
+### LNR-016 — Testable Android Platform / Riot Global LIVE / APK Delivery
 状态：`TESTING`
 
-本轮已经形成全球 POST 主链，不按 LPL/LCK/LEC/LCP 复制业务系统：
-- 强类型拆分 `SeriesResult / CompletedGameRecord / Player Stats / Awards / Replay / Historical Timeline`；
-- `PostMatchService` 按 `PostSourceCapability` 选择来源，Application 不写赛区 if/else；
-- `GameIdentity.canonical(matchId, gameNumber)` 冻结 canonical GameId，Provider raw IDs 只存在 mapping/Adapter；
-- `ProviderMatchIdentityRepository` 保存 canonical MatchId ↔ provider event/match ID 映射；
-- `PostMatchArchiveRepository` 保存已经验证的 Result/Game facts，archive 仅在外部事实缺失时补位；
-- Riot global schedule 提供跨赛区/国际赛事 Series Result baseline；
-- Riot `getEventDetails` 提供跨赛区/国际赛事 Replay metadata baseline；
-- Riot LiveStats history 提供按需真实历史过程帧，不插值、上游无历史即留缺口；
-- LIVE/POST 真实帧复用同一个 canonical `GameTimeline`，PRE/AI 不得进入 Timeline；
-- POST 页面通过 Application 展示 Series Result / Replay / Awards，并只在用户选择 Gx 时触发历史 Timeline 恢复；
-- LPL TJStats 历史链仅为区域 supplement，不是 POST 主架构，且 credential 外部注入、旧硬编码值未迁移。
+当前优先目标是给实机赛事测试提供可安装、可诊断的数据包，同时开启 Android 平台迁移轮次。
 
-自动验证证据：
-- global capability routing commit `e3de01052602d7633368acd003c1ab0fd0f14401` / run `34694930111`：全 PASS；
-- global Riot Result/Replay baseline commit `ea9b6e576fe22f4459c0c55c89f805a3d556285e` / run `34695412163`：全 PASS；
-- Timeline source-class 根因修复 head `7451c302f106fa1f4d636a8ac77f1580b8dd672c` / run `34695924994`：全 PASS；
-- current code/UI head `0681c3b20f2e6cad4cd6fb52bf90a4912e299608` / run `34696081645`：Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS。
+本阶段已实现：
+- `RiotGlobalLiveStateSource`：global schedule 唯一定位 → provider identity mapping → EventDetails → LiveStats real-frame probe；
+- LIVE Application 不再使用空 Source 列表；
+- BLG/AL 与 LCK fixture 共用同一 discovery/parser，不增加赛区业务分支；
+- canonical GameId 继续由 Laner 生成，provider raw IDs 不进入 Domain identity；
+- Android 顶部提供 Riot Key 临时输入；测试 Key **仅驻留当前进程内存**，退出进程即清除，不落盘、不进日志/Git/provenance；
+- 改 Key 后 Composition graph 立即重建；
+- LIVE UI 显示 `LNR-SRC-LIVE-002~005` 稳定来源诊断码；
+- CI 在 Gate 全绿后上传 `app-debug.apk` artifact；
+- test build `2.0.0-dev.3 / versionCode 3`。
 
-尚未认证/尚未完成：
-- Riot credentialed online Result / EventDetails / LiveStats fetch 尚未形成本轮真实在线证据，因此对应全球 Provider 能力最终只能进入 `WAITING EXTERNAL TEST`，不能写 DONE；
-- global per-game `CompletedGameRecord` 仍要求明确 winner evidence；没有显式赢家字段时不得用经济/击杀推断；
-- Bilibili replay supplement、每局 BP/终局装备、Timeline 事件筛选/团战聚合仍未完成；
-- Media3/WebView 属后续 Android Adapter，不进入本轮 Core。
+历史证据：
+- run `34697683655`：Architecture/Core PASS，Android compile FAIL；runtime key Compose 文案 `when` 语法错误，失败留档；
+- fix `2cddeb872d7854829b54750db31f8739e37f0d2a`；
+- run `34697846793`：Architecture / Core / App unit / Android build PASS，并产出 artifact id `10299088400`；
+- 最新 UI diagnostics / docs exact-head 仍需自己 Gate 后才作为正式首选测试包。
 
-### 后续轮次
+本阶段紧急测试 DoD：
+1. final exact-head Architecture/Core/App/Android PASS；
+2. 对应 APK artifact 存在；
+3. PR Gate PASS 并合并 main；
+4. BLG vs AL 真实设备结果记为 `PASS / DEGRADED / FAIL`，不得用 fixture 代替；
+5. 若失败，必须依据 `LNR-SRC-LIVE-*` 错误码确定断点。
 
-#### LNR-016 — Android RiftScreen / Watch / Player / OTA
+LNR-016 后续 Android 深化仍包括 RiftScreen/HUD、Watch Hub、Player、OTA；这些不得阻塞当前数据链测试包交付。
+
+### LNR-017 — Local AI / OCR / Roster Assist
 状态：`TODO`
 
-目标：迁移 Watch Hub、平台跳转、RiftScreen/HUD、播放器与更新能力；保持赛事数据面与直播入口解耦。
+迁移本地 AI、OCR（中/日/韩）、首发图片识别、赛中 Insight、AI diagnostics。AI 继续保持 `FACT_BACKED / INFERENCE / UNVERIFIED`，永远不能升级为赛事事实权威。
 
-#### LNR-017 — Local AI / OCR / Roster Assist
+### LNR-018 — Compatibility / Full Regression / Migration Audit
 状态：`TODO`
 
-目标：迁移本地 AI、OCR、首发图片识别、Insight 与 AI diagnostics；AI 永远不升级为赛事事实权威。
+兼容导入、Feature Baseline 全量销账、真实设备/Provider 回归、性能/安全/数据审计、release closure。只有 Migration Audit PASS 后才能宣称完整迁移完成。
 
-#### LNR-018 — Compatibility Import / Full Regression / Migration Audit
-状态：`TODO`
+## 当前推进顺序
+1. LNR-016 当前 Riot Global LIVE Android 测试包交付与 BLG vs AL 实机数据验收；
+2. LNR-016 Android RiftScreen / Watch / Player / OTA；
+3. LNR-017 AI / OCR；
+4. LNR-018 完整兼容性 / 回归 / Migration Audit。
 
-目标：兼容导入、全功能基线销账、真实设备/Provider 回归、迁移审计与发布闭环。
-
-## 第一批真实迁移顺序
-
-1. Global Competition Catalog / Schedule —— `LNR-010 WAITING EXTERNAL TEST`；
-2. PRE Roster / Staff / Form / H2H —— `LNR-011 WAITING EXTERNAL TEST`；
-3. Standings / Qualification / Tournament Edition —— `LNR-012 WAITING EXTERNAL TEST`；
-4. LIVE Core —— `LNR-013 DONE`；
-5. LIVE Persistence / Wiring / Degraded UI —— `LNR-014 WAITING EXTERNAL TEST`；
-6. Global POST Result / Replay / Historical Timeline / Archive —— `LNR-015 TESTING`；
-7. Android RiftScreen / Watch / Player / OTA —— `LNR-016 TODO`；
-8. Local AI / OCR / Roster Assist —— `LNR-017 TODO`；
-9. Compatibility Import / Full Regression / Migration Audit —— `LNR-018 TODO`。
-
-Cito 在线验收作为 LNR-014 外部补证项独立回填，不阻塞第 6 项及以后迁移。
+Cito online 作为 LNR-014 外部补证独立回填，不阻塞上述顺序。
 
 ## 速度原则
-
-允许并行读取与分析、同责任域成组实现、自动化减少重复、需求明确后直接开发。
-
-禁止跨层乱改、跳过测试/留档、临时代码进入主线、把未执行测试写 PASS、未完成基线条目却宣称“完整迁移”。
+允许并行读取与分析、同责任域成组实现、自动化减少重复、需求明确后直接开发。禁止跨层乱改、跳过测试/留档、临时代码进入主线、把未执行测试写 PASS、把 fixture PASS 冒充在线/实机 PASS。
