@@ -57,7 +57,6 @@ fun LanerRoot(
     riftScreenRunning: Boolean,
     onRequestOverlayPermission: () -> Unit,
     onStartRiftScreen: () -> Unit,
-    onStartDraftHudPreview: () -> Unit,
     onStopRiftScreen: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
@@ -105,7 +104,6 @@ fun LanerRoot(
                         riftScreenRunning = riftScreenRunning,
                         onRequestOverlayPermission = onRequestOverlayPermission,
                         onStartRiftScreen = onStartRiftScreen,
-                        onStartDraftHudPreview = onStartDraftHudPreview,
                         onStopRiftScreen = onStopRiftScreen,
                         modifier = Modifier.fillMaxSize(),
                     )
