@@ -31,9 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
-import com.laner.core.application.LiveMatchStateService
-import com.laner.core.application.LiveSnapshotService
-import com.laner.core.application.LiveTimelineService
+import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
@@ -44,9 +42,7 @@ fun LanerRoot(
     scheduleService: GlobalScheduleService,
     preMatchContextService: PreMatchContextService,
     competitionStructureService: CompetitionStructureService,
-    liveMatchStateService: LiveMatchStateService,
-    liveSnapshotService: LiveSnapshotService,
-    liveTimelineService: LiveTimelineService,
+    liveMatchContextService: LiveMatchContextService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
     riotCredentialConfigured: Boolean,
@@ -96,10 +92,7 @@ fun LanerRoot(
                         )
                     }
                     MatchPhase.LIVE_MATCH -> LiveMatchScreen(
-                        scheduleService = scheduleService,
-                        liveMatchStateService = liveMatchStateService,
-                        liveSnapshotService = liveSnapshotService,
-                        liveTimelineService = liveTimelineService,
+                        liveMatchContextService = liveMatchContextService,
                         overlayPermissionGranted = overlayPermissionGranted,
                         riftScreenRunning = riftScreenRunning,
                         onRequestOverlayPermission = onRequestOverlayPermission,

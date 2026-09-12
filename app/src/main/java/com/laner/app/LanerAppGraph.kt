@@ -19,6 +19,7 @@ import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
+import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveTimelineService
@@ -31,7 +32,7 @@ class LanerAppGraph(
     filesDir: File,
     riotApiKey: String = BuildConfig.LOL_ESPORTS_API_KEY,
 ) {
-    private val diagnostics = AndroidDiagnosticsPort()
+    val diagnostics = AndroidDiagnosticsPort()
     private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
 
     private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = riotApiKey)
@@ -96,6 +97,14 @@ class LanerAppGraph(
     val liveSnapshotService = LiveSnapshotService(
         sources = listOf(riotGlobalLiveSnapshotSource),
         timelineService = liveTimelineService,
+        diagnostics = diagnostics,
+    )
+
+    val liveMatchContextService = LiveMatchContextService(
+        scheduleService = globalScheduleService,
+        liveMatchStateService = liveMatchStateService,
+        liveSnapshotService = liveSnapshotService,
+        liveTimelineService = liveTimelineService,
         diagnostics = diagnostics,
     )
 
