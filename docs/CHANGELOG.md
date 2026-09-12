@@ -5,6 +5,19 @@ All notable project changes must be recorded here at release or milestone level.
 ## Unreleased
 
 ### M1 Feature Migration
+- Implemented `LNR-013` LIVE Core/Application truth layer: authoritative lifecycle, Provider Arbitration, standardized events and provider-neutral Timeline contract.
+- Added pure-domain `LiveMatchState`, `LiveStateSignal`, evidence/result types and `LiveMatchStateReducer`; `EVENT_LIVE_PRE_GAME` remains distinct from `IN_GAME`.
+- Locked intermission/new-game boundaries: stale old-game signals cannot rewind a newer game, future-game signals during an active game become conflicts, `SERIES_COMPLETE` is terminal, and a new game without a Provider gameId never inherits the prior gameId.
+- Same-lifecycle LIVE heartbeat now refreshes freshness/provenance without generating a false state-transition event.
+- Tightened stale-order semantics after CI exposed a regression: within the same game, an observation older than the current authoritative freshness cannot advance lifecycle merely because its lifecycle rank is higher.
+- Added `LiveStateSourcePort`, `LiveMatchStateRepository` and `LiveMatchStateService`; arbitration considers realtime freshness, evidence strength, authority, revision and timestamp in Application rather than Adapter/UI.
+- Added standardized `MatchStateChanged` emission. Missing intermediate `POST_GAME` may be inserted only as derived evidence when a stronger downstream state proves the boundary.
+- Added `VERIFIED_FRAME` event evidence and typed `DraftActionType`; Provider free-text draft actions no longer become Domain action identity directly.
+- Added provider-neutral `GameTimeline`, provenance-bearing snapshot points, semantic event identity, `LiveTimelineRepository` and `LiveTimelineService`.
+- Timeline ingestion supports reconnect idempotency, out-of-order replay, same-second snapshot provenance arbitration and invalid cross-game event rejection. Transport sequence/provenance and descriptive objective text do not define factual event identity.
+- Updated `:core:domain` and `:core:application` module READMEs and added `LNR-LIVE-CORE-001` troubleshooting evidence.
+- CI run `34691364933` is intentionally preserved as a real failure: Architecture PASS, Domain regression FAIL because a delayed `POST_GAME` could advance after a newer `IN_GAME` heartbeat. Fix commit `22668b37d22be5969ec59c99ac687f57c52a1ad3` made any older same-game lifecycle-changing observation stale; run `34691458209` then passed Architecture/Core/Android gates.
+- `LNR-013` is DONE as a Core/Application foundation task only. LIVE-001/002/003/004/013/017/018/019 remain `IN PROGRESS` until real LIVE adapters, Android persistence and Composition wiring are completed by LNR-014.
 - Implemented `LNR-012` Tournament Edition / Standings / Qualification structure slice.
 - Added pure-domain Standings, Championship Points, Qualification and Tournament Edition contracts with hard semantic separation.
 - Added typed Qualification inputs and evidence levels `OFFICIAL / PROVIDER / DERIVED / PENDING`; first place, participant ordering and standings points cannot silently become qualification facts.
