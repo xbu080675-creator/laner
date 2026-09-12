@@ -14,47 +14,32 @@
 
 产物：`docs/FEATURE_BASELINE.md`。
 
-验收结果：已以 `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43` 为旧版事实基线，将 PRE/LIVE/POST、共享平台能力、Provider、AI、Overlay、回放、OTA 及已承诺 Sandbox 路线映射为可逐项关闭的迁移清单。
-
 ### LNR-002 — 旧工程架构与技术债审计
 状态：`DONE`
 
 产物：`docs/LEGACY_ARCHITECTURE_AUDIT.md`。
-
-结论：旧 RiftLab 是可靠行为基线，但 `:app` 内混合 Domain/Application/Provider/UI/Android 的结构不得原样复制。新工程保留能力，不保留大 Store / 分散仲裁 / 赛区特例式耦合。
 
 ### LNR-003 — 新架构冻结
 状态：`DONE`
 
 产物：`docs/ARCHITECTURE_FREEZE.md`。
 
-冻结内容：
-- `PRE_MATCH / LIVE_MATCH / POST_MATCH` 一级产品轴；
-- `SPECTATOR / COACH_ANALYST` 共享事实、不同展示密度；
-- 四类 Source Class；
-- Global Competition Domain；
-- Match Lifecycle；
-- provenance / authority / freshness / revision；
-- Application 唯一 Fact Arbitration；
-- `:core:domain ← :core:application ← :app` 依赖 DAG；
-- Android/Compose/Provider API 禁止进入 Core。
-
 ### LNR-004 — 工程骨架与 CI Gate
-状态：`TESTING`
+状态：`DONE`
 
-已实现：
+已完成并验证：
 - Gradle 多模块工程；
-- `:core:domain`；
-- `:core:application`；
-- Android `:app`；
+- `:core:domain` / `:core:application` / Android `:app`；
 - 三阶段 Compose 壳；
-- Match Lifecycle / Global ID / Source Provenance / Fact Candidate / Standard Event；
+- Match Lifecycle / Global IDs / Source Provenance / Fact Candidate / Standard Events；
 - FactArbiter；
+- ErrorCode / Diagnostics Port；
 - Domain/Application Unit Tests；
-- GitHub Actions Core Test + Android Debug Compile Gate；
+- GitHub Actions Architecture Boundary Gate；
+- Android `assembleDebug` Gate；
 - 模块 README。
 
-DONE 条件：GitHub CI 实际通过并完成 Compliance Review。
+验证证据：CI run `34686592578` 全部 PASS。首轮因 Gradle 版本低于 AGP 9.4.0 最低要求而失败，已修正为 Gradle 9.6.0并保留失败记录。
 
 ### LNR-005 — 三阶段一级架构轴确立
 状态：`DONE`
