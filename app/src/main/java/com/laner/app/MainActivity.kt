@@ -8,12 +8,16 @@ import com.laner.app.ui.LanerRoot
 import com.laner.app.ui.LanerTheme
 
 class MainActivity : ComponentActivity() {
+    private val appGraph by lazy { LanerAppGraph() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
         setContent {
             LanerTheme {
-                LanerRoot()
+                LanerRoot(
+                    scheduleService = appGraph.globalScheduleService,
+                )
             }
         }
     }
