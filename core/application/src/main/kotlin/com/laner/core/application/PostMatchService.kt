@@ -35,10 +35,12 @@ data class PostMatchSnapshot(
 /**
  * Application authority for POST facts.
  *
- * Result, completed games, awards and replay metadata are independent capabilities. A failure in
- * one capability never erases valid facts already returned by another source. The device archive
- * is fallback-only: fresh external candidates replace the cached fact for the same capability/game
- * while missing facts may still be recovered from the last verified archive.
+ * Result, completed games, awards and replay metadata are independent capabilities. Region/league
+ * differences live only in source capability declarations; Application never branches on LPL/LCK
+ * or any other competition. Unsupported sources are skipped before I/O. A failure in one capability
+ * never erases valid facts already returned by another source. The device archive is fallback-only:
+ * fresh external candidates replace the cached fact for the same capability/game while missing facts
+ * may still be recovered from the last verified archive.
  */
 class PostMatchService(
     private val resultSources: List<PostResultSourcePort>,
@@ -56,17 +58,19 @@ class PostMatchService(
         val conflicts = mutableListOf<PostMatchConflict>()
         val archived = loadArchive(query.matchId, failures)
 
-        val externalResults = resultSources.mapNotNull { source ->
-            when (val read = source.readResult(query, context)) {
-                is ProviderRead.Success -> read.value?.takeIf {
-                    validateMatch(it.matchId, query.matchId, source.providerId, "result", failures)
-                }
-                is ProviderRead.Failure -> {
-                    failures += read.failure
-                    null
+        val externalResults = resultSources
+            .filter { it.supports(query) }
+            .mapNotNull { source ->
+                when (val read = source.readResult(query, context)) {
+                    is ProviderRead.Success -> read.value?.takeIf {
+                        validateMatch(it.matchId, query.matchId, source.providerId, "result", failures)
+                    }
+                    is ProviderRead.Failure -> {
+                        failures += read.failure
+                        null
+                    }
                 }
             }
-        }
         val resultCandidates = if (externalResults.isNotEmpty()) {
             externalResults
         } else {
@@ -81,17 +85,19 @@ class PostMatchService(
             )
         }
 
-        val externalGameCandidates = gameSources.flatMap { source ->
-            when (val read = source.readGames(query, context)) {
-                is ProviderRead.Success -> read.value.filter {
-                    validateMatch(it.matchId, query.matchId, source.providerId, "game", failures)
-                }
-                is ProviderRead.Failure -> {
-                    failures += read.failure
-                    emptyList()
+        val externalGameCandidates = gameSources
+            .filter { it.supports(query) }
+            .flatMap { source ->
+                when (val read = source.readGames(query, context)) {
+                    is ProviderRead.Success -> read.value.filter {
+                        validateMatch(it.matchId, query.matchId, source.providerId, "game", failures)
+                    }
+                    is ProviderRead.Failure -> {
+                        failures += read.failure
+                        emptyList()
+                    }
                 }
             }
-        }
         val externalGameNumbers = externalGameCandidates.map { it.gameNumber }.toSet()
         val fallbackGames = archived?.games.orEmpty().filter { it.gameNumber !in externalGameNumbers }
         val gameCandidates = externalGameCandidates + fallbackGames
@@ -110,17 +116,19 @@ class PostMatchService(
             }
             .sortedBy { it.gameNumber }
 
-        val awardCandidates = awardSources.flatMap { source ->
-            when (val read = source.readAwards(query, context)) {
-                is ProviderRead.Success -> read.value.filter {
-                    validateMatch(it.matchId, query.matchId, source.providerId, "award", failures)
-                }
-                is ProviderRead.Failure -> {
-                    failures += read.failure
-                    emptyList()
+        val awardCandidates = awardSources
+            .filter { it.supports(query) }
+            .flatMap { source ->
+                when (val read = source.readAwards(query, context)) {
+                    is ProviderRead.Success -> read.value.filter {
+                        validateMatch(it.matchId, query.matchId, source.providerId, "award", failures)
+                    }
+                    is ProviderRead.Failure -> {
+                        failures += read.failure
+                        emptyList()
+                    }
                 }
             }
-        }
         val awards = awardCandidates
             .groupBy(::awardSlot)
             .mapNotNull { (slot, candidates) ->
@@ -135,17 +143,19 @@ class PostMatchService(
             }
             .sortedWith(compareBy({ it.gameNumber ?: Int.MIN_VALUE }, { it.gameId?.value ?: "" }, { it.kind.name }))
 
-        val replays = replaySources.flatMap { source ->
-            when (val read = source.readReplays(query, context)) {
-                is ProviderRead.Success -> read.value.filter {
-                    validateMatch(it.matchId, query.matchId, source.providerId, "replay", failures)
+        val replays = replaySources
+            .filter { it.supports(query) }
+            .flatMap { source ->
+                when (val read = source.readReplays(query, context)) {
+                    is ProviderRead.Success -> read.value.filter {
+                        validateMatch(it.matchId, query.matchId, source.providerId, "replay", failures)
+                    }
+                    is ProviderRead.Failure -> {
+                        failures += read.failure
+                        emptyList()
+                    }
                 }
-                is ProviderRead.Failure -> {
-                    failures += read.failure
-                    emptyList()
-                }
-            }
-        }.groupBy(::replayKey)
+            }.groupBy(::replayKey)
             .mapNotNull { (_, candidates) ->
                 candidates.reduceOrNull { best, next -> if (prefer(next.provenance, best.provenance)) next else best }
             }
@@ -192,6 +202,11 @@ class PostMatchService(
                 message = "Post match ${status.name.lowercase()}",
                 context = mapOf(
                     "match_id" to query.matchId.value,
+                    "competition" to (query.competitionSlug ?: "unknown"),
+                    "result_sources" to resultSources.count { it.supports(query) }.toString(),
+                    "game_sources" to gameSources.count { it.supports(query) }.toString(),
+                    "award_sources" to awardSources.count { it.supports(query) }.toString(),
+                    "replay_sources" to replaySources.count { it.supports(query) }.toString(),
                     "result" to (selectedResult != null).toString(),
                     "games" to games.size.toString(),
                     "awards" to awards.size.toString(),
