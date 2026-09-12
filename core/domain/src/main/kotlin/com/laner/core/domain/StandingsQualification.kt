@@ -144,9 +144,7 @@ enum class QualificationMechanism {
     UNKNOWN,
 }
 
-/**
- * Typed inputs stop a tournament standing from silently becoming annual Championship Points.
- */
+/** Typed inputs prevent standings metrics from silently becoming annual Championship Points. */
 sealed interface QualificationInput {
     data class ChampionshipPoints(
         val points: Int,
@@ -290,7 +288,6 @@ data class TournamentEditionSlot(
 data class TournamentEdition(
     val id: EditionId,
     val competition: CompetitionRef,
-    val externalTournamentId: String,
     val slug: String,
     val family: String,
     val seasonYear: Int?,
@@ -306,7 +303,6 @@ data class TournamentEdition(
     val provenance: SourceProvenance,
 ) {
     init {
-        require(externalTournamentId.isNotBlank())
         require(slug.isNotBlank())
         require(family.isNotBlank())
         require(displayName.isNotBlank())
