@@ -55,13 +55,22 @@ class LiveMatchStateService(
     suspend fun refresh(
         matchId: MatchId,
         context: SourceRequestContext,
+    ): LiveStateResolution = refresh(
+        query = LiveMatchSourceQuery(matchId = matchId),
+        context = context,
+    )
+
+    suspend fun refresh(
+        query: LiveMatchSourceQuery,
+        context: SourceRequestContext,
     ): LiveStateResolution {
+        val matchId = query.matchId
         val current = repository.read(matchId) ?: LiveMatchState(matchId = matchId)
         val failures = mutableListOf<DiagnosticFailure>()
         val candidates = mutableListOf<SignalCandidate>()
 
         sources.forEach { source ->
-            when (val read = source.readLiveState(matchId, context)) {
+            when (val read = readSource(source, query, context)) {
                 is ProviderRead.Success -> {
                     val observation = read.value
                     if (observation.matchId != matchId) {
@@ -178,6 +187,16 @@ class LiveMatchStateService(
             appliedTransitions = applied,
             stateEvents = stateEvents,
         )
+    }
+
+    private suspend fun readSource(
+        source: LiveStateSourcePort,
+        query: LiveMatchSourceQuery,
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderLiveObservation> = if (source is TargetAwareLiveStateSourcePort) {
+        source.readLiveState(query, context)
+    } else {
+        source.readLiveState(query.matchId, context)
     }
 
     private fun toCandidate(
