@@ -111,28 +111,37 @@
 
 | ID | 功能 | Persona | Source | Legacy evidence | Laner 归属 | Migration |
 |---|---|---|---|---|---|---|
-| POST-001 | Series 总比分 | BOTH | POST_MATCH_SOURCE | PostScreen / MatchDetail | Result Domain | TODO |
-| POST-002 | G1/G2/... 历史小局 | BOTH | POST_MATCH_SOURCE | MatchDetail | Game Archive | TODO |
+| POST-001 | Series 总比分 | BOTH | POST_MATCH_SOURCE | PostScreen / MatchDetail | Result Domain | WAITING EXTERNAL TEST |
+| POST-002 | G1/G2/... 历史小局 | BOTH | POST_MATCH_SOURCE | MatchDetail | Game Archive | IN PROGRESS |
 | POST-003 | 每局 BP | BOTH | POST_MATCH_SOURCE | dev.73 roadmap | Draft Archive | TODO |
-| POST-004 | 每局阵容/英雄/召唤师技能 | BOTH | POST_MATCH_SOURCE | MatchDetail | Game Archive | TODO |
-| POST-005 | K/D/A、CS、经济、伤害等统计 | BOTH | POST_MATCH_SOURCE | dev.73 roadmap | Player Stats | TODO |
+| POST-004 | 每局阵容/英雄/召唤师技能 | BOTH | POST_MATCH_SOURCE | MatchDetail | Game Archive | IN PROGRESS |
+| POST-005 | K/D/A、CS、经济、伤害等统计 | BOTH | POST_MATCH_SOURCE | dev.73 roadmap | Player Stats | IN PROGRESS |
 | POST-006 | 终局装备 | BOTH | POST_MATCH_SOURCE | dev.73 roadmap | Player Stats | TODO |
-| POST-007 | 龙/塔/男爵等资源结果 | BOTH | POST_MATCH_SOURCE | MatchDetail | Objective Archive | TODO |
-| POST-008 | MVP / POG / Awards | BOTH | POST_MATCH_SOURCE | Award providers | Awards Query | TODO |
-| POST-009 | Timeline 本地归档 | BOTH | POST_MATCH_SOURCE | MatchTimeline | Timeline Repository | TODO |
+| POST-007 | 龙/塔/男爵等资源结果 | BOTH | POST_MATCH_SOURCE | MatchDetail | Objective Archive | IN PROGRESS |
+| POST-008 | MVP / POG / Awards | BOTH | POST_MATCH_SOURCE | Award providers | Awards Query | WAITING EXTERNAL TEST |
+| POST-009 | Timeline 本地归档 | BOTH | POST_MATCH_SOURCE | MatchTimeline | Timeline Repository | WAITING EXTERNAL TEST |
 | POST-010 | Timeline 事件筛选 | COACH_ANALYST | POST_MATCH_SOURCE | dev.34 | Timeline Query | TODO |
 | POST-011 | 团战窗口聚合 | COACH_ANALYST | POST_MATCH_SOURCE | dev.34 | Timeline Analysis | TODO |
-| POST-012 | 历史赛后补全 | SYSTEM | POST_MATCH_SOURCE | OP.GG/Cito/Riot/LPL resolvers | Post Source Orchestration | TODO |
+| POST-012 | 历史赛后补全 | SYSTEM | POST_MATCH_SOURCE | OP.GG/Cito/Riot/LPL resolvers | Post Source Orchestration | WAITING EXTERNAL TEST |
 | POST-013 | Bilibili VOD | SPECTATOR | POST_MATCH_SOURCE | BilibiliVodRepository | Replay Domain | TODO |
-| POST-014 | Riot / LoL Esports VOD | SPECTATOR | POST_MATCH_SOURCE | GlobalReplay | Replay Domain | TODO |
-| POST-015 | YouTube VOD | SPECTATOR | POST_MATCH_SOURCE | GlobalReplay | Replay Domain | TODO |
+| POST-014 | Riot / LoL Esports VOD | SPECTATOR | POST_MATCH_SOURCE | GlobalReplay | Replay Domain | WAITING EXTERNAL TEST |
+| POST-015 | YouTube VOD | SPECTATOR | POST_MATCH_SOURCE | GlobalReplay | Replay Domain | WAITING EXTERNAL TEST |
 | POST-016 | APP 内 Media3 播放 | SPECTATOR | PLATFORM | MatchVodUi | Media Adapter | TODO |
 | POST-017 | APP 内 WebView 播放 | SPECTATOR | PLATFORM | MatchVodUi | Media Adapter | TODO |
-| POST-018 | VOD 来源按赛区/赛事智能选择 | SYSTEM | POST_MATCH_SOURCE | dev.47-54 | Replay Resolver | TODO |
+| POST-018 | VOD 来源按赛区/赛事智能选择 | SYSTEM | POST_MATCH_SOURCE | dev.47-54 | Replay Resolver | IN PROGRESS |
 | POST-019 | Tournament Research / 年度档案 | BOTH | POST_MATCH_SOURCE | TournamentEditionArchiveUi | Research Query | TODO |
 | POST-020 | Team Archive / 历史成绩 | BOTH | POST_MATCH_SOURCE | TeamDetailUi | Archive Query | TODO |
 | POST-021 | 赛后 AI 总结 / 复盘辅助 | BOTH | GLOBAL_AI_ASSIST | product roadmap | AI Assist | TODO |
 | POST-022 | 未来 VOD ↔ Timeline 对齐 | COACH_ANALYST | POST_MATCH_SOURCE | dev.74 roadmap | Replay Timeline Sync | TODO |
+
+## POST 验收原则
+
+- `WAITING EXTERNAL TEST` 仅表示 Domain/Application/Adapter contract 与自动化已通过，真实 credentialed Provider 或实机仍待补证，不等于 DONE。
+- Series Result、Completed Game、Player Stats、Awards、Replay、Historical Timeline 必须独立取证；一个能力成功不得伪装另一个能力已具备。
+- 全球主链优先：LPL/LCK/LEC/LCP/国际赛事共享同一 Domain/Application，赛区专属来源只能作为 Adapter supplement。
+- 未获得明确 per-game winner 时不得用经济、击杀或其他统计推断 `CompletedGameRecord` 胜方。
+- Historical Timeline 只收真实 Provider frames，不插值；Riot 不再保留历史窗口时保持缺口。
+- Provider raw event/match/game ID 必须停留在 identity mapping / Adapter / provenance，不能成为 canonical MatchId/GameId。
 
 ---
 
@@ -147,7 +156,7 @@
 | SH-005 | Authority | SYSTEM | ALL | dev.68 | Source Domain | IN PROGRESS |
 | SH-006 | Freshness | SYSTEM | ALL | dev.68 | Source Domain | IN PROGRESS |
 | SH-007 | Coverage 12 域 | COACH_ANALYST | ALL | dev.68 | Coverage Domain | TODO |
-| SH-008 | 缓存 / Last-good | SYSTEM | ALL | multiple providers | Persistence Port | TODO |
+| SH-008 | 缓存 / Last-good | SYSTEM | ALL | multiple providers | Persistence Port | IN PROGRESS |
 | SH-009 | APK Seed fallback | SYSTEM | ALL | dev.30/71 | Seed Adapter | TODO |
 | SH-010 | League subscription persistence | SPECTATOR | PLATFORM | dev.47 | Preference Port | TODO |
 | SH-011 | Team Skin Registry | SPECTATOR | PLATFORM | dev.32-33 | Presentation Theme | TODO |
@@ -161,10 +170,10 @@
 | SH-019 | HTTP Range 断点续传 / 自动换线 | SYSTEM | PLATFORM | dev.59-65 | Update Transport | TODO |
 | SH-020 | APK SHA-256 / 包名 / versionCode / 签名校验 | SYSTEM | PLATFORM | README | Update Security | TODO |
 | SH-021 | 全球人员 / Staff 镜像 | SYSTEM | PRE_MATCH_SOURCE | GlobalTeamStaff | Provider Adapter | WAITING EXTERNAL TEST |
-| SH-022 | 全球 Awards 镜像 | SYSTEM | POST_MATCH_SOURCE | GlobalVerifiedAwards | Provider Adapter | TODO |
+| SH-022 | 全球 Awards 镜像 | SYSTEM | POST_MATCH_SOURCE | GlobalVerifiedAwards | Provider Adapter | WAITING EXTERNAL TEST |
 | SH-023 | International Event Mirror | SYSTEM | PRE_MATCH_SOURCE | InternationalEventMirrorProvider | Provider Adapter | TODO |
-| SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | IN PROGRESS |
-| SH-025 | Cito REST/WebSocket optional provider | SYSTEM | ALL | CitoDataPlane | Provider Adapter | TODO |
+| SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | WAITING EXTERNAL TEST |
+| SH-025 | Cito REST/WebSocket optional provider | SYSTEM | ALL | CitoDataPlane | Provider Adapter | WAITING EXTERNAL TEST |
 | SH-026 | Bilibili VOD resolver | SYSTEM | POST_MATCH_SOURCE | BilibiliVodRepository | Provider Adapter | TODO |
 | SH-027 | OCR 多语言（中/日/韩） | SYSTEM | GLOBAL_AI_ASSIST | app dependencies | OCR Adapter | TODO |
 | SH-028 | AI 输出 FACT_BACKED / INFERENCE / UNVERIFIED | BOTH | GLOBAL_AI_ASSIST | Laner LNR-008 | AI Evidence | IN PROGRESS |
