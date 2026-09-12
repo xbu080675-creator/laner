@@ -130,12 +130,14 @@ enum class AwardKind {
 data class VerifiedPostAward(
     val matchId: MatchId,
     val gameId: GameId? = null,
+    val gameNumber: Int? = null,
     val kind: AwardKind,
     val player: PlayerRef,
     val label: String,
     val provenance: SourceProvenance,
 ) {
     init {
+        require(gameNumber == null || gameNumber > 0)
         require(label.isNotBlank())
         require(provenance.sourceClass == SourceClass.POST_MATCH_SOURCE)
         require(provenance.authority != DataAuthority.DERIVED) {
