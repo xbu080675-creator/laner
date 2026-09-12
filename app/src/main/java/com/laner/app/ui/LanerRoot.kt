@@ -47,6 +47,10 @@ fun LanerRoot(
     liveTimelineService: LiveTimelineService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
+    riotCredentialConfigured: Boolean,
+    runtimeCredentialActive: Boolean,
+    onSaveRuntimeCredential: (String) -> Unit,
+    onClearRuntimeCredential: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
@@ -55,12 +59,17 @@ fun LanerRoot(
         color = MaterialTheme.colorScheme.background,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 16.dp),
         ) {
             LanerHeader()
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(10.dp))
+            RiotCredentialPanel(
+                configured = riotCredentialConfigured,
+                runtimeOverrideActive = runtimeCredentialActive,
+                onSave = onSaveRuntimeCredential,
+                onClearRuntimeOverride = onClearRuntimeCredential,
+            )
+            Spacer(Modifier.height(12.dp))
             PhaseSwitcher(selected = selectedPhase, onSelect = { selectedPhase = it })
             Spacer(Modifier.height(18.dp))
             AnimatedContent(

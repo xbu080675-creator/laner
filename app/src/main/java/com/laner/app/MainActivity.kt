@@ -3,17 +3,24 @@ package com.laner.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.laner.app.ui.LanerRoot
 import com.laner.app.ui.LanerTheme
 
 class MainActivity : ComponentActivity() {
-    private val appGraph by lazy { LanerAppGraph(filesDir) }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
+
         setContent {
+            var runtimeKey by remember { mutableStateOf("") }
+            val effectiveKey = runtimeKey.ifBlank { BuildConfig.LOL_ESPORTS_API_KEY }
+            val appGraph = remember(effectiveKey) { LanerAppGraph(filesDir, riotApiKey = effectiveKey) }
+
             LanerTheme {
                 LanerRoot(
                     scheduleService = appGraph.globalScheduleService,
@@ -23,6 +30,10 @@ class MainActivity : ComponentActivity() {
                     liveTimelineService = appGraph.liveTimelineService,
                     postMatchService = appGraph.postMatchService,
                     postTimelineService = appGraph.postTimelineService,
+                    riotCredentialConfigured = effectiveKey.isNotBlank(),
+                    runtimeCredentialActive = runtimeKey.isNotBlank(),
+                    onSaveRuntimeCredential = { value -> runtimeKey = value.trim().take(512) },
+                    onClearRuntimeCredential = { runtimeKey = "" },
                 )
             }
         }

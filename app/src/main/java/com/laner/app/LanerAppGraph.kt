@@ -9,6 +9,7 @@ import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalHistoricalTimelineSource
+import com.laner.app.data.riot.RiotGlobalLiveStateSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotGlobalReplaySource
 import com.laner.app.data.riot.RiotGlobalResultSource
@@ -26,11 +27,18 @@ import java.io.File
 
 class LanerAppGraph(
     filesDir: File,
+    riotApiKey: String = BuildConfig.LOL_ESPORTS_API_KEY,
 ) {
     private val diagnostics = AndroidDiagnosticsPort()
-    private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
-    private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
-    private val riotCompetitionStructureSource = RiotCompetitionStructureSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
+    private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
+
+    private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = riotApiKey)
+    private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = riotApiKey)
+    private val riotCompetitionStructureSource = RiotCompetitionStructureSource(apiKey = riotApiKey)
+    private val riotGlobalLiveStateSource = RiotGlobalLiveStateSource(
+        apiKey = riotApiKey,
+        identityRepository = providerIdentityRepository,
+    )
     private val official2026QualificationSource = Official2026QualificationSource()
     private val normalizedStartingRosterSource = NormalizedStartingRosterSource()
     private val normalizedTeamStaffSource = NormalizedTeamStaffSource()
@@ -39,17 +47,16 @@ class LanerAppGraph(
     private val liveStateRepository = JsonLiveMatchStateRepository(File(filesDir, "live/state"))
     private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
     private val postArchiveRepository = JsonPostMatchArchiveRepository(File(filesDir, "post/archive"))
-    private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
     private val riotGlobalResultSource = RiotGlobalResultSource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
     private val riotGlobalReplaySource = RiotGlobalReplaySource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
     private val riotGlobalHistoricalTimelineSource = RiotGlobalHistoricalTimelineSource(
-        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
 
@@ -71,19 +78,18 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
+    /**
+     * Riot LiveStats is the first global LIVE baseline. Cito remains an optional future realtime
+     * provider; it is not required for basic LIVE lifecycle verification.
+     */
     val liveMatchStateService = LiveMatchStateService(
-        sources = emptyList(),
+        sources = listOf(riotGlobalLiveStateSource),
         repository = liveStateRepository,
         diagnostics = diagnostics,
     )
 
     val liveTimelineService = LiveTimelineService(liveTimelineRepository)
 
-    /**
-     * Global Riot POST is the baseline across every competition present in the Riot schedule:
-     * official SeriesResult + official Replay metadata. Regional providers are supplements only and
-     * can later add deeper CompletedGame/Stats without changing Domain/Application/UI structure.
-     */
     val postMatchService = PostMatchService(
         resultSources = listOf(riotGlobalResultSource),
         gameSources = emptyList(),
@@ -93,7 +99,6 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
-    /** On-demand real historical frames. Never auto-scans every game when POST opens. */
     val postTimelineService = PostTimelineService(
         sources = listOf(riotGlobalHistoricalTimelineSource),
         timelineService = liveTimelineService,
