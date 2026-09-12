@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.PreMatchContextService
 import com.laner.core.domain.MatchPhase
@@ -37,6 +38,7 @@ import com.laner.core.domain.MatchPhase
 fun LanerRoot(
     scheduleService: GlobalScheduleService,
     preMatchContextService: PreMatchContextService,
+    competitionStructureService: CompetitionStructureService,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
@@ -63,11 +65,18 @@ fun LanerRoot(
                 label = "laner-phase",
             ) { phase ->
                 when (phase) {
-                    MatchPhase.PRE_MATCH -> PreMatchScreen(
-                        scheduleService = scheduleService,
-                        preMatchContextService = preMatchContextService,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                        CompetitionStructurePanel(
+                            service = competitionStructureService,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        PreMatchScreen(
+                            scheduleService = scheduleService,
+                            preMatchContextService = preMatchContextService,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     MatchPhase.LIVE_MATCH,
                     MatchPhase.POST_MATCH -> PhaseEmptyState(phase)
                 }
@@ -182,7 +191,7 @@ private val MatchPhase.headline: String
 
 private val MatchPhase.migrationMessage: String
     get() = when (this) {
-        MatchPhase.PRE_MATCH -> "全球赛事、赛程、首发证据、名单池、Staff、近期状态与 H2H 正按真实数据逐项接入。"
+        MatchPhase.PRE_MATCH -> "全球赛事、赛程、届次、Standings、首发证据、名单池、Staff、近期状态与 H2H 正按真实数据逐项接入。"
         MatchPhase.LIVE_MATCH -> "正在迁移统一赛事状态、实时事件、Timeline 与 RiftScreen。只有经过 Source Orchestration 的事实才会进入这里。"
         MatchPhase.POST_MATCH -> "正在迁移终局数据、历史小局、Timeline、回放与复盘。当前骨架不会把未迁移能力伪装成可用。"
     }

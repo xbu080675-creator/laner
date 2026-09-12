@@ -3,7 +3,7 @@
 ## Current Baseline
 
 - Repository: `xbu080675-creator/laner`
-- Working branch: `feature/lnr-011-pre-context`
+- Working branch: `feature/lnr-012-standings-qualification`
 - Project phase: `M1 / Feature Migration`
 - Business implementation: `STARTED`
 - Functional migration: `IN PROGRESS`
@@ -26,14 +26,16 @@
 | LNR-009 | 全球赛事统一管理架构 | DONE |
 | LNR-010 | 全球赛事目录与赛程中心 | WAITING EXTERNAL TEST |
 | LNR-011 | PRE Roster / Staff / Form / H2H | WAITING EXTERNAL TEST |
-| LNR-012 | Standings / Qualification / Tournament Edition | TODO |
+| LNR-012 | Standings / Qualification / Tournament Edition | WAITING EXTERNAL TEST |
+| LNR-013 | LIVE Match State / Provider Arbitration / Unified Event / Timeline | TODO |
 
 ## Current Truth
 
-Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前已经形成两条连续数据链：
+Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前形成三条连续数据链：
 
 1. 全球赛事目录 / 全球赛程；
-2. 以某一场比赛为上下文的 Roster / Starting Roster Evidence / Staff / Recent Form / H2H。
+2. 以某一场比赛为上下文的 Roster / Starting Roster Evidence / Staff / Recent Form / H2H；
+3. Tournament Edition / Standings / Championship Points boundary / Qualification mechanism。
 
 当前已验证存在：
 
@@ -42,7 +44,7 @@ Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前已经形成两条连续
 - `:app` Android/Compose Composition Root；
 - PRE/LIVE/POST 三阶段 Android 壳；
 - Match Lifecycle；
-- Global Competition / Team / Player IDs；
+- Global Competition / Team / Player / Edition IDs；
 - Source Class / Provenance / Authority / Freshness / Revision；
 - AI 与事实路径硬隔离；
 - `GlobalScheduleService`；
@@ -55,7 +57,12 @@ Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前已经形成两条连续
 - normalized global Staff Adapter；
 - completed-Series-only Form / H2H；
 - PRE 页面比赛点选与同页上下文展示；
-- 首发证据冲突可视化；
+- Standings / Championship Points / Qualification / Tournament Edition 四类事实强类型分离；
+- `CompetitionStructureService`；
+- Riot Tournament Edition / Standings Adapter；
+- `schema_version=1` Tournament Edition device archive 与原子替换写入；
+- Riot 2026 Handbook qualification mechanism Source；
+- PRE Competition Structure Panel；
 - GitHub Actions Architecture Gate + Core Tests + Android Debug Compile。
 
 ## Verification Evidence
@@ -87,10 +94,6 @@ GitHub Actions run `34687580424`：PASS。
 
 修复后 GitHub Actions run `34688715420`：PASS。
 
-- Architecture boundary gate：PASS；
-- Domain/Application tests：PASS；
-- Android debug compile：PASS。
-
 自动化已证明：
 - 五人名单池不会自动变成官方首发；
 - 错日期/错对手首发证据被拒绝；
@@ -107,8 +110,46 @@ GitHub Actions run `34687580424`：PASS。
 
 因此 LNR-011 总状态为 `WAITING EXTERNAL TEST`，其中 PRE-007 可凭纯业务不变量与自动化直接标 `DONE`。
 
+### LNR-012
+
+Core 语义验证 run `34689400211`：PASS。
+Riot Tournament/Standings Adapter 验证 run `34689473333`：PASS。
+
+run `34690235942`：
+- Architecture boundary gate：PASS；
+- Domain/Application tests：PASS；
+- Android debug compile：FAIL。
+
+失败根因：Tournament Edition archive 的 `Files.move(...)` 返回 `Path`，导致 Kotlin 将 `save()` block 推断为 `Path`，不满足 Repository `Unit` 契约。修复仅在 block 末尾显式返回 `Unit`，未改变原子写入或赛事语义。
+
+最终 exact-head CI：文档收口后重新验证并回填。
+
+自动化已证明：
+- Standings points 不会自动成为 Championship Points；
+- Standings 第一名不会自动成为 Qualification LOCKED；
+- participant set 不能反推 Championship Points / Seed / Qualification Origin；
+- tied ordinal 合法；
+- Tournament Edition archive merge 不因当前 API 缺页删除历史届次；
+- Qualification 无可信规则时返回 `UNKNOWN / PENDING`。
+
+当前产品行为：
+- Riot 提供 Tournament Edition / Standings；
+- Riot 2026 Handbook Seed 只提供已核实 qualification mechanism；
+- Championship Points 当前没有接入 2026-09-12 新鲜可信总分源，UI 明确显示缺失；
+- 旧 RiftLab `2026-09-08 赛后` 静态积分未迁移为当前值；
+- LEC 2026 官方资格表述冲突，保持 PENDING。
+
+未执行 / 外部验收：
+- credentialed Riot Tournament/Standings 在线读取；
+- Android 实机 archive 写入/重启恢复；
+- Android 实机 Competition Structure Panel；
+- 新鲜 Championship Points 总分 Source；
+- 完整 team-level qualification state 外部证据。
+
+因此 LNR-012 总状态为 `WAITING EXTERNAL TEST`；PRE-019 team-level state 保持 `IN PROGRESS`，不因任务总状态被误报为 DONE。
+
 旧 RiftLab 现场实测确认的场间/新局开局识别证据仍保留于 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`，迁移 LIVE-001/LIVE-002 时必须永久回归。
 
 ## Next
 
-进入 `LNR-012`：Standings / Qualification / Tournament Edition。LNR-010 与 LNR-011 的外部验收在具备真实 credential / Android 实机环境时补证，不阻塞正交迁移。
+进入 `LNR-013`：LIVE Match State / Provider Arbitration / Unified Event / Timeline。LNR-010~012 的外部验收在具备真实 credential / Android 实机环境时补证，不阻塞正交迁移。

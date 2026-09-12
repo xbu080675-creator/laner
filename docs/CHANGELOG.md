@@ -5,6 +5,21 @@ All notable project changes must be recorded here at release or milestone level.
 ## Unreleased
 
 ### M1 Feature Migration
+- Implemented `LNR-012` Tournament Edition / Standings / Qualification structure slice.
+- Added pure-domain Standings, Championship Points, Qualification and Tournament Edition contracts with hard semantic separation.
+- Added typed Qualification inputs and evidence levels `OFFICIAL / PROVIDER / DERIVED / PENDING`; first place, participant ordering and standings points cannot silently become qualification facts.
+- Added `CompetitionStructureService` and four independent Application source ports so Tournament Edition, Standings, Championship Points and Qualification can degrade independently.
+- Added Riot `getTournamentsForLeague/getStandings` Adapter. Provider tournament IDs remain Adapter-local and do not become canonical Domain IDs.
+- Removed the legacy `points = wins` shortcut: Riot standings publish `STAGE_POINTS` only when the payload contains an explicit points field.
+- Added additive Tournament Edition archive with `schema_version=1`; a temporarily missing upstream edition does not delete historical archive facts.
+- Added atomic archive publishing with sibling temp file + `ATOMIC_MOVE / REPLACE_EXISTING`; unsupported atomic replacement fails rather than deleting last-known-good data first.
+- Added a narrow Riot 2026 Handbook Qualification mechanism source. It publishes only explicitly verified mechanisms and does not infer team-level locked/eliminated state from standings.
+- LEC 2026 qualification remains PENDING because the current Riot Handbook surface contains conflicting top-two/top-three qualification wording.
+- Deliberately did not migrate RiftLab's `2026-09-08` static LPL Championship Points snapshot as a current `2026-09-12` total; missing fresh annual points stay visibly unknown.
+- Added PRE `CompetitionStructurePanel` for Edition selection, Standings, Championship Points availability and Qualification mechanism/evidence state without UI→Provider or UI→storage coupling.
+- Regression tests lock: tied ordinal support; Standings ≠ Championship Points; first place ≠ automatically qualified; participant origin ≠ invented points/seed; archive merge preserves older editions; missing qualification evidence stays UNKNOWN/PENDING.
+- CI run `34690235942` preserved a real failure: Architecture/Core PASS, Android compile FAIL because `Files.move()` caused the repository `save()` block to infer `Path` instead of `Unit`; fixed by explicit `Unit` without changing persistence semantics.
+- `PRE-017` and `PRE-020` are `DONE` by Domain invariant + automated tests. `PRE-016/PRE-018/PRE-021` remain `WAITING EXTERNAL TEST`; `PRE-019` remains `IN PROGRESS` until team-level qualification facts have sufficient evidence.
 - Implemented `LNR-011` PRE context slice: Team Roster Pool, Official Starting Roster evidence, Staff, Recent Form and H2H.
 - Added pure-domain `TeamRosterPool`, `OfficialStartingRoster`, `StartingRosterResolution`, `StaffMember`, `TeamStaffSnapshot` and `RecentSeries` contracts.
 - Hard-separated roster pool from starting lineup: a clean five-player roster pool can never become an official starting roster without valid official evidence.
