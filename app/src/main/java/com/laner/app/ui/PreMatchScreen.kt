@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,7 +41,6 @@ import com.laner.core.application.ScheduleLoadStatus
 import com.laner.core.application.SourceRequestContext
 import com.laner.core.domain.CompetitionId
 import com.laner.core.domain.CompetitionKind
-import com.laner.core.domain.PlayerRef
 import com.laner.core.domain.PlayerRole
 import com.laner.core.domain.RecentSeries
 import com.laner.core.domain.ScheduleState
@@ -194,9 +192,7 @@ private fun PreMatchContent(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            ScheduleStatusCard(snapshot = snapshot, onRefresh = onRefresh)
-        }
+        item { ScheduleStatusCard(snapshot = snapshot, onRefresh = onRefresh) }
 
         item {
             Column {
@@ -258,16 +254,12 @@ private fun PreMatchContent(
                             recentSeries = contextState.snapshot.rightRecentSeries,
                         )
                     }
-                    item {
-                        HeadToHeadCard(contextState.snapshot)
-                    }
+                    item { HeadToHeadCard(contextState.snapshot) }
                 }
             }
         }
 
-        item {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        }
+        item { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
 
         item {
             Column {
@@ -306,10 +298,7 @@ private fun PreMatchContent(
 }
 
 @Composable
-private fun ScheduleStatusCard(
-    snapshot: GlobalScheduleSnapshot,
-    onRefresh: () -> Unit,
-) {
+private fun ScheduleStatusCard(snapshot: GlobalScheduleSnapshot, onRefresh: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -325,10 +314,7 @@ private fun ScheduleStatusCard(
                 },
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = when (snapshot.status) {
-                    ScheduleLoadStatus.READY -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.error
-                },
+                color = if (snapshot.status == ScheduleLoadStatus.READY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
             )
             Spacer(Modifier.height(6.dp))
             Text(
@@ -347,11 +333,7 @@ private fun ScheduleStatusCard(
                 )
             }
             Spacer(Modifier.height(10.dp))
-            Surface(
-                onClick = onRefresh,
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-            ) {
+            Surface(onClick = onRefresh, shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                 Text(
                     text = "重新同步",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -374,24 +356,19 @@ private fun FocusMatchCard(match: ScheduledSeries) {
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                text = "${match.competition.name} · ${match.blockName.ifBlank { "赛事" }}",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text("${match.competition.name} · ${match.blockName.ifBlank { "赛事" }}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(5.dp))
             Text(
-                text = "${teamLabel(left.team.code, left.team.name)}  VS  ${teamLabel(right.team.code, right.team.name)}",
+                "${teamLabel(left.team.code, left.team.name)}  VS  ${teamLabel(right.team.code, right.team.name)}",
                 fontSize = 21.sp,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "${formatLocalTime(match.startTimeEpochMillis)} · ${match.bestOf?.let { "BO$it" } ?: "BO待确认"} · ${scheduleStateLabel(match.state)}",
+                "${formatLocalTime(match.startTimeEpochMillis)} · ${match.bestOf?.let { "BO$it" } ?: "BO待确认"} · ${scheduleStateLabel(match.state)}",
                 fontSize = 11.sp,
-                color = if (match.state == ScheduleState.EVENT_LIVE) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (match.state == ScheduleState.EVENT_LIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -406,75 +383,40 @@ private fun ContextHealthCard(snapshot: MatchPreContextSnapshot) {
         color = MaterialTheme.colorScheme.errorContainer,
     ) {
         Column(Modifier.padding(14.dp)) {
-            Text(
-                text = "赛前上下文 · 部分降级",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onErrorContainer,
-            )
+            Text("赛前上下文 · 部分降级", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
             snapshot.failures.take(3).forEach { failure ->
-                Text(
-                    text = "${failure.code} · ${failure.message}",
-                    fontSize = 10.sp,
-                    lineHeight = 15.sp,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
+                Text("${failure.code} · ${failure.message}", fontSize = 10.sp, lineHeight = 15.sp, color = MaterialTheme.colorScheme.onErrorContainer)
             }
         }
     }
 }
 
 @Composable
-private fun TeamContextCard(
-    context: TeamPreMatchContext,
-    recentSeries: List<RecentSeries>,
-) {
+private fun TeamContextCard(context: TeamPreMatchContext, recentSeries: List<RecentSeries>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                text = teamLabel(context.team.code, context.team.name),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Text(teamLabel(context.team.code, context.team.name), fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(10.dp))
 
-            Text(
-                text = "STARTING ROSTER / 首发",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Text("STARTING ROSTER / 首发", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             StartingRosterBlock(context.startingRoster)
 
             Spacer(Modifier.height(12.dp))
-            Text(
-                text = "ROSTER POOL / 名单池（不等于首发）",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text("ROSTER POOL / 名单池（不等于首发）", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             val pool = context.rosterPool
             if (pool == null || pool.members.isEmpty()) {
                 MutedLine("当前没有可核实名单池。")
             } else {
-                pool.members.sortedBy { roleOrder(it.role) }.forEach { player ->
-                    MutedLine("${playerRoleLabel(player.role)} · ${player.handle}")
-                }
+                pool.members.sortedBy { roleOrder(it.role) }.forEach { player -> MutedLine("${playerRoleLabel(player.role)} · ${player.handle}") }
                 MutedLine("SOURCE · ${pool.provenance.providerId}")
             }
 
             Spacer(Modifier.height(12.dp))
-            Text(
-                text = "TEAM STAFF / 教练组与管理人员",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text("TEAM STAFF / 教练组与管理人员", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             val staff = context.staff
             if (staff == null || (staff.management.isEmpty() && staff.coachingStaff.isEmpty())) {
                 MutedLine("当前没有可核实 Staff 数据。")
@@ -485,17 +427,9 @@ private fun TeamContextCard(
             }
 
             Spacer(Modifier.height(12.dp))
-            Text(
-                text = "RECENT FORM / 近期正式 Series",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (recentSeries.isEmpty()) {
-                MutedLine("当前历史窗口没有可核实的已结束 Series。")
-            } else {
-                recentSeries.forEach { series -> MutedLine(recentSeriesLine(series)) }
-            }
+            Text("RECENT FORM / 近期正式 Series", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (recentSeries.isEmpty()) MutedLine("当前历史窗口没有可核实的已结束 Series。")
+            else recentSeries.forEach { series -> MutedLine(recentSeriesLine(series)) }
         }
     }
 }
@@ -504,45 +438,26 @@ private fun TeamContextCard(
 private fun StartingRosterBlock(resolution: StartingRosterResolution) {
     when (resolution) {
         StartingRosterResolution.Unknown -> {
-            Text(
-                text = "首发未确认",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Text("首发未确认", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             MutedLine("名单池即使恰好五人，也不会被 Laner 自动当作官方首发。")
         }
         is StartingRosterResolution.Confirmed -> {
             Text(
-                text = if (resolution.crossConfirmed) "首发已交叉确认" else "首发已确认",
+                if (resolution.crossConfirmed) "首发已交叉确认" else "首发已确认",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
             resolution.roster.starters.sortedBy { roleOrder(it.role) }.forEach { player ->
-                Text(
-                    text = "${playerRoleLabel(player.role)} · ${player.handle}",
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Text("${playerRoleLabel(player.role)} · ${player.handle}", fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurface)
             }
-            MutedLine(
-                "${resolution.roster.account} · ${resolution.roster.platform} · ${resolution.roster.evidenceSource.name} · evidence ${resolution.evidenceCount}"
-            )
+            MutedLine("${resolution.roster.account} · ${resolution.roster.platform} · ${resolution.roster.evidenceSource.name} · evidence ${resolution.evidenceCount}")
         }
         is StartingRosterResolution.Conflict -> {
-            Text(
-                text = "官方首发证据冲突",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error,
-            )
+            Text("官方首发证据冲突", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
             MutedLine("检测到 ${resolution.candidates.size} 套同级官方阵容；不静默覆盖，等待新证据确认。")
             resolution.candidates.take(2).forEachIndexed { index, roster ->
-                MutedLine(
-                    "方案 ${index + 1} · ${roster.starters.sortedBy { roleOrder(it.role) }.joinToString(" / ") { it.handle }} · ${roster.account}"
-                )
+                MutedLine("方案 ${index + 1} · ${roster.starters.sortedBy { roleOrder(it.role) }.joinToString(" / ") { it.handle }} · ${roster.account}")
             }
         }
     }
@@ -550,63 +465,33 @@ private fun StartingRosterBlock(resolution: StartingRosterResolution) {
 
 @Composable
 private fun StaffLine(staff: StaffMember) {
-    MutedLine(
-        buildString {
-            append(staffRoleLabel(staff.role))
-            append(" · ")
-            append(staff.displayName)
-            staff.realName?.let {
-                append(" · ")
-                append(it)
-            }
-        }
-    )
+    MutedLine(buildString {
+        append(staffRoleLabel(staff.role))
+        append(" · ")
+        append(staff.displayName)
+        staff.realName?.let { append(" · "); append(it) }
+    })
 }
 
 @Composable
 private fun HeadToHeadCard(snapshot: MatchPreContextSnapshot) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-    ) {
+    Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                text = "RECENT H2H / 近期交手",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = "${teamLabel(snapshot.left.team.code, snapshot.left.team.name)} 视角",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            if (snapshot.recentHeadToHeadFromLeftPerspective.isEmpty()) {
-                MutedLine("当前历史窗口没有可核实的近期直接交手。")
-            } else {
-                snapshot.recentHeadToHeadFromLeftPerspective.forEach { series ->
-                    MutedLine(recentSeriesLine(series))
-                }
-            }
+            Text("RECENT H2H / 近期交手", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text("${teamLabel(snapshot.left.team.code, snapshot.left.team.name)} 视角", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            if (snapshot.recentHeadToHeadFromLeftPerspective.isEmpty()) MutedLine("当前历史窗口没有可核实的近期直接交手。")
+            else snapshot.recentHeadToHeadFromLeftPerspective.forEach { series -> MutedLine(recentSeriesLine(series)) }
             MutedLine("只使用已验证结束的 Series；W/L 以上方队伍为视角。")
         }
     }
 }
 
 @Composable
-private fun ScheduleMatchCard(
-    match: ScheduledSeries,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun ScheduleMatchCard(match: ScheduledSeries, selected: Boolean, onClick: () -> Unit) {
     val left = match.teams[0]
     val right = match.teams[1]
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
@@ -615,128 +500,64 @@ private fun ScheduleMatchCard(
         Column(Modifier.padding(15.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    text = "${match.competition.name} · ${match.blockName.ifBlank { "赛事" }}",
+                    "${match.competition.name} · ${match.blockName.ifBlank { "赛事" }}",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
-                if (selected) {
-                    Text(
-                        text = "已选",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+                if (selected) Text("已选", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
             Spacer(Modifier.height(5.dp))
             Text(
-                text = "${teamLabel(left.team.code, left.team.name)}  ${left.gameWins}  :  ${right.gameWins}  ${teamLabel(right.team.code, right.team.name)}",
+                "${teamLabel(left.team.code, left.team.name)}  ${left.gameWins}  :  ${right.gameWins}  ${teamLabel(right.team.code, right.team.name)}",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(7.dp))
             Text(
-                text = buildString {
-                    append(formatLocalTime(match.startTimeEpochMillis))
-                    append(" · ")
-                    append(match.bestOf?.let { "BO$it" } ?: "BO待确认")
-                    append(" · ")
-                    append(scheduleStateLabel(match.state))
-                },
+                "${formatLocalTime(match.startTimeEpochMillis)} · ${match.bestOf?.let { "BO$it" } ?: "BO待确认"} · ${scheduleStateLabel(match.state)}",
                 fontSize = 11.sp,
-                color = if (match.state == ScheduleState.EVENT_LIVE) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                color = if (match.state == ScheduleState.EVENT_LIVE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = "来源 ${match.provenance.providerId}",
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.outline,
-            )
+            Text("来源 ${match.provenance.providerId}", fontSize = 10.sp, color = MaterialTheme.colorScheme.outline)
         }
     }
 }
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 0.7.sp,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
+    Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.7.sp, color = MaterialTheme.colorScheme.onSurface)
 }
 
 @Composable
 private fun MutedLine(text: String) {
-    Text(
-        text = text,
-        fontSize = 11.sp,
-        lineHeight = 17.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Text(text, fontSize = 11.sp, lineHeight = 17.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
-private fun PreMatchMessage(
-    title: String,
-    body: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
-    ) {
+private fun PreMatchMessage(title: String, body: String, modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.padding(18.dp)) {
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(6.dp))
-            Text(
-                text = body,
-                fontSize = 12.sp,
-                lineHeight = 18.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(body, fontSize = 12.sp, lineHeight = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 private fun focusMatch(matches: List<ScheduledSeries>, nowEpochMillis: Long): ScheduledSeries? {
     if (matches.isEmpty()) return null
-    return matches
-        .filter { it.state == ScheduleState.EVENT_LIVE }
-        .minByOrNull { kotlin.math.abs(it.startTimeEpochMillis - nowEpochMillis) }
-        ?: matches
-            .filter { it.state == ScheduleState.UPCOMING && it.startTimeEpochMillis >= nowEpochMillis }
-            .minByOrNull { it.startTimeEpochMillis }
-        ?: matches
-            .filter { it.state == ScheduleState.COMPLETED }
-            .maxByOrNull { it.startTimeEpochMillis }
+    return matches.filter { it.state == ScheduleState.EVENT_LIVE }.minByOrNull { kotlin.math.abs(it.startTimeEpochMillis - nowEpochMillis) }
+        ?: matches.filter { it.state == ScheduleState.UPCOMING && it.startTimeEpochMillis >= nowEpochMillis }.minByOrNull { it.startTimeEpochMillis }
+        ?: matches.filter { it.state == ScheduleState.COMPLETED }.maxByOrNull { it.startTimeEpochMillis }
         ?: matches.minByOrNull { kotlin.math.abs(it.startTimeEpochMillis - nowEpochMillis) }
 }
 
 private fun recentSeriesLine(series: RecentSeries): String = buildString {
-    append(seriesOutcomeLabel(series.outcome))
-    append(" · ")
-    append(series.scoreFor)
-    append(':')
-    append(series.scoreAgainst)
-    append(" vs ")
-    append(teamLabel(series.opponent.code, series.opponent.name))
-    append(" · ")
-    append(series.competition.name)
-    append(" · ")
-    append(formatLocalTime(series.startTimeEpochMillis))
+    append(seriesOutcomeLabel(series.outcome)); append(" · "); append(series.scoreFor); append(':'); append(series.scoreAgainst)
+    append(" vs "); append(teamLabel(series.opponent.code, series.opponent.name)); append(" · "); append(series.competition.name)
+    append(" · "); append(formatLocalTime(series.startTimeEpochMillis))
 }
 
 private fun competitionLabel(kind: CompetitionKind, name: String): String = when (kind) {
@@ -810,7 +631,4 @@ private fun teamLabel(code: String, name: String): String = code.ifBlank { name 
 private fun formatLocalTime(epochMillis: Long): String =
     LOCAL_TIME_FORMATTER.format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
-private val LOCAL_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern(
-    "MM-dd E HH:mm",
-    Locale.SIMPLIFIED_CHINESE,
-)
+private val LOCAL_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd E HH:mm", Locale.SIMPLIFIED_CHINESE)
