@@ -25,16 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.laner.core.application.GlobalScheduleService
-import com.laner.core.application.LiveMatchSourceQuery
-import com.laner.core.application.LiveMatchStateService
+import com.laner.core.application.LiveMatchContextResult
+import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.LiveSnapshotLoadStatus
 import com.laner.core.application.LiveSnapshotResolution
-import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveStateLoadStatus
 import com.laner.core.application.LiveStateResolution
-import com.laner.core.application.LiveTargetSelector
-import com.laner.core.application.LiveTimelineService
+import com.laner.core.application.LiveTargetUnavailableReason
 import com.laner.core.application.SourceRequestContext
 import com.laner.core.domain.DraftChangedEvent
 import com.laner.core.domain.GameTimeline
@@ -61,10 +58,7 @@ private sealed interface LiveScreenState {
 
 @Composable
 fun LiveMatchScreen(
-    scheduleService: GlobalScheduleService,
-    liveMatchStateService: LiveMatchStateService,
-    liveSnapshotService: LiveSnapshotService,
-    liveTimelineService: LiveTimelineService,
+    liveMatchContextService: LiveMatchContextService,
     overlayPermissionGranted: Boolean = false,
     riftScreenRunning: Boolean = false,
     onRequestOverlayPermission: () -> Unit = {},
@@ -76,42 +70,31 @@ fun LiveMatchScreen(
 
     val state by produceState<LiveScreenState>(
         initialValue = LiveScreenState.Loading,
-        key1 = scheduleService,
-        key2 = liveMatchStateService,
-        key3 = refreshNonce,
+        key1 = liveMatchContextService,
+        key2 = refreshNonce,
     ) {
-        value = try {
-            val now = System.currentTimeMillis()
-            val context = SourceRequestContext(
-                nowEpochMillis = now,
-                correlationId = "live-$now-$refreshNonce",
-            )
-            val schedule = scheduleService.load(context)
-            val target = LiveTargetSelector.select(schedule.matches, now)
-            if (target == null) {
-                LiveScreenState.NoTarget(
-                    reason = if (schedule.matches.isEmpty()) {
+        val now = System.currentTimeMillis()
+        val context = SourceRequestContext(
+            nowEpochMillis = now,
+            correlationId = "live-$now-$refreshNonce",
+        )
+        value = when (val result = liveMatchContextService.load(context)) {
+            is LiveMatchContextResult.NoTarget -> LiveScreenState.NoTarget(
+                reason = when (result.reason) {
+                    LiveTargetUnavailableReason.NO_MATCHES ->
                         "当前没有可用赛事目录，LIVE 不会自行猜测比赛目标。"
-                    } else {
+                    LiveTargetUnavailableReason.NO_ELIGIBLE_TARGET ->
                         "当前没有可识别的赛事目标。"
-                    }
-                )
-            } else {
-                val query = LiveMatchSourceQuery.from(target)
-                val resolution = liveMatchStateService.refresh(query = query, context = context)
-                val snapshotResolution = liveSnapshotService.refresh(query = query, context = context)
-                val gameId = snapshotResolution.snapshot?.game?.gameId ?: resolution.state.currentGameId
-                LiveScreenState.Ready(
-                    match = target,
-                    resolution = resolution,
-                    snapshotResolution = snapshotResolution,
-                    timeline = gameId?.let { liveTimelineService.load(it) },
-                )
-            }
-        } catch (error: Throwable) {
-            LiveScreenState.Failed(
-                error.message?.take(180)?.takeIf { it.isNotBlank() }
-                    ?: error::class.java.simpleName
+                }
+            )
+            is LiveMatchContextResult.Ready -> LiveScreenState.Ready(
+                match = result.match,
+                resolution = result.liveState,
+                snapshotResolution = result.snapshot,
+                timeline = result.timeline,
+            )
+            is LiveMatchContextResult.Failed -> LiveScreenState.Failed(
+                "${result.failure.code.value} · ${result.failure.message}"
             )
         }
     }
