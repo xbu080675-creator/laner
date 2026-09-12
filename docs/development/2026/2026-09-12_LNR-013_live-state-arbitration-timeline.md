@@ -188,7 +188,8 @@ Timeline 只保存标准化 `LiveGameSnapshot` 与 `MatchEvent`。
   - historical failure 已写入 `docs/TROUBLESHOOTING.md`。
 - fix commit `22668b37d22be5969ec59c99ac687f57c52a1ad3`：同一 Game 的旧 lifecycle-changing observation 一律 stale。
 - run `34691458209`: Architecture Gate PASS / Domain+Application Tests PASS / Android Compile PASS。
-- 文档收口后的 final exact-head / PR Gate：在 PR 收口阶段验证并在 merge 后回填。
+- final exact-head branch run `34691766133` on `12eb24b901f34c98837285f46d56f9b279fc0d67`: Architecture / Domain+Application / Android 全 PASS。
+- PR #5 Gate run `34691843981` on the same exact head: Architecture / Domain+Application / Android 全 PASS。
 
 ## 8. Risks / Compatibility / Security / Performance / Data
 
@@ -209,16 +210,20 @@ Timeline 只保存标准化 `LiveGameSnapshot` 与 `MatchEvent`。
 
 ## 10. Rollback
 
-- Revert LNR-013 PR/merge commit 可移除本任务全部 LIVE Core/Application 能力。
+- Revert merge commit `996cd1275729c324aca7a8d8c6b145c2f9206fc8` 可移除 LNR-013 主任务改动；若保留后续依赖提交，需按依赖顺序回滚。
 - 本轮无 persistent schema / remote DB migration，无数据 rollback。
 
-## 11. Repository Evidence
+## 11. Final Repository Evidence
 
 - Branch: `feature/lnr-013-live-state-timeline`
 - Baseline: `f6e00c9a3b960fe8370f20da7d5a10675c66c69b`
 - Key fix: `22668b37d22be5969ec59c99ac687f57c52a1ad3`
-- Code-level final PASS before documentation closeout: run `34691458209`
-- PR / merge / post-doc exact-head CI: merge 后回填本记录。
+- Final branch head: `12eb24b901f34c98837285f46d56f9b279fc0d67`
+- Final branch CI: `34691766133` PASS
+- PR: `#5 — LNR-013: LIVE state, arbitration and timeline core`
+- PR Gate: `34691843981` PASS
+- Merge commit: `996cd1275729c324aca7a8d8c6b145c2f9206fc8`
+- Post-merge record commit: 本次提交。
 
 ## 12. Status Sync
 
@@ -243,7 +248,9 @@ Timeline 只保存标准化 `LiveGameSnapshot` 与 `MatchEvent`。
 - 模块 README：`PASS`；
 - Troubleshooting 历史 bug 留档：`PASS`；
 - 状态/计划/功能基线同步：`PASS`；
-- exact-head CI / PR Gate：合并前必须 PASS；
+- exact-head CI：`PASS`；
+- PR Gate：`PASS`；
+- Commit + Push + PR + Merge：`PASS`；
 - real Provider / persistence / UI wiring：`N/A for LNR-013`，进入 LNR-014。
 
-结论：LNR-013 Core/Application 范围 `DONE`；仓库合并仍必须经过 exact-head CI + PR Gate。
+结论：`PASS / DONE`。LNR-013 Core/Application 基础层正式收口。
