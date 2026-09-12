@@ -44,7 +44,7 @@ fun RiotCredentialPanel(
                     text = when {
                         runtimeOverrideActive -> "临时 Key 生效中 · 退出进程即清除"
                         configured -> "构建时 Secret 生效中"
-                        else -> "点此临时配置 · 不落盘",
+                        else -> "点此临时配置 · 不落盘"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
