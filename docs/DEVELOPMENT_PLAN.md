@@ -26,6 +26,9 @@
 必须逐项记录：
 - 功能名称；
 - Phase：`PRE_MATCH / LIVE_MATCH / POST_MATCH`；
+- Persona：`SPECTATOR / COACH_ANALYST / BOTH`；
+- User Question；
+- Decision Value；
 - 用户入口；
 - 数据来源；
 - UI/交互；
@@ -33,7 +36,7 @@
 - 已知问题；
 - 迁移验收方式。
 
-任何用户可见业务功能如果无法归属三阶段之一，必须先进行架构评审，不得直接迁移。
+任何用户可见业务功能如果无法归属三阶段之一，或无法说明它解决了什么真实用户问题，必须先进行架构评审，不得直接迁移。
 
 ### LNR-002 — 旧工程架构与技术债审计
 状态：`TODO`
@@ -49,7 +52,9 @@
 - 所有业务页面以 `PRE_MATCH / LIVE_MATCH / POST_MATCH` 为一级产品轴；
 - 细粒度 Match State 能稳定映射到三阶段；
 - 共享能力没有被错误建成第四业务阶段；
-- UI 不自行判断阶段。
+- UI 不自行判断阶段；
+- 同一领域事实不会因观众/教练视图不同而复制业务实现；
+- Presentation 能从统一 Application Query 派生观众层和教练/分析层信息密度。
 
 ### LNR-004 — 工程骨架与 CI Gate
 状态：`TODO`
@@ -65,6 +70,22 @@
 - `docs/ARCHITECTURE.md` 更新；
 - `docs/decisions/ADR-001-three-phase-product-axis.md`；
 - 本任务开发留档。
+
+### LNR-006 — 用户角色 × 比赛阶段产品矩阵
+状态：`DONE`
+
+目标：以“教练/分析人员”和“普通观众”在赛前、赛中、赛后真正关心的问题为功能设计来源，禁止仅因“数据能拿到”就堆功能。
+
+统一公式：
+
+```text
+Feature = Persona × Match Phase × User Question
+```
+
+产物：
+- `docs/PRODUCT_PERSPECTIVE_MATRIX.md`
+- `docs/ARCHITECTURE.md` 产品设计约束更新
+- 本任务开发留档
 
 ## M1 — Core Migration
 
