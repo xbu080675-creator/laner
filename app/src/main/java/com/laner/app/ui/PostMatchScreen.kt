@@ -31,6 +31,7 @@ import com.laner.core.application.PostMatchQuery
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostMatchSnapshot
 import com.laner.core.application.SourceRequestContext
+import com.laner.core.domain.ReplayAsset
 import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
 import com.laner.core.domain.VerifiedPostAward
@@ -87,6 +88,7 @@ fun PostMatchScreen(
                 item { PostTargetCard(current.match) }
                 item { PostSummaryCard(current.snapshot) }
                 item { PostCapabilityCard(current.snapshot) }
+                item { ReplayCard(current.snapshot.bundle.replays) }
                 item { AwardsCard(current.snapshot.bundle.awards) }
             }
         }
@@ -160,6 +162,38 @@ private fun PostCapabilityCard(snapshot: PostMatchSnapshot) {
             Text(note, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (snapshot.failures.isNotEmpty() || snapshot.conflicts.isNotEmpty()) {
                 Text("Failures ${snapshot.failures.size} · Conflicts ${snapshot.conflicts.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReplayCard(replays: List<ReplayAsset>) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Text("REPLAY / 官方录像元数据", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            if (replays.isEmpty()) {
+                Text("暂无已验证 Replay metadata。录像缺失不会影响赛果和其他赛后事实。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                replays.forEachIndexed { index, replay ->
+                    if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    Text(
+                        "${replay.gameNumber?.let { "G$it" } ?: "SERIES"} · ${replay.provider.name}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        listOfNotNull(replay.locale, replay.externalMediaId).joinToString(" · ").ifBlank { "官方录像入口" },
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        "${replay.provenance.providerId} · offset ${replay.offsetSeconds}s",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
