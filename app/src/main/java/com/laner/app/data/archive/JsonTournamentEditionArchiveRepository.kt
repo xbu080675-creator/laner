@@ -18,13 +18,15 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * Device-local Tournament Edition archive.
  *
  * The file is a cache/archive implementation, never a domain identity source. Writes use a sibling
- * temporary file followed by rename so an interrupted write cannot silently replace the last good
- * snapshot with a partial JSON document.
+ * temporary file plus an atomic replace; if the filesystem cannot provide that guarantee we fail
+ * the write instead of deleting the last known-good archive first.
  */
 class JsonTournamentEditionArchiveRepository(
     private val directory: File,
@@ -52,13 +54,16 @@ class JsonTournamentEditionArchiveRepository(
             .put("editions", JSONArray().apply { editions.forEach { put(encodeEdition(it)) } })
         val temp = File(directory, "$FILE_NAME.tmp")
         temp.writeText(root.toString())
-        if (archiveFile.exists() && !archiveFile.delete()) {
+        try {
+            Files.move(
+                temp.toPath(),
+                archiveFile.toPath(),
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING,
+            )
+        } catch (error: Throwable) {
             temp.delete()
-            error("Could not replace Tournament Edition archive")
-        }
-        if (!temp.renameTo(archiveFile)) {
-            temp.delete()
-            error("Could not atomically publish Tournament Edition archive")
+            throw error
         }
     }
 
