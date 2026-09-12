@@ -9,6 +9,7 @@ import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalHistoricalTimelineSource
+import com.laner.app.data.riot.RiotGlobalLiveSnapshotSource
 import com.laner.app.data.riot.RiotGlobalLiveStateSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotGlobalReplaySource
@@ -19,6 +20,7 @@ import com.laner.app.data.staff.NormalizedTeamStaffSource
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
+import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
@@ -36,6 +38,10 @@ class LanerAppGraph(
     private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = riotApiKey)
     private val riotCompetitionStructureSource = RiotCompetitionStructureSource(apiKey = riotApiKey)
     private val riotGlobalLiveStateSource = RiotGlobalLiveStateSource(
+        apiKey = riotApiKey,
+        identityRepository = providerIdentityRepository,
+    )
+    private val riotGlobalLiveSnapshotSource = RiotGlobalLiveSnapshotSource(
         apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
@@ -78,10 +84,7 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
-    /**
-     * Riot LiveStats is the first global LIVE baseline. Cito remains an optional future realtime
-     * provider; it is not required for basic LIVE lifecycle verification.
-     */
+    /** Lifecycle authority remains independent from gameplay snapshot ingestion. */
     val liveMatchStateService = LiveMatchStateService(
         sources = listOf(riotGlobalLiveStateSource),
         repository = liveStateRepository,
@@ -89,6 +92,12 @@ class LanerAppGraph(
     )
 
     val liveTimelineService = LiveTimelineService(liveTimelineRepository)
+
+    val liveSnapshotService = LiveSnapshotService(
+        sources = listOf(riotGlobalLiveSnapshotSource),
+        timelineService = liveTimelineService,
+        diagnostics = diagnostics,
+    )
 
     val postMatchService = PostMatchService(
         resultSources = listOf(riotGlobalResultSource),

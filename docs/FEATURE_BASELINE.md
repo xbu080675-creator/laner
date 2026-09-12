@@ -48,7 +48,6 @@
 | PRE-025 | 官方首发图片 / OCR / AI 辅助识别 | BOTH | GLOBAL_AI_ASSIST | RosterVisionPipeline | Roster Assist Pipeline | TODO |
 
 ## PRE 验收原则
-
 - 不允许名单池顺序被伪装成官方首发。
 - 不允许无可靠来源时填造 Rank、伤病、转会、首发变化。
 - 所有数据必须带 provenance / authority / freshness。
@@ -65,12 +64,12 @@
 | LIVE-002 | 赛事开始 != 游戏开始 | BOTH | LIVE_MATCH_SOURCE | dev.60 / RiftLabApp / 2026-09-12 legacy real-device intermission PASS | Match State Engine | IN PROGRESS |
 | LIVE-003 | Riot/LPL/Cito 等多实时源 | SYSTEM | LIVE_MATCH_SOURCE | data providers | Source Orchestration | IN PROGRESS |
 | LIVE-004 | 来源优先级、降级、fallback | SYSTEM | LIVE_MATCH_SOURCE | MatchSessionStore/providers | Source Arbitration | IN PROGRESS |
-| LIVE-005 | 实时经济 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
-| LIVE-006 | 实时击杀 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
-| LIVE-007 | 防御塔 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
-| LIVE-008 | 小龙 / 龙魂 / 远古龙 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot / roadmap | Objective Domain | TODO |
-| LIVE-009 | 男爵 / Herald / Atakhan 等版本资源 | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Objective Domain | TODO |
-| LIVE-010 | 选手等级 / CS / KDA | BOTH | LIVE_MATCH_SOURCE | Live player rows | Player Live State | TODO |
+| LIVE-005 | 实时经济 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | WAITING EXTERNAL TEST |
+| LIVE-006 | 实时击杀 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | WAITING EXTERNAL TEST |
+| LIVE-007 | 防御塔 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | WAITING EXTERNAL TEST |
+| LIVE-008 | 小龙 / 龙魂 / 远古龙 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot / roadmap | Objective Domain | WAITING EXTERNAL TEST |
+| LIVE-009 | 男爵 / Herald / Atakhan 等版本资源 | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Objective Domain | IN PROGRESS |
+| LIVE-010 | 选手等级 / CS / KDA | BOTH | LIVE_MATCH_SOURCE | Live player rows | Player Live State | WAITING EXTERNAL TEST |
 | LIVE-011 | 终局前装备/Item Spike | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Player Live State | TODO |
 | LIVE-012 | BP / Draft 实时状态 | BOTH | LIVE_MATCH_SOURCE | OfficialDraftProvider | Draft Domain | TODO |
 | LIVE-013 | 统一事件模型 | BOTH | LIVE_MATCH_SOURCE | dev.72 / RiftLabApp | Event Domain | IN PROGRESS |
@@ -97,13 +96,14 @@
 | LIVE-034 | 直播入口与赛事数据完全解耦 | SYSTEM | PLATFORM | RiftLabApp | Watch Port | TODO |
 
 ## LIVE 验收原则
-
 - 导播已明确展示且 Laner 无额外解释价值的信息，不应抢占 HUD 高优先级区域。
 - 统一事件必须可追溯来源，不允许 Provider 自由文本直接成为赛事事实。
 - 事件重复、乱序、重连必须幂等处理。
 - 赛中 UI 必须自动跟随 Match State，不由页面自行猜状态。
-- 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线，证据见 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`。
-- LNR-013 已完成上述能力的 Core/Application contract 与回归测试；在真实 LIVE Adapter、Android persistence、Composition wiring 完成前，对应产品条目保持 `IN PROGRESS`。
+- 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线。
+- LNR-019 已完成 LIVE-005/006/007/008/010 的 Global Riot snapshot 自动链路；在真实 BLG vs AL Android online evidence 前保持 `WAITING EXTERNAL TEST`。
+- `LIVE-006` 当前指团队实时击杀总数；KillEvent/MultiKill 事件识别仍属于 LIVE-014，不得混为已完成。
+- `LIVE-009` 当前仅覆盖 Baron 字段，Herald/Atakhan 未统一，因此保持 `IN PROGRESS`。
 
 ---
 
@@ -135,13 +135,12 @@
 | POST-022 | 未来 VOD ↔ Timeline 对齐 | COACH_ANALYST | POST_MATCH_SOURCE | dev.74 roadmap | Replay Timeline Sync | TODO |
 
 ## POST 验收原则
-
-- `WAITING EXTERNAL TEST` 仅表示 Domain/Application/Adapter contract 与自动化已通过，真实 credentialed Provider 或实机仍待补证，不等于 DONE。
-- Series Result、Completed Game、Player Stats、Awards、Replay、Historical Timeline 必须独立取证；一个能力成功不得伪装另一个能力已具备。
-- 全球主链优先：LPL/LCK/LEC/LCP/国际赛事共享同一 Domain/Application，赛区专属来源只能作为 Adapter supplement。
-- 未获得明确 per-game winner 时不得用经济、击杀或其他统计推断 `CompletedGameRecord` 胜方。
-- Historical Timeline 只收真实 Provider frames，不插值；Riot 不再保留历史窗口时保持缺口。
-- Provider raw event/match/game ID 必须停留在 identity mapping / Adapter / provenance，不能成为 canonical MatchId/GameId。
+- `WAITING EXTERNAL TEST` 仅表示自动链路已通过，真实 Provider/实机待补证，不等于 DONE。
+- Series Result、Completed Game、Player Stats、Awards、Replay、Historical Timeline 必须独立取证。
+- 全球主链优先；赛区专属来源只能作为 Adapter supplement。
+- 未获得明确 per-game winner 时不得用经济、击杀或其他统计推断胜方。
+- Historical Timeline 只收真实 Provider frames，不插值。
+- Provider raw IDs 不得成为 canonical MatchId/GameId。
 
 ---
 
@@ -185,7 +184,6 @@
 # E. 旧路线中已定义、尚未完整落地但必须保留的产品方向
 
 这些不计入“旧版已完整实现”的迁移完成率，但因为已是明确产品路线，Laner 不得因重构丢失：
-
 - Sandbox Core / 从真实比赛或 Timeline 创建只读事实快照；
 - 召唤师峡谷战术地图；
 - BP / Draft Sandbox；
@@ -204,7 +202,6 @@
 # F. 完整迁移 Definition of Done
 
 只有同时满足以下条件，才允许宣称 RiftLab → Laner 功能完整迁移：
-
 1. 本文件 A/B/C/D 中所有非废弃条目为 `DONE` 或经过用户批准的 `APPROVED_REPLACEMENT`；
 2. 每项均有自动化测试或明确外部/实机验收证据；
 3. PRE/LIVE/POST 三阶段行为与旧版关键行为对照通过；
