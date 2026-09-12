@@ -2,6 +2,7 @@ package com.laner.app.data.roster
 
 import com.laner.core.application.ProviderRead
 import com.laner.core.application.ProviderStartingPlayer
+import com.laner.core.application.ProviderStartingRosterAnnouncement
 import com.laner.core.application.ProviderStartingRosterEvidence
 import com.laner.core.application.ProviderStartingRosterSnapshot
 import com.laner.core.application.SourceRequestContext
@@ -19,9 +20,8 @@ import java.io.IOException
 import java.time.Instant
 
 /**
- * Transitional transport adapter for the normalized official-roster feed.
- * The feed contains evidence derived from official team/league accounts and official sites.
- * Laner still re-validates date, matchup and 5-role completeness in Application.
+ * Transport adapter for normalized official-roster evidence plus raw official announcement metadata.
+ * Raw announcements are discovery facts only. They are never promoted to a starting roster here.
  */
 class NormalizedStartingRosterSource(
     private val client: OkHttpClient = OkHttpClient(),
@@ -39,11 +39,12 @@ class NormalizedStartingRosterSource(
                 val root = getJson(endpoint)
                 val schema = root.optInt("schemaVersion", -1)
                 if (schema !in 1..MAX_SCHEMA_VERSION) throw IOException("unsupported schema $schema")
-                val rows = root.optJSONArray("evidence") ?: throw IOException("missing evidence array")
-                val evidence = parseEvidence(rows)
+                val evidence = parseEvidence(root.optJSONArray("evidence") ?: JSONArray())
+                val announcements = parseAnnouncements(root.optJSONArray("announcements") ?: JSONArray())
                 return@withContext ProviderRead.Success(
                     ProviderStartingRosterSnapshot(
                         evidence = evidence,
+                        announcements = announcements,
                         observedAtEpochMillis = context.nowEpochMillis,
                         sourceUri = endpoint,
                     )
@@ -63,7 +64,7 @@ class NormalizedStartingRosterSource(
         )
     }
 
-    private fun parseEvidence(rows: JSONArray): List<ProviderStartingRosterEvidence> = buildList {
+    internal fun parseEvidence(rows: JSONArray): List<ProviderStartingRosterEvidence> = buildList {
         for (index in 0 until rows.length()) {
             val row = rows.optJSONObject(index) ?: continue
             val matchDate = row.optString("matchDateLocal").ifBlank { row.optString("matchDateChina") }
@@ -113,12 +114,58 @@ class NormalizedStartingRosterSource(
         }
     }
 
+    internal fun parseAnnouncements(rows: JSONArray): List<ProviderStartingRosterAnnouncement> = buildList {
+        for (index in 0 until rows.length()) {
+            val row = rows.optJSONObject(index) ?: continue
+            val id = row.optString("id").trim()
+            val team = row.optString("team").trim()
+            val account = row.optString("account").trim()
+            val observedAt = parseInstant(row.optString("observedAt")) ?: continue
+            if (id.isBlank() || team.isBlank() || account.isBlank()) continue
+
+            val images = row.optJSONArray("imageUrls")?.let { array ->
+                buildList {
+                    for (i in 0 until array.length()) {
+                        array.optString(i).trim().takeIf { it.startsWith("https://") }?.let(::add)
+                    }
+                }
+            }.orEmpty()
+            val candidateTeams = row.optJSONArray("candidateTeams")?.let { array ->
+                buildList {
+                    for (i in 0 until array.length()) {
+                        array.optString(i).trim().takeIf { it.isNotBlank() }?.let(::add)
+                    }
+                }
+            }.orEmpty()
+
+            add(
+                ProviderStartingRosterAnnouncement(
+                    id = id,
+                    league = row.optString("league").trim(),
+                    team = team,
+                    platform = row.optString("platform").ifBlank { "OFFICIAL" },
+                    account = account,
+                    sourceCategory = row.optString("source").ifBlank { "TEAM_SOCIAL" },
+                    observedAtEpochMillis = observedAt,
+                    publishedAtEpochMillis = parseInstant(row.optString("publishedAt")),
+                    sourceUri = row.optString("sourceUrl").takeIf { it.startsWith("https://") },
+                    imageUrls = images.distinct().take(MAX_IMAGES_PER_ANNOUNCEMENT),
+                    textSnippet = row.optString("textSnippet").take(MAX_TEXT_SNIPPET),
+                    parseStatus = row.optString("parseStatus").ifBlank { "UNPARSED" },
+                    candidateBasis = row.optString("candidateBasis").take(80),
+                    candidateTeams = candidateTeams.distinct(),
+                    candidateScore = row.optInt("candidateScore", 0).coerceAtLeast(0),
+                )
+            )
+        }
+    }
+
     private fun getJson(url: String): JSONObject {
         val request = Request.Builder()
             .url(url)
             .header("Cache-Control", "no-cache")
             .header("Accept", "application/json,text/plain;q=0.9,*/*;q=0.1")
-            .header("User-Agent", "Laner-Roster/2")
+            .header("User-Agent", "Laner-Roster/3")
             .build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
@@ -136,8 +183,10 @@ class NormalizedStartingRosterSource(
             ?: error?.javaClass?.simpleName
             ?: "unknown error"
 
-    private companion object {
+    companion object {
         const val MAX_SCHEMA_VERSION = 3
+        const val MAX_IMAGES_PER_ANNOUNCEMENT = 4
+        const val MAX_TEXT_SNIPPET = 800
         val DEFAULT_ENDPOINTS = listOf(
             "https://gitee.com/xiaobaiaaa1/Rlftlab/raw/main/data/global/starting_rosters.json",
             "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/starting_rosters.json",
