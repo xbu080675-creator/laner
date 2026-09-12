@@ -36,12 +36,12 @@
 | PRE-013 | 战队档案 / 运营关系 / 谱系 | BOTH | PRE_MATCH_SOURCE | TeamDetail / dev.30-31 | Global Identity Graph | TODO |
 | PRE-014 | 人物履历 / 电竞图谱 | COACH_ANALYST | PRE_MATCH_SOURCE | EntityDetail / esports graph | Global Identity Graph | TODO |
 | PRE-015 | 战队历史 Honors / Results 分离 | BOTH | PRE_MATCH_SOURCE | dev.31 | Team Archive | TODO |
-| PRE-016 | Standings / 排名 | BOTH | PRE_MATCH_SOURCE | Standings client | Standings Query | TODO |
-| PRE-017 | Championship Points 与联赛排名分离 | BOTH | PRE_MATCH_SOURCE | dev.70 | Qualification Domain | TODO |
-| PRE-018 | 晋级路径 / Qualification Center | BOTH | PRE_MATCH_SOURCE | QualificationPathUi / dev.70 | Qualification Query | TODO |
-| PRE-019 | 已锁定/可争夺/淘汰/待确认状态 | BOTH | PRE_MATCH_SOURCE | dev.70 | Qualification State | TODO |
-| PRE-020 | 资格证据等级 OFFICIAL/PROVIDER/DERIVED/PENDING | COACH_ANALYST | PRE_MATCH_SOURCE | dev.70 | Evidence Model | TODO |
-| PRE-021 | Tournament Edition 年度届次档案 | BOTH | PRE_MATCH_SOURCE | dev.69 | Competition Edition | TODO |
+| PRE-016 | Standings / 排名 | BOTH | PRE_MATCH_SOURCE | Standings client | Standings Query | WAITING EXTERNAL TEST |
+| PRE-017 | Championship Points 与联赛排名分离 | BOTH | PRE_MATCH_SOURCE | dev.70 | Qualification Domain | DONE |
+| PRE-018 | 晋级路径 / Qualification Center | BOTH | PRE_MATCH_SOURCE | QualificationPathUi / dev.70 | Qualification Query | WAITING EXTERNAL TEST |
+| PRE-019 | 已锁定/可争夺/淘汰/待确认状态 | BOTH | PRE_MATCH_SOURCE | dev.70 | Qualification State | IN PROGRESS |
+| PRE-020 | 资格证据等级 OFFICIAL/PROVIDER/DERIVED/PENDING | COACH_ANALYST | PRE_MATCH_SOURCE | dev.70 | Evidence Model | DONE |
+| PRE-021 | Tournament Edition 年度届次档案 | BOTH | PRE_MATCH_SOURCE | dev.69 | Competition Edition | WAITING EXTERNAL TEST |
 | PRE-022 | Patch / 规则 / 抽签 / 签位 / 赛制 | BOTH | PRE_MATCH_SOURCE | Tournament Research / Governance | Competition Research | TODO |
 | PRE-023 | 赛前选边 / 当前小局选边 | BOTH | PRE_MATCH_SOURCE | SideSelectionPrePanel | Match Setup | TODO |
 | PRE-024 | 内容覆盖度 / 缺失字段显式展示 | COACH_ANALYST | PRE_MATCH_SOURCE | ComprehensiveDataCoverage | Coverage Query | TODO |
