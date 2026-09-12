@@ -3,6 +3,7 @@ package com.laner.app
 import com.laner.app.data.archive.JsonTournamentEditionArchiveRepository
 import com.laner.app.data.live.JsonLiveMatchStateRepository
 import com.laner.app.data.live.JsonLiveTimelineRepository
+import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
@@ -27,6 +28,7 @@ class LanerAppGraph(
     private val official2026QualificationSource = Official2026QualificationSource()
     private val normalizedStartingRosterSource = NormalizedStartingRosterSource()
     private val normalizedTeamStaffSource = NormalizedTeamStaffSource()
+    private val verifiedAwardsMirrorSource = VerifiedAwardsMirrorSource()
     private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(File(filesDir, "archive"))
     private val liveStateRepository = JsonLiveMatchStateRepository(File(filesDir, "live/state"))
     private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
@@ -58,13 +60,14 @@ class LanerAppGraph(
     val liveTimelineService = LiveTimelineService(liveTimelineRepository)
 
     /**
-     * POST composition is valid before concrete providers arrive. Empty capabilities produce an
-     * explicit UNAVAILABLE snapshot instead of reusing PRE scores or inventing historical facts.
+     * Result/game/replay capabilities remain explicit until verified adapters are added. Awards can
+     * already use the provenance-preserving mirror because they do not require provider raw IDs or
+     * private credentials. Empty capabilities do not borrow PRE facts or fabricate POST records.
      */
     val postMatchService = PostMatchService(
         resultSources = emptyList(),
         gameSources = emptyList(),
-        awardSources = emptyList(),
+        awardSources = listOf(verifiedAwardsMirrorSource),
         replaySources = emptyList(),
         diagnostics = diagnostics,
     )
