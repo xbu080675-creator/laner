@@ -21,62 +21,68 @@ class JsonLiveMatchStateRepositoryTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun roundTripPreservesAuthoritativeStateAndLeavesNoTempFile() = runBlocking {
-        val directory = temporaryFolder.newFolder("live-state")
-        val repository = JsonLiveMatchStateRepository(directory)
-        val state = LiveMatchState(
-            matchId = MatchId("lol:series:lpl:2026:blg-al"),
-            lifecycle = MatchLifecycleState.IN_GAME,
-            currentGameId = GameId("lol:game:123"),
-            currentGameNumber = 2,
-            lastObservedAtEpochMillis = 123_456L,
-            provenance = SourceProvenance(
-                providerId = "cito-rest",
-                sourceClass = SourceClass.LIVE_MATCH_SOURCE,
-                authority = DataAuthority.VERIFIED_PROVIDER,
-                freshnessClass = FreshnessClass.REALTIME,
-                observedAtEpochMillis = 123_456L,
-                sourceTimestampEpochMillis = 123_450L,
-                revision = 7L,
-                sourceUri = "https://example.invalid/live/123",
-            ),
-        )
+    fun roundTripPreservesAuthoritativeStateAndLeavesNoTempFile() {
+        runBlocking {
+            val directory = temporaryFolder.newFolder("live-state")
+            val repository = JsonLiveMatchStateRepository(directory)
+            val state = LiveMatchState(
+                matchId = MatchId("lol:series:lpl:2026:blg-al"),
+                lifecycle = MatchLifecycleState.IN_GAME,
+                currentGameId = GameId("lol:game:123"),
+                currentGameNumber = 2,
+                lastObservedAtEpochMillis = 123_456L,
+                provenance = SourceProvenance(
+                    providerId = "cito-rest",
+                    sourceClass = SourceClass.LIVE_MATCH_SOURCE,
+                    authority = DataAuthority.VERIFIED_PROVIDER,
+                    freshnessClass = FreshnessClass.REALTIME,
+                    observedAtEpochMillis = 123_456L,
+                    sourceTimestampEpochMillis = 123_450L,
+                    revision = 7L,
+                    sourceUri = "https://example.invalid/live/123",
+                ),
+            )
 
-        repository.write(state)
+            repository.write(state)
 
-        assertEquals(state, repository.read(state.matchId))
-        assertFalse(directory.listFiles().orEmpty().any { it.name.endsWith(".tmp") })
-    }
-
-    @Test
-    fun corruptJsonFailsInsteadOfSilentlyReturningEmptyState() = runBlocking {
-        val directory = temporaryFolder.newFolder("corrupt-state")
-        val repository = JsonLiveMatchStateRepository(directory)
-        val matchId = MatchId("lol:series:test:corrupt")
-
-        repository.write(LiveMatchState(matchId = matchId))
-        val file = directory.listFiles().orEmpty().single { it.extension == "json" }
-        file.writeText("{not-json")
-
-        assertThrows(Throwable::class.java) {
-            runBlocking { repository.read(matchId) }
+            assertEquals(state, repository.read(state.matchId))
+            assertFalse(directory.listFiles().orEmpty().any { it.name.endsWith(".tmp") })
         }
     }
 
     @Test
-    fun unsupportedSchemaFailsExplicitly() = runBlocking {
-        val directory = temporaryFolder.newFolder("schema-state")
-        val repository = JsonLiveMatchStateRepository(directory)
-        val matchId = MatchId("lol:series:test:schema")
+    fun corruptJsonFailsInsteadOfSilentlyReturningEmptyState() {
+        runBlocking {
+            val directory = temporaryFolder.newFolder("corrupt-state")
+            val repository = JsonLiveMatchStateRepository(directory)
+            val matchId = MatchId("lol:series:test:corrupt")
 
-        repository.write(LiveMatchState(matchId = matchId))
-        val file = directory.listFiles().orEmpty().single { it.extension == "json" }
-        val text = file.readText().replace("\"schema_version\":1", "\"schema_version\":999")
-        file.writeText(text)
+            repository.write(LiveMatchState(matchId = matchId))
+            val file = directory.listFiles().orEmpty().single { it.extension == "json" }
+            file.writeText("{not-json")
 
-        val error = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { repository.read(matchId) }
+            assertThrows(Throwable::class.java) {
+                runBlocking { repository.read(matchId) }
+            }
         }
-        assertEquals("Unsupported LIVE state schema: 999", error.message)
+    }
+
+    @Test
+    fun unsupportedSchemaFailsExplicitly() {
+        runBlocking {
+            val directory = temporaryFolder.newFolder("schema-state")
+            val repository = JsonLiveMatchStateRepository(directory)
+            val matchId = MatchId("lol:series:test:schema")
+
+            repository.write(LiveMatchState(matchId = matchId))
+            val file = directory.listFiles().orEmpty().single { it.extension == "json" }
+            val text = file.readText().replace("\"schema_version\":1", "\"schema_version\":999")
+            file.writeText(text)
+
+            val error = assertThrows(IllegalArgumentException::class.java) {
+                runBlocking { repository.read(matchId) }
+            }
+            assertEquals("Unsupported LIVE state schema: 999", error.message)
+        }
     }
 }
