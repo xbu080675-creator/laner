@@ -83,12 +83,12 @@
 | LIVE-021 | 本地 AI 模型运行时 | SYSTEM | GLOBAL_AI_ASSIST | LocalAiCore/LiteRT-LM | AI Runtime Adapter | TODO |
 | LIVE-022 | GPU/OpenCL 优先 + CPU fallback | SYSTEM | GLOBAL_AI_ASSIST | dev.90 | AI Runtime Capability | TODO |
 | LIVE-023 | AI 性能基准 COLD/WARM/MEDIAN/P90/THERMAL | COACH_ANALYST | GLOBAL_AI_ASSIST | dev.90 | AI Diagnostics | TODO |
-| LIVE-024 | RiftScreen 悬浮副屏 | SPECTATOR | PLATFORM | overlay | Android Overlay Adapter | TODO |
-| LIVE-025 | Draft HUD 全屏悬浮 | BOTH | PLATFORM | dev.62 | HUD Presentation | TODO |
-| LIVE-026 | HUD Edit / Lock | BOTH | PLATFORM | dev.63 | HUD Layout | TODO |
-| LIVE-027 | HUD 拖动 / Scale / Alpha / Visibility / Reset | BOTH | PLATFORM | dev.63 | HUD Layout | TODO |
-| LIVE-028 | 横竖屏独立 HUD Profile | BOTH | PLATFORM | dev.63 | HUD Layout Persistence | TODO |
-| LIVE-029 | LOCK 后触摸穿透 | SPECTATOR | PLATFORM | dev.63 | Android Overlay Adapter | TODO |
+| LIVE-024 | RiftScreen 悬浮副屏 | SPECTATOR | PLATFORM | overlay | Android Overlay Adapter | WAITING EXTERNAL TEST |
+| LIVE-025 | Draft HUD 全屏悬浮 | BOTH | PLATFORM | dev.62 | HUD Presentation | WAITING EXTERNAL TEST |
+| LIVE-026 | HUD Edit / Lock | BOTH | PLATFORM | dev.63 | HUD Layout | WAITING EXTERNAL TEST |
+| LIVE-027 | HUD 拖动 / Scale / Alpha / Visibility / Reset | BOTH | PLATFORM | dev.63 | HUD Layout | WAITING EXTERNAL TEST |
+| LIVE-028 | 横竖屏独立 HUD Profile | BOTH | PLATFORM | dev.63 | HUD Layout Persistence | WAITING EXTERNAL TEST |
+| LIVE-029 | LOCK 后触摸穿透 | SPECTATOR | PLATFORM | dev.63 | Android Overlay Adapter | WAITING EXTERNAL TEST |
 | LIVE-030 | Tactical HUD / 战术副屏 | COACH_ANALYST | PLATFORM | TacticalHudOverlay | HUD Presentation | TODO |
 | LIVE-031 | Bilibili 观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
 | LIVE-032 | 虎牙观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
@@ -101,9 +101,11 @@
 - 事件重复、乱序、重连必须幂等处理。
 - 赛中 UI 必须自动跟随 Match State，不由页面自行猜状态。
 - 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线。
-- LNR-019 已完成 LIVE-005/006/007/008/010 的 Global Riot snapshot 自动链路；在真实 BLG vs AL Android online evidence 前保持 `WAITING EXTERNAL TEST`。
+- LNR-019 已完成 LIVE-005/006/007/008/010 的 Global Riot snapshot 自动链路；在真实 Android online evidence 前保持 `WAITING EXTERNAL TEST`。
 - `LIVE-006` 当前指团队实时击杀总数；KillEvent/MultiKill 事件识别仍属于 LIVE-014，不得混为已完成。
 - `LIVE-009` 当前仅覆盖 Baron 字段，Herald/Atakhan 未统一，因此保持 `IN PROGRESS`。
+- LNR-020 已完成 LIVE-024~029 的新架构实现与自动 Gate；系统悬浮窗权限、后台显示、拖动、横竖屏 Profile 与 Lock 触摸穿透必须真机补证，因此保持 `WAITING EXTERNAL TEST`。
+- LNR-020 的本地 Draft HUD Preview 明确为 `LOCAL PREVIEW · NOT FACT`，不得写入 Core / Repository / Timeline；真实 Draft Provider 未迁移，所以 LIVE-012 仍为 `TODO`。
 
 ---
 
