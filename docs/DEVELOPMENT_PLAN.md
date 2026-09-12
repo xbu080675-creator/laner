@@ -25,12 +25,15 @@
 
 必须逐项记录：
 - 功能名称；
+- Phase：`PRE_MATCH / LIVE_MATCH / POST_MATCH`；
 - 用户入口；
 - 数据来源；
 - UI/交互；
 - 成功表现；
 - 已知问题；
 - 迁移验收方式。
+
+任何用户可见业务功能如果无法归属三阶段之一，必须先进行架构评审，不得直接迁移。
 
 ### LNR-002 — 旧工程架构与技术债审计
 状态：`TODO`
@@ -42,10 +45,26 @@
 
 目标：在 LNR-001/002 证据基础上冻结 Laner vNext 的模块图、依赖 DAG、核心 Contracts、数据模型边界和首批错误码。
 
+验收必须包含：
+- 所有业务页面以 `PRE_MATCH / LIVE_MATCH / POST_MATCH` 为一级产品轴；
+- 细粒度 Match State 能稳定映射到三阶段；
+- 共享能力没有被错误建成第四业务阶段；
+- UI 不自行判断阶段。
+
 ### LNR-004 — 工程骨架与 CI Gate
 状态：`TODO`
 
 目标：建立真实代码目录、构建、测试、静态检查、架构 Gate、日志基础设施。
+
+### LNR-005 — 三阶段一级架构轴确立
+状态：`DONE`
+
+目标：将“赛前 / 赛中 / 赛后”从产品概念提升为所有页面、主路由、赛事查询和展示的一级架构分类轴。
+
+产物：
+- `docs/ARCHITECTURE.md` 更新；
+- `docs/decisions/ADR-001-three-phase-product-axis.md`；
+- 本任务开发留档。
 
 ## M1 — Core Migration
 
