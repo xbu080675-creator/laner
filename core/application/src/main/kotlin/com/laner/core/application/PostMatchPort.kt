@@ -1,12 +1,12 @@
 package com.laner.core.application
 
+import com.laner.core.domain.CompletedGameRecord
 import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.MatchId
 import com.laner.core.domain.ReplayAsset
 import com.laner.core.domain.ScheduledSeries
 import com.laner.core.domain.SeriesResult
 import com.laner.core.domain.TeamRef
-import com.laner.core.domain.CompletedGameRecord
 import com.laner.core.domain.VerifiedPostAward
 
 data class PostMatchQuery(
@@ -30,6 +30,33 @@ data class PostMatchQuery(
             teams = series.teams.map { it.team },
         )
     }
+}
+
+data class PostArchiveSnapshot(
+    val matchId: MatchId,
+    val result: SeriesResult? = null,
+    val games: List<CompletedGameRecord> = emptyList(),
+    val storedAtEpochMillis: Long,
+) {
+    init {
+        require(result == null || result.matchId == matchId)
+        require(games.all { it.matchId == matchId })
+        require(games.map { it.gameNumber }.distinct().size == games.size)
+        require(games.map { it.gameId }.distinct().size == games.size)
+        require(storedAtEpochMillis >= 0)
+    }
+}
+
+/**
+ * Device-local cache for already verified POST facts.
+ *
+ * The archive is not a new fact authority. It preserves the original provenance embedded in each
+ * fact so Application can recover completed series even when the external historical provider is
+ * temporarily unavailable. Adapters must version/corruption-protect their storage format.
+ */
+interface PostMatchArchiveRepository {
+    suspend fun load(matchId: MatchId): PostArchiveSnapshot?
+    suspend fun save(snapshot: PostArchiveSnapshot)
 }
 
 interface PostResultSourcePort {
