@@ -70,54 +70,42 @@ PR #8 已合并 main。已交付第一条 Global Riot LIVE lifecycle baseline、
 ### LNR-019 — Global LIVE Snapshot / Timeline / Match HUD
 状态：`WAITING EXTERNAL TEST`
 
-已交付：
-- Global Riot LiveStats 真帧标准化为 canonical `LiveGameSnapshot`；
-- team gold/kills/towers/dragons/barons 与 player level/KDA/CS/gold/champion；
-- `LiveSnapshotService` 在 Application 二次校验 canonical Match/Game/team identity 后才写 Timeline；
-- lifecycle authority 与 snapshot ingestion 严格分离；
-- LIVE 页面全宽真帧卡片与经济差；null 保持“未知”，不伪造成 0；
-- region-neutral，同一链覆盖 LPL/LCK/国际赛事。
-
-任务号纠正：该工作最初误用 `LNR-017`，但 `LNR-017/018` 已被本计划预留。旧 branch/record 保留作为历史，正式归档使用 `LNR-019`，不改写失败与提交历史。
-
-自动 Gate 与 PR 已通过并合并；真实赛事 online/device 证据仍需补齐，因此保持 `WAITING EXTERNAL TEST`。
+已交付 Global Riot LiveStats → canonical `LiveGameSnapshot` → Application validation → Timeline → LIVE UI 的真实 baseline。team gold/kills/towers/dragons/barons 与 player level/KDA/CS/gold/champion 均仅在上游明确提供时展示；真实赛事 online/device 仍待补证。
 
 ### LNR-020 — RiftScreen / Draft HUD Android Overlay
 状态：`WAITING EXTERNAL TEST (functional) / COMPLIANCE PASS`
 
-原第 1 块平台迁移通过 PR #10 合入 `main@967e112d…`；随后 `INC-LNR-020-001` 确认 7 项工程合规偏离。整改没有作废功能实现，也没有改写历史失败，而是独立重新执行 Preflight、修复并验证。
+Block 1 已冻结。原功能 PR #10 合入后，`INC-LNR-020-001` 的 7 项偏离已通过独立整改闭环；`LiveMatchContextService`、`OverlayWindowHost`、`RiftScreenWindowController / DraftHudWindowController` 已成为当前边界。系统悬浮窗、拖动、Edit/Lock、横竖屏 profile 和触摸穿透继续等待 Android 真机证据。
 
-功能基线保持：
-- RiftScreen `MINI / COMPACT / EXPANDED`、拖动、关闭、前台自动隐藏 / 后台显示；
-- Verified Draft HUD 仅在 canonical lifecycle=`DRAFT` 时激活，只消费 canonical `DraftChangedEvent`；
-- 未有 SideSelection 事实时仅显示左/右侧，未有角色/对位证据时不推断；
-- 本地 HUD Preview 明确 `LOCAL PREVIEW · NOT FACT`，不写 Core/Repository/Timeline；
-- HUD Edit / Lock、模块拖动、Scale、Alpha、Visibility、Reset；
-- 横/竖屏独立 Profile；
-- Lock 使用 `FLAG_NOT_TOUCHABLE`，边缘 Dock 继续可操作；
-- `LIVE-024~029` 保持 `WAITING EXTERNAL TEST`；`LIVE-012` 真实 Draft Provider 仍为 TODO。
+### LNR-021 — Tactical HUD / LIVE Event Derivation
+状态：`WAITING EXTERNAL TEST`（自动实现与 Gate 收口中）
 
-合规整改已完成：
-- `LiveMatchContextService` 成为唯一 Current LIVE 编排入口；
-- `OverlayWindowHost` 统一 WindowManager add/update/remove/bounds 与 `[Laner:OVERLAY]` diagnostics；
-- `RiftScreenWindowController / DraftHudWindowController` 拆出平台窗口职责，收薄 Foreground Service；
-- LNR-020 Failure A/B 已进入 `TROUBLESHOOTING.md`；
-- 独立整改记录与 closeout 记录按 §15 留档；
-- root README / ARCHITECTURE / PROJECT_SCOPE / module/status docs 已从过期 M0/整改中状态同步到当前事实；
-- PR #12 final head `249c42208ab6105ad26b78215b47fbd754d889e9`，run `34708127194` 全 Gate PASS；
-- PR #12 merge `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`；
-- post-merge main run `34708285172` 全 Gate PASS；
-- `INC-LNR-020-001` 最终 `CLOSED`。
+第 2 块目标：迁移旧 Tactical HUD 的用户可见价值，但不复制旧模拟数据与巨型 Service 架构。
+
+已实现：
+- `LiveEventDerivationService` 从 canonical Timeline snapshot 保守派生 aggregate Kill delta、player-backed kill delta、`MultiKillWindowEvent`、`TeamFightWindowEvent`、Objective delta 与 `GoldLeadChangedEvent`；
+- 不制造 killer/victim 配对，不从 dragon 总数猜龙种/龙魂/远古龙，不生成现有数据链没有的 HP/CD/位置事实；
+- `LiveTimelineService.reconcileGeneratedEvents` 只重建本地 generator 的派生事件，Provider explicit / Draft / lifecycle 事件不被删除；
+- late/out-of-order/stronger same-second snapshot 可以重新计算派生层，避免旧派生事实残留；
+- Timeline persistence 升级到 schema v2，同时读取 v1 并在下一次写入自动升级；
+- `TacticalHudPresentationMapper / TacticalHudWindowController / TacticalHudOverlayView`；窗口优先级保留 `Draft > Tactical > RiftScreen`；
+- Verified Tactical event 采用 25s game-time TTL + 30s wall-clock freshness，避免断流旧卡永久挂屏；
+- `TacticalHudPreviewSession` 为 Android-only 视觉夹具，固定 `LOCAL PREVIEW · NOT FACT`，不进入 Core/Repository/Timeline。
+
+自动状态：`LIVE-014 / LIVE-015 / LIVE-030 → WAITING EXTERNAL TEST`。真实 Riot online 事件触发、Android overlay 视觉/触摸/窗口优先级/断流行为仍需外部验证，不能升级 DONE。
+
+已记录历史失败：run `34709821178` 的 Core 已 PASS，但 Android production compile 因 `LiveMatchScreen.eventLabel()` 未穷举新 sealed event 失败；fix `403bba4e874ad37978179618e84dceaafb9f06f8`。后续 implementation baseline run `34710012697` 全 Gate PASS。最终 exact-head / PR / main Gate 以开发记录为准。
 
 ## 当前推进顺序
-1. **第 2 块：Tactical HUD + 赛中事件层**。开始前必须重新执行该任务自己的 Constitution Preflight；
-2. LNR-020 Android 真机补证继续独立回填，但不得被 CI 冒充 PASS；
-3. 第 3 块：Watch Hub + 播放器；
-4. 第 4 块：赛前/赛后剩余功能；
-5. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
-6. 第 6 块：Local AI / OCR；
-7. 第 7 块：全量回归；
-8. 第 8 块：Migration Audit / release closure。
+1. **第 2 块：LNR-021 Tactical HUD + 赛中事件层**完成最终 exact-head Gate、PR、主线 closeout，然后冻结；
+2. 第 3 块：Watch Hub + 播放器；
+3. 第 4 块：赛前/赛后剩余功能；
+4. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
+5. 第 6 块：Local AI / OCR；
+6. 第 7 块：全量回归；
+7. 第 8 块：Migration Audit / release closure。
+
+LNR-020 Android 真机补证、LNR-019 Riot online 补证继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
 
 用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
 
