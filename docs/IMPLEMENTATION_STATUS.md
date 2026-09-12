@@ -17,12 +17,15 @@
 | LNR-002 | 旧工程架构与技术债审计 | TODO |
 | LNR-003 | 新架构冻结 | TODO |
 | LNR-004 | 工程骨架与 CI Gate | TODO |
+| LNR-005 | 三阶段一级架构轴确立 | DONE |
 
 ## Current Truth
 
 当前仓库只包含工程治理与架构基线文档，不应被描述为“APP 已开始重写”或“已有功能可测试”。
 
 `LNR-000` 已完成远端反查并满足工程初始化 Definition of Done。
+
+`LNR-005` 已确立：所有用户可见业务页面、主路由、赛事查询、HUD 与展示必须以 `PRE_MATCH / LIVE_MATCH / POST_MATCH`（赛前 / 赛中 / 赛后）为一级产品与架构分类轴；共享基础能力不构成第四业务阶段。
 
 ## Blocking Conditions Before Business Code
 
