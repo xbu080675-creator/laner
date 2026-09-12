@@ -3,9 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Public web-client token used by lolesports.com and widely documented for the persisted esports
+// gateway. It is not a user/developer secret. A controlled build may still override it through
+// LOL_ESPORTS_API_KEY / lolEsportsApiKey without changing source.
+val publicLolEsportsWebClientKey = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"
 val lolEsportsApiKey = providers.environmentVariable("LOL_ESPORTS_API_KEY")
     .orElse(providers.gradleProperty("lolEsportsApiKey"))
-    .getOrElse("")
+    .getOrElse(publicLolEsportsWebClientKey)
 val escapedLolEsportsApiKey = lolEsportsApiKey
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
@@ -24,8 +28,8 @@ android {
         applicationId = "com.riftlab.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0.0-dev.3"
+        versionCode = 4
+        versionName = "2.0.0-dev.4"
         buildConfigField("String", "LOL_ESPORTS_API_KEY", "\"$escapedLolEsportsApiKey\"")
         buildConfigField("String", "LPL_TJSTATS_AUTH", "\"$escapedLplTjstatsAuth\"")
     }
