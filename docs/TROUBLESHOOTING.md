@@ -56,6 +56,49 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **排障路径**：`Core test compile fail → 检查本模块既有 test framework → 禁止为单测随意增加依赖 → :core:application:test`。
 
+### `LNR-UI-LIVE-003` — LNR-020 Foundation 测试仍绑定已删除 UI-private 选择逻辑
+首次发现：LNR-020 / run `34704014273`。
+
+**现象**：Architecture/Core PASS，App unit compile FAIL；旧 `LiveMatchScreenTest` 仍引用已经删除的 UI-private `selectLiveTarget`。
+
+**根因**：比赛目标选择已经迁入 Application `LiveTargetSelector`，但历史 Presentation test 没有同步迁移到新的边界。
+
+**修复**：commit `8b17f94ed75ba417eed017bd4c4d45ba63b5e9a9`，测试改为验证 Application target policy；后续 push run `34704124799` / PR run `34704127811` PASS。
+
+**永久回归**：`LiveMatchScreenTest` 继续验证 EVENT_LIVE 优先、completed 不作为 fallback、completed-only 不产生 LIVE target；LNR-020 合规整改进一步由 `LiveMatchContextServiceTest` 锁定完整 Application context orchestration，Presentation 不再自己组合四个 Service。
+
+**排障路径**：`UI test compile fail → 检查业务规则是否已迁入 Application → 测试公开 Use Case/Query → 禁止为测试恢复 UI-private 业务规则`。
+
+### `LNR-LIVE-TEST-003` — Draft HUD 新测试断言自身错误
+首次发现：LNR-020 / PR run `34705468018`。
+
+**现象**：Architecture/Core 与 production `compileDebugKotlin` PASS；App tests 35 个中 1 个失败。
+
+**根因**：测试错误要求最后一个正常 LEFT UNDO 文本不得出现 LEFT；真正要验证的是 unknown team 的 `Garen` 不能污染左右侧。失败面在新测试断言，不在生产 Draft mapper。
+
+**修复**：commit `871e1a0ad257c465dc51720df46fb66cceeae7cc`，改为检查 `Garen` 不存在于任一侧 picks；run `34705512479` PASS。
+
+**永久回归**：`DraftHudPresentationMapperTest` 持续覆盖 unknown team 隔离、PICK/LOCK/BAN、UNDO 与非 DRAFT 不激活。
+
+**排障路径**：`单测失败且 production compile PASS → 先核对断言与需求语义 → 不为迎合错误断言篡改生产逻辑`。
+
+### `LNR-APP-LIVE-003` — Current LIVE Context Query 意外失败
+LNR-020 合规整改新增。`LiveMatchContextService` 是当前 LIVE 上下文唯一 Application 编排入口；若 Schedule/Target/Lifecycle/Snapshot/Timeline 组合链出现非业务降级类异常，返回 typed `Failed` 并通过 `[Laner:LIVE]` 记录 `LNR-APP-LIVE-003`。UI/Overlay 不得自行复制相同编排作为 fallback。
+
+永久回归：`LiveMatchContextServiceTest.unexpectedApplicationFailureIsDiagnosedWithStableCode`。
+
+### `LNR-OVR-WINDOW-001~004` — Android Overlay WindowManager
+LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock WindowManager 操作统一经过 `OverlayWindowHost`：
+- `001` add 失败；
+- `002` update 失败；
+- `003` remove 失败；
+- `004` display bounds 获取失败，使用 displayMetrics 安全退化边界。
+
+日志统一 `[Laner:OVERLAY]`，上下文至少包含 `window / operation / error_type`；禁止无 `onFailure` 的静默 `runCatching`。永久回归 `OverlayWindowOperationTest` 锁定错误码唯一性与 retryability 分类。Android ROM/权限/Window token 的真实行为仍必须实机验证。
+
+### `LNR-OVR-REFRESH-001` — Overlay Presentation Mapping 失败
+`LiveMatchContextService` 成功返回后，如果 Rift/Draft Presentation Mapper 自身抛出异常，Foreground Service 不得静默停止轮询。记录 `[Laner:OVERLAY] / LNR-OVR-REFRESH-001`，并退化为“读取失败 + 错误码”的等待态；不得制造赛事事实。
+
 ### Riot Global LIVE 设备诊断码
 - `LNR-SRC-LIVE-002`：Riot API Key 未配置（Lifecycle）。
 - `LNR-SRC-LIVE-003`：目标缺少双方队伍或 scheduled start。
@@ -76,4 +119,4 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。LNR-019 正在收口 Global LIVE Snapshot / canonical Timeline / LIVE 可视化测试包；真实 BLG vs AL 在线结果仍必须由 Android 实机补证，Fixture/CI PASS 不等价于 online PASS。Cito 继续 DEFERRED。
+M1 Feature Migration。LNR-020 功能代码已经合入主线并保持 Android 真机项 `WAITING EXTERNAL TEST`；当前正在完成 `INC-LNR-020-001` 合规整改。整改通过、状态落账和主线 Gate 完成前，不进入 Tactical HUD。Cito 继续 DEFERRED。

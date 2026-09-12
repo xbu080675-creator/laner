@@ -2,9 +2,9 @@
 
 ## 状态
 
-- 文档状态：`DRAFT / M0`
-- 架构状态：目标骨架已定义，待读取旧工程后冻结细节
-- 当前无业务实现
+- 文档状态：`ACTIVE / M1`
+- 架构状态：`FROZEN BASELINE / 按工程宪法增量演进`
+- 当前实现：LNR-010~020 已进入功能迁移与外部验证阶段；具体完成度以 `docs/IMPLEMENTATION_STATUS.md` 和 `docs/FEATURE_BASELINE.md` 为准
 
 ## 核心目标
 
@@ -303,6 +303,6 @@ UI → LCK-only business implementation
 14. 赛区专属差异必须通过 Ruleset / Capability / Adapter / Metadata 表达。
 15. 外部赛区 ID 不得直接成为全局领域主键。
 
-## 待旧工程审计后决定
+## 后续技术选型规则
 
-具体客户端技术栈、数据库、网络库、DI、UI 框架、任务调度、OCR Provider、AI Provider、具体包名/模块名均不提前拍脑袋，必须以旧工程现状、目标平台和真实需求为依据后再定。
+当前已经进入 M1，现有客户端技术栈、数据库/文件持久化、网络、Compose、任务调度与模块边界以仓库当前实现和对应开发记录为事实。后续新增或替换 OCR Provider、AI Provider、网络/数据库库、DI、调度机制或模块结构时，必须重新执行 Constitution Preflight，并基于真实需求、兼容边界、迁移/回滚方案与测试证据决定，禁止脱离仓库事实提前拍脑袋。

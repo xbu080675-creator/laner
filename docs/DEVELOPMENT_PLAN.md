@@ -83,33 +83,45 @@ PR #8 已合并 main。已交付第一条 Global Riot LIVE lifecycle baseline、
 自动 Gate 与 PR 已通过并合并；真实赛事 online/device 证据仍需补齐，因此保持 `WAITING EXTERNAL TEST`。
 
 ### LNR-020 — RiftScreen / Draft HUD Android Overlay
-状态：`WAITING EXTERNAL TEST`
+状态：`WAITING EXTERNAL TEST (functional) / COMPLIANCE REMEDIATION IN PROGRESS`
 
-第 1 块平台迁移已完成自动化实现：
-- RiftScreen 不复制旧 `MatchSessionStore`，改用 process-level `LanerApplication` Composition Root，共享标准 Application services；
-- 链路固定为 `GlobalScheduleService → LiveTargetSelector → LiveMatchStateService + LiveSnapshotService → LiveTimelineService → Presentation → WindowManager`；
-- 保留 RiftScreen `MINI / COMPACT / EXPANDED`、拖动、关闭、前台自动隐藏 / 后台显示；
+原第 1 块平台迁移已通过 PR #10 合入 `main@967e112d…`，post-merge run `34706047380` 自动 Gate PASS。功能状态不作废，但 `INC-LNR-020-001` 后续确认了 7 项工程合规偏离，因此工程认证暂停，正在 PR #12 中整改。
+
+功能基线保持：
+- RiftScreen `MINI / COMPACT / EXPANDED`、拖动、关闭、前台自动隐藏 / 后台显示；
 - Verified Draft HUD 仅在 canonical lifecycle=`DRAFT` 时激活，只消费 canonical `DraftChangedEvent`；
 - 未有 SideSelection 事实时仅显示左/右侧，未有角色/对位证据时不推断；
-- 本地 HUD Preview 与赛事事实彻底隔离，明确标记 `LOCAL PREVIEW · NOT FACT`，不写 Core/Repository/Timeline；
-- HUD 支持 Edit / Lock、模块拖动、Scale、Alpha、Visibility、Reset；
-- 横屏 / 竖屏使用独立持久化 Profile；
-- Lock 后全屏 HUD Window 使用 `FLAG_NOT_TOUCHABLE` 真正触摸穿透，边缘 Dock 保持可操作；
-- Architecture/Core/App Unit/Android build/APK 自动 Gate 已通过。
+- 本地 HUD Preview 明确 `LOCAL PREVIEW · NOT FACT`，不写 Core/Repository/Timeline；
+- HUD Edit / Lock、模块拖动、Scale、Alpha、Visibility、Reset；
+- 横/竖屏独立 Profile；
+- Lock 使用 `FLAG_NOT_TOUCHABLE`，边缘 Dock 继续可操作；
+- `LIVE-024~029` 保持 `WAITING EXTERNAL TEST`；`LIVE-012` 真实 Draft Provider 仍为 TODO。
 
-当前仅剩系统悬浮窗权限、后台显示、拖动、横竖屏 Profile 与 Lock 触摸穿透等 Android 真机行为补证，所以平台条目进入 `WAITING EXTERNAL TEST`，而不是伪写 `DONE`。`LIVE-012 BP/Draft 实时状态` 仍为 TODO：本任务交付的是 HUD Presentation，不等价于真实 Draft Provider 已迁移。
+合规整改目标固定为：
+- `LiveMatchContextService` 唯一编排 `Schedule → Target → Lifecycle → Snapshot → GameId → Timeline`，Presentation 不再复制 Use Case；
+- `OverlayWindowHost` 统一 WindowManager add/update/remove/bounds 与 `[Laner:OVERLAY]` diagnostics；
+- `RiftScreenWindowController / DraftHudWindowController` 拆出平台窗口职责，收薄 Foreground Service；
+- LNR-020 Failure A/B 进入 `TROUBLESHOOTING.md`；
+- 独立整改记录填写 §15 固定 17 项交付单；
+- 状态文档同步真实 merge/CI 事实；
+- Post-change Compliance Review 与 exact-head Gate 完成后才能关闭事故。
+
+整改中 PR #11 已把分支截至 `6720f660…` 的前半段合入 `main@d4e4f70…`；changed-files 已复核均属于本事故/整改范围。剩余闭环由 Draft PR #12 承载。该中途主线变化已写入整改记录，不掩盖、不反向改写历史。
 
 ## 当前推进顺序
-1. LNR-020 Android 真机补证可独立回填，不阻塞后续工程切片；
-2. 第 2 块：Tactical HUD + 赛中事件层；
-3. 第 3 块：Watch Hub + 播放器；
-4. 第 4 块：赛前/赛后剩余功能；
-5. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
-6. 第 6 块：Local AI / OCR；
-7. 第 7 块：全量回归；
-8. 第 8 块：Migration Audit / release closure。
+1. **先完成 LNR-020 / INC-LNR-020-001 合规整改**：PR #12 exact-head Gate → 文档/状态落账 → Post-change Compliance Review → merge → main Gate；
+2. LNR-020 Android 真机补证继续独立回填，但不得被 CI 冒充 PASS；
+3. 第 2 块：Tactical HUD + 赛中事件层；
+4. 第 3 块：Watch Hub + 播放器；
+5. 第 4 块：赛前/赛后剩余功能；
+6. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
+7. 第 6 块：Local AI / OCR；
+8. 第 7 块：全量回归；
+9. 第 8 块：Migration Audit / release closure。
 
-Cito online 与已有真实 Provider/设备补证独立回填，不阻塞上述工程顺序。
+用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
+
+Cito online 与已有真实 Provider/设备补证独立回填，不阻塞工程开发，但其状态必须保持真实。
 
 ## 速度原则
 允许并行读取与分析、同责任域成组实现、自动化减少重复、需求明确后直接开发。禁止跨层乱改、跳过测试/留档、临时代码进入主线、把未执行测试写 PASS、把 fixture PASS 冒充在线/实机 PASS。
