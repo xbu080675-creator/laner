@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
@@ -27,22 +28,37 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**
- * Android platform adapter for the RiftScreen system overlay.
+ * Android platform adapter for RiftScreen and Draft HUD.
  *
- * The service never talks to a Provider directly. It resolves the process-level Application graph,
- * asks Core/Application services for canonical LIVE truth, and renders only normalized results.
+ * Provider payloads never enter these windows. Verified presentation comes only from Application
+ * truth/canonical Timeline; the local HUD preview is a separate Android-only fixture and never
+ * writes back into Core or persistence.
  */
 class RiftScreenOverlayService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var windowManager: WindowManager
+
     private var overlay: RiftScreenOverlayView? = null
     private var overlayParams: WindowManager.LayoutParams? = null
+    private var draftHud: DraftHudOverlayView? = null
+    private var draftHudParams: WindowManager.LayoutParams? = null
+    private var draftDock: DraftHudControlView? = null
+    private var draftDockParams: WindowManager.LayoutParams? = null
+
     private var pollingJob: Job? = null
+    private var previewJob: Job? = null
+    private var draftEditing = false
+    private var selectedDraftModule = DraftHudModule.LEFT_PICK
+
+    private var latestRiftPresentation = RiftScreenPresentationMapper.waiting("等待 Application LIVE truth")
+    private var latestVerifiedDraft = DraftHudPresentation.inactive()
+    private var latestPreviewState = DraftHudPreviewSession.state.value
 
     override fun onCreate() {
         super.onCreate()
@@ -50,6 +66,7 @@ class RiftScreenOverlayService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
         startAsForeground()
+        ensurePreviewCollection()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -59,6 +76,20 @@ class RiftScreenOverlayService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_HIDE -> hideOverlay()
+            ACTION_DRAFT_PREVIEW_AUTO -> {
+                DraftHudPreviewSession.startAuto()
+                syncVisibility()
+            }
+            ACTION_DRAFT_PREVIEW_NEXT -> {
+                DraftHudPreviewSession.next()
+                syncVisibility()
+            }
+            ACTION_DRAFT_PREVIEW_STOP -> {
+                setDraftEditMode(false)
+                DraftHudPreviewSession.stop()
+                syncVisibility()
+            }
+            ACTION_SHOW,
             ACTION_SYNC -> syncVisibility()
             else -> syncVisibility()
         }
@@ -67,6 +98,15 @@ class RiftScreenOverlayService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        overlay?.post { clampOverlayToDisplay() }
+        draftHud?.post {
+            draftHud?.render(effectiveDraftPresentation())
+            refreshDraftDock()
+        }
+    }
 
     private fun syncVisibility() {
         if (hostInForeground || !Settings.canDrawOverlays(this)) {
@@ -79,17 +119,18 @@ class RiftScreenOverlayService : Service() {
     private fun showOverlay() {
         if (!Settings.canDrawOverlays(this)) return
         if (overlay == null) createOverlay()
-        overlay?.visibility = View.VISIBLE
-        overlay?.post { clampOverlayToDisplay() }
+        refreshOverlayMode()
     }
 
     private fun hideOverlay() {
         overlay?.visibility = View.GONE
+        draftHud?.visibility = View.GONE
+        draftDock?.visibility = View.GONE
     }
 
     private fun createOverlay() {
         if (overlay != null || !Settings.canDrawOverlays(this)) return
-        val view = RiftScreenOverlayView(this)
+        val view = RiftScreenOverlayView(this) { stopSelf() }
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -105,8 +146,85 @@ class RiftScreenOverlayService : Service() {
         overlayParams = params
         attachDragAndMode(view, params)
         windowManager.addView(view, params)
-        view.render(RiftScreenPresentationMapper.waiting("等待 Application LIVE truth"))
+        view.render(latestRiftPresentation)
         view.post { clampOverlayToDisplay() }
+    }
+
+    private fun createDraftWindows() {
+        if (draftHud != null && draftDock != null) return
+
+        val hud = DraftHudOverlayView(this) { module ->
+            selectedDraftModule = module
+            refreshDraftDock()
+        }
+        val hudParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            lockedHudFlags(),
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+        }
+        windowManager.addView(hud, hudParams)
+        draftHud = hud
+        draftHudParams = hudParams
+
+        val dock = DraftHudControlView(
+            this,
+            onToggleAuto = { DraftHudPreviewSession.toggleAuto() },
+            onNext = { DraftHudPreviewSession.next() },
+            onStopPreview = {
+                setDraftEditMode(false)
+                DraftHudPreviewSession.stop()
+            },
+            onToggleEdit = { setDraftEditMode(!draftEditing) },
+            onPreviousModule = {
+                draftHud?.cycleSelection(-1)
+                refreshDraftDock()
+            },
+            onNextModule = {
+                draftHud?.cycleSelection(1)
+                refreshDraftDock()
+            },
+            onScaleDown = {
+                draftHud?.adjustSelectedScale(-0.05f)
+                refreshDraftDock()
+            },
+            onScaleUp = {
+                draftHud?.adjustSelectedScale(0.05f)
+                refreshDraftDock()
+            },
+            onAlphaDown = {
+                draftHud?.adjustSelectedAlpha(-0.08f)
+                refreshDraftDock()
+            },
+            onAlphaUp = {
+                draftHud?.adjustSelectedAlpha(0.08f)
+                refreshDraftDock()
+            },
+            onToggleVisibility = {
+                draftHud?.toggleSelectedVisibility()
+                refreshDraftDock()
+            },
+            onResetLayout = {
+                draftHud?.resetCurrentLayout()
+                refreshDraftDock()
+            },
+        )
+        val dockParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            x = dp(4)
+        }
+        windowManager.addView(dock, dockParams)
+        draftDock = dock
+        draftDockParams = dockParams
     }
 
     private fun ensurePolling() {
@@ -114,16 +232,31 @@ class RiftScreenOverlayService : Service() {
         pollingJob = scope.launch {
             while (isActive) {
                 if (!hostInForeground && Settings.canDrawOverlays(this@RiftScreenOverlayService)) {
-                    refreshPresentation()
+                    refreshTruth()
                 }
                 delay(REFRESH_INTERVAL_MILLIS)
             }
         }
     }
 
-    private suspend fun refreshPresentation() {
+    private fun ensurePreviewCollection() {
+        if (previewJob?.isActive == true) return
+        previewJob = scope.launch {
+            DraftHudPreviewSession.state.collect { state ->
+                latestPreviewState = state
+                overlay?.post { refreshOverlayMode() }
+            }
+        }
+    }
+
+    private data class OverlayTruth(
+        val rift: RiftScreenPresentation,
+        val draft: DraftHudPresentation,
+    )
+
+    private suspend fun refreshTruth() {
         val now = System.currentTimeMillis()
-        val presentation = runCatching {
+        val truth = runCatching {
             val graph = (application as LanerApplication).graph()
             val context = SourceRequestContext(
                 nowEpochMillis = now,
@@ -131,29 +264,116 @@ class RiftScreenOverlayService : Service() {
             )
             val schedule = graph.globalScheduleService.load(context)
             val target = LiveTargetSelector.select(schedule.matches, now)
-                ?: return@runCatching RiftScreenPresentationMapper.waiting(
-                    if (schedule.matches.isEmpty()) {
-                        "没有可用赛事目录；RiftScreen 不猜比赛目标"
-                    } else {
-                        "没有可识别的 LIVE 目标"
-                    }
+                ?: return@runCatching OverlayTruth(
+                    rift = RiftScreenPresentationMapper.waiting(
+                        if (schedule.matches.isEmpty()) {
+                            "没有可用赛事目录；RiftScreen 不猜比赛目标"
+                        } else {
+                            "没有可识别的 LIVE 目标"
+                        }
+                    ),
+                    draft = DraftHudPresentation.inactive(),
                 )
             val query = LiveMatchSourceQuery.from(target)
             val liveState = graph.liveMatchStateService.refresh(query, context)
             val snapshot = graph.liveSnapshotService.refresh(query, context)
             val gameId = snapshot.snapshot?.game?.gameId ?: liveState.state.currentGameId
             val timeline = gameId?.let { graph.liveTimelineService.load(it) }
-            RiftScreenPresentationMapper.from(target, liveState, snapshot, timeline)
+            OverlayTruth(
+                rift = RiftScreenPresentationMapper.from(target, liveState, snapshot, timeline),
+                draft = DraftHudPresentationMapper.from(target, liveState, timeline),
+            )
         }.getOrElse { error ->
-            RiftScreenPresentationMapper.waiting(
-                "读取失败 · ${error.message?.take(96)?.takeIf { it.isNotBlank() } ?: error::class.java.simpleName}"
+            OverlayTruth(
+                rift = RiftScreenPresentationMapper.waiting(
+                    "读取失败 · ${error.message?.take(96)?.takeIf { it.isNotBlank() } ?: error::class.java.simpleName}"
+                ),
+                draft = DraftHudPresentation.inactive(),
             )
         }
+
+        latestRiftPresentation = truth.rift
+        latestVerifiedDraft = truth.draft
         overlay?.post {
-            overlay?.render(presentation)
-            clampOverlayToDisplay()
+            overlay?.render(truth.rift)
+            refreshOverlayMode()
         }
     }
+
+    private fun effectiveDraftPresentation(): DraftHudPresentation = when {
+        latestVerifiedDraft.active -> latestVerifiedDraft
+        latestPreviewState.active -> latestPreviewState.presentation
+        else -> DraftHudPresentation.inactive()
+    }
+
+    private fun refreshOverlayMode() {
+        if (hostInForeground || !Settings.canDrawOverlays(this)) {
+            hideOverlay()
+            return
+        }
+
+        val draft = effectiveDraftPresentation()
+        if (draft.active) {
+            createDraftWindows()
+            overlay?.visibility = View.GONE
+            draftHud?.apply {
+                visibility = View.VISIBLE
+                render(draft)
+            }
+            draftDock?.visibility = View.VISIBLE
+            refreshDraftDock()
+        } else {
+            if (draftEditing) setDraftEditMode(false)
+            draftHud?.visibility = View.GONE
+            draftDock?.visibility = View.GONE
+            overlay?.apply {
+                visibility = View.VISIBLE
+                render(latestRiftPresentation)
+                post { clampOverlayToDisplay() }
+            }
+        }
+    }
+
+    private fun setDraftEditMode(enabled: Boolean) {
+        if (draftEditing == enabled) return
+        if (enabled && latestPreviewState.autoPlay) DraftHudPreviewSession.toggleAuto()
+        draftEditing = enabled
+        draftHud?.setEditMode(enabled)
+        draftHudParams?.let { params ->
+            params.flags = if (enabled) editableHudFlags() else lockedHudFlags()
+            draftHud?.let { hud -> runCatching { windowManager.updateViewLayout(hud, params) } }
+        }
+        refreshDraftDock()
+    }
+
+    private fun refreshDraftDock() {
+        val hud = draftHud ?: return
+        val dock = draftDock ?: return
+        val presentation = effectiveDraftPresentation()
+        if (!presentation.active) return
+        selectedDraftModule = hud.selectedModule()
+        dock.render(
+            presentation = presentation,
+            previewState = latestPreviewState,
+            editing = draftEditing,
+            selectedModule = selectedDraftModule,
+            placement = hud.selectedPlacement(),
+        )
+        draftDockParams?.let { params ->
+            runCatching { windowManager.updateViewLayout(dock, params) }
+        }
+    }
+
+    private fun lockedHudFlags(): Int =
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+
+    private fun editableHudFlags(): Int =
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
     private fun attachDragAndMode(view: RiftScreenOverlayView, params: WindowManager.LayoutParams) {
         var downX = 0f
@@ -231,20 +451,23 @@ class RiftScreenOverlayService : Service() {
         }
     }
 
+    private fun actionIntent(action: String, requestCode: Int): PendingIntent = PendingIntent.getService(
+        this,
+        requestCode,
+        Intent(this, RiftScreenOverlayService::class.java).setAction(action),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
     private fun buildNotification(): Notification {
-        val stopIntent = PendingIntent.getService(
-            this,
-            2001,
-            Intent(this, RiftScreenOverlayService::class.java).setAction(ACTION_STOP),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setContentTitle("Laner RiftScreen 正在运行")
-            .setContentText("退到后台后显示赛事副屏；数据只来自 Application LIVE truth")
+            .setContentText("赛事副屏 / Draft HUD · 本地预览不会写入赛事事实")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停止", stopIntent)
+            .addAction(android.R.drawable.ic_media_play, "HUD预览", actionIntent(ACTION_DRAFT_PREVIEW_AUTO, 2001))
+            .addAction(android.R.drawable.ic_media_next, "下一步", actionIntent(ACTION_DRAFT_PREVIEW_NEXT, 2002))
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停止预览", actionIntent(ACTION_DRAFT_PREVIEW_STOP, 2003))
             .build()
     }
 
@@ -262,11 +485,19 @@ class RiftScreenOverlayService : Service() {
     override fun onDestroy() {
         isRunning = false
         pollingJob?.cancel()
+        previewJob?.cancel()
+        DraftHudPreviewSession.stop()
         if (this::windowManager.isInitialized) {
             overlay?.let { runCatching { windowManager.removeView(it) } }
+            draftHud?.let { runCatching { windowManager.removeView(it) } }
+            draftDock?.let { runCatching { windowManager.removeView(it) } }
         }
         overlay = null
         overlayParams = null
+        draftHud = null
+        draftHudParams = null
+        draftDock = null
+        draftDockParams = null
         scope.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
@@ -282,6 +513,9 @@ class RiftScreenOverlayService : Service() {
         const val ACTION_SHOW = "com.laner.app.overlay.RIFTSCREEN_SHOW"
         const val ACTION_HIDE = "com.laner.app.overlay.RIFTSCREEN_HIDE"
         const val ACTION_STOP = "com.laner.app.overlay.RIFTSCREEN_STOP"
+        const val ACTION_DRAFT_PREVIEW_AUTO = "com.laner.app.overlay.DRAFT_PREVIEW_AUTO"
+        const val ACTION_DRAFT_PREVIEW_NEXT = "com.laner.app.overlay.DRAFT_PREVIEW_NEXT"
+        const val ACTION_DRAFT_PREVIEW_STOP = "com.laner.app.overlay.DRAFT_PREVIEW_STOP"
         private const val ACTION_SYNC = "com.laner.app.overlay.RIFTSCREEN_SYNC"
 
         @Volatile
