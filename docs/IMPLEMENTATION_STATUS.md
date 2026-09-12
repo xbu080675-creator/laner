@@ -3,7 +3,7 @@
 ## Current Baseline
 
 - Repository: `xbu080675-creator/laner`
-- Working branch: `feature/lnr-010-global-schedule`
+- Working branch: `feature/lnr-011-pre-context`
 - Project phase: `M1 / Feature Migration`
 - Business implementation: `STARTED`
 - Functional migration: `IN PROGRESS`
@@ -25,11 +25,15 @@
 | LNR-008 | 四类数据/API 源架构 | DONE |
 | LNR-009 | 全球赛事统一管理架构 | DONE |
 | LNR-010 | 全球赛事目录与赛程中心 | WAITING EXTERNAL TEST |
-| LNR-011 | PRE Roster / Staff / Form / H2H | TODO |
+| LNR-011 | PRE Roster / Staff / Form / H2H | WAITING EXTERNAL TEST |
+| LNR-012 | Standings / Qualification / Tournament Edition | TODO |
 
 ## Current Truth
 
-Laner 已进入 M1 真实功能迁移。当前已经不仅是工程骨架：**第一条 PRE_MATCH 真实数据链已经实现并通过自动化构建/单测，但真实在线 Provider 与实机展示尚待外部验收。**
+Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前已经形成两条连续数据链：
+
+1. 全球赛事目录 / 全球赛程；
+2. 以某一场比赛为上下文的 Roster / Starting Roster Evidence / Staff / Recent Form / H2H。
 
 当前已验证存在：
 
@@ -38,22 +42,21 @@ Laner 已进入 M1 真实功能迁移。当前已经不仅是工程骨架：**�
 - `:app` Android/Compose Composition Root；
 - PRE/LIVE/POST 三阶段 Android 壳；
 - Match Lifecycle；
-- Global Competition IDs；
+- Global Competition / Team / Player IDs；
 - Source Class / Provenance / Authority / Freshness / Revision；
 - AI 与事实路径硬隔离；
-- Standard Match Event 初版；
-- Application FactArbiter；
-- 稳定 ErrorCode / Diagnostics Port；
-- Global Schedule Domain / Port / Service；
-- Riot LoL Esports PRE Adapter；
-- 全球赛事目录筛选 + 本地时区赛程 UI；
-- Schedule `EVENT_LIVE` 与 Match `IN_GAME` 分离；
-- PRE source 明确 `READY / DEGRADED / UNAVAILABLE`；
-- credential 缺失时不制造数据，返回 `LNR-SRC-PRE-001`；
-- Domain/Application Unit Tests；
+- `GlobalScheduleService`；
+- Riot LoL Esports PRE Schedule Adapter；
+- `TeamRosterPool` 与 `OfficialStartingRoster` 分离；
+- `StartingRosterResolution.Unknown / Confirmed / Conflict`；
+- `PreMatchContextService`；
+- Riot Team Roster Adapter；
+- normalized official Starting Roster Adapter；
+- normalized global Staff Adapter；
+- completed-Series-only Form / H2H；
+- PRE 页面比赛点选与同页上下文展示；
+- 首发证据冲突可视化；
 - GitHub Actions Architecture Gate + Core Tests + Android Debug Compile。
-
-旧 RiftLab 现场实测还确认了一条必须保留的正向行为：场间/新局开局识别可用。该证据已留档于 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`，后续迁移 LIVE-001/LIVE-002 时必须做永久回归。
 
 ## Verification Evidence
 
@@ -61,29 +64,51 @@ Laner 已进入 M1 真实功能迁移。当前已经不仅是工程骨架：**�
 
 - 首轮 CI：FAIL —— CI 错配 Gradle 9.4.0，而 AGP 9.4.0 要求最低 Gradle 9.6.0；失败证据保留。
 - 修复后 CI run `34686592578`：PASS。
-  - Architecture boundary gate: PASS
-  - Domain and application tests: PASS
-  - Android debug compile: PASS
 
 ### LNR-010
 
 GitHub Actions run `34687580424`：PASS。
 
+未执行：
+- 带真实 LoL Esports credential 的在线 `getLeagues/getSchedule`；
+- Android 实机真实赛事目录/赛程展示。
+
+状态：`WAITING EXTERNAL TEST`。
+
+### LNR-011
+
+首个完整 Core 规则 CI 已通过。UI 接线后 run `34688581238`：
+
 - Architecture boundary gate：PASS；
-- Domain and application tests：PASS；
+- Domain/Application tests：PASS；
+- Android debug compile：FAIL。
+
+失败根因：`PreMatchScreen` 的 Context `produceState` 使用 4 个命名 key，当前 Compose API 对应重载不接受该调用方式。未修改业务语义，改为 3 个稳定 key。
+
+修复后 GitHub Actions run `34688715420`：PASS。
+
+- Architecture boundary gate：PASS；
+- Domain/Application tests：PASS；
 - Android debug compile：PASS。
 
-未执行：
+自动化已证明：
+- 五人名单池不会自动变成官方首发；
+- 错日期/错对手首发证据被拒绝；
+- 重复位置首发证据被拒绝；
+- 两条相同官方阵容可交叉确认；
+- 同 Authority 冲突阵容必须返回 Conflict；
+- Form/H2H 只使用已验证结束 Series；
+- H2H 的 W/L 视角明确。
 
-- 带真实 LoL Esports credential 的在线 `getLeagues/getSchedule` 集成测试；
-- Android 实机真实赛事目录/赛程展示验收。
+未执行 / 外部验收：
+- 真实 Riot credential roster pool 在线读取；
+- normalized starting-roster/staff 网络配送；
+- Android 实机 PRE 上下文展示。
 
-原因：CI 不持有真实 Provider credential。以上两项状态为 `WAITING EXTERNAL TEST`，因此 LNR-010、PRE-001、PRE-004 暂不标 DONE。
+因此 LNR-011 总状态为 `WAITING EXTERNAL TEST`，其中 PRE-007 可凭纯业务不变量与自动化直接标 `DONE`。
 
-当前 UI 不展示假比赛数据；旧功能只有在 `docs/FEATURE_BASELINE.md` 对应条目通过真实迁移验收后才可标记 DONE。
+旧 RiftLab 现场实测确认的场间/新局开局识别证据仍保留于 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`，迁移 LIVE-001/LIVE-002 时必须永久回归。
 
 ## Next
 
-- 将 LNR-010 可编译、可测试实现合并到 `main`，保留 `WAITING EXTERNAL TEST` 认证状态；
-- 立即启动 `LNR-011`：PRE Roster / Staff / Form / H2H；
-- 后续获取真实 credential/实机环境后补 LNR-010 外部验收证据，不阻塞其它正交功能迁移。
+进入 `LNR-012`：Standings / Qualification / Tournament Edition。LNR-010 与 LNR-011 的外部验收在具备真实 credential / Android 实机环境时补证，不阻塞正交迁移。

@@ -26,13 +26,13 @@
 | PRE-003 | 赛区订阅与首页目标控制 | SPECTATOR | PRE_MATCH_SOURCE | dev.47-48 | User Preference + Competition Filter | TODO |
 | PRE-004 | 赛程中心与本地时区显示 | BOTH | PRE_MATCH_SOURCE | ScheduleCenterUi / dev.47 | Schedule Query | WAITING EXTERNAL TEST |
 | PRE-005 | 赛事倒计时与状态 | SPECTATOR | PRE_MATCH_SOURCE | RiftLabApp PreScreen | Match Lifecycle Query | TODO |
-| PRE-006 | 首发阵容 | BOTH | PRE_MATCH_SOURCE | StartingRosterCenter / PreScreen | Roster Query | TODO |
-| PRE-007 | 名单池与首发严格分离 | BOTH | PRE_MATCH_SOURCE | dev.71 / PreScreen | Roster Evidence Policy | TODO |
-| PRE-008 | 替补 | BOTH | PRE_MATCH_SOURCE | README / roster model | Roster Query | TODO |
-| PRE-009 | 教练组 / 管理人员 | BOTH | PRE_MATCH_SOURCE | GlobalTeamStaff / PreScreen | Staff Query | TODO |
+| PRE-006 | 首发阵容 | BOTH | PRE_MATCH_SOURCE | StartingRosterCenter / PreScreen | Roster Query | WAITING EXTERNAL TEST |
+| PRE-007 | 名单池与首发严格分离 | BOTH | PRE_MATCH_SOURCE | dev.71 / PreScreen | Roster Evidence Policy | DONE |
+| PRE-008 | 替补 | BOTH | PRE_MATCH_SOURCE | README / roster model | Roster Query | IN PROGRESS |
+| PRE-009 | 教练组 / 管理人员 | BOTH | PRE_MATCH_SOURCE | GlobalTeamStaff / PreScreen | Staff Query | WAITING EXTERNAL TEST |
 | PRE-010 | Rank / 近期英雄池（有可靠源时） | BOTH | PRE_MATCH_SOURCE | dev.71 roadmap | Player Form Query | TODO |
-| PRE-011 | 最近正式 Series 状态 | BOTH | PRE_MATCH_SOURCE | PreScreen | Form Query | TODO |
-| PRE-012 | 近期 H2H | BOTH | PRE_MATCH_SOURCE | PreScreen | H2H Query | TODO |
+| PRE-011 | 最近正式 Series 状态 | BOTH | PRE_MATCH_SOURCE | PreScreen | Form Query | WAITING EXTERNAL TEST |
+| PRE-012 | 近期 H2H | BOTH | PRE_MATCH_SOURCE | PreScreen | H2H Query | WAITING EXTERNAL TEST |
 | PRE-013 | 战队档案 / 运营关系 / 谱系 | BOTH | PRE_MATCH_SOURCE | TeamDetail / dev.30-31 | Global Identity Graph | TODO |
 | PRE-014 | 人物履历 / 电竞图谱 | COACH_ANALYST | PRE_MATCH_SOURCE | EntityDetail / esports graph | Global Identity Graph | TODO |
 | PRE-015 | 战队历史 Honors / Results 分离 | BOTH | PRE_MATCH_SOURCE | dev.31 | Team Archive | TODO |
@@ -159,7 +159,7 @@
 | SH-018 | GitHub 直连 + GitHub-only 节点测速 | SYSTEM | PLATFORM | dev.65 | Update Transport | TODO |
 | SH-019 | HTTP Range 断点续传 / 自动换线 | SYSTEM | PLATFORM | dev.59-65 | Update Transport | TODO |
 | SH-020 | APK SHA-256 / 包名 / versionCode / 签名校验 | SYSTEM | PLATFORM | README | Update Security | TODO |
-| SH-021 | 全球人员 / Staff 镜像 | SYSTEM | PRE_MATCH_SOURCE | GlobalTeamStaff | Provider Adapter | TODO |
+| SH-021 | 全球人员 / Staff 镜像 | SYSTEM | PRE_MATCH_SOURCE | GlobalTeamStaff | Provider Adapter | WAITING EXTERNAL TEST |
 | SH-022 | 全球 Awards 镜像 | SYSTEM | POST_MATCH_SOURCE | GlobalVerifiedAwards | Provider Adapter | TODO |
 | SH-023 | International Event Mirror | SYSTEM | PRE_MATCH_SOURCE | InternationalEventMirrorProvider | Provider Adapter | TODO |
 | SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | IN PROGRESS |

@@ -32,7 +32,7 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 **现象**：PRE 页面显示“全球赛前源 · 不可用”，无赛事目录/赛程；错误信息提示 credential 未配置。
 
-**影响范围**：Riot PRE Adapter；不影响 Core、LIVE/POST 壳及其它未来 Provider。
+**影响范围**：Riot PRE Adapter；不影响 Core、LIVE/POST 壳及其它 Provider。
 
 **首查模块**：`app/data/riot/RiotGlobalPreMatchSource.kt` → `LanerAppGraph` → BuildConfig。
 
@@ -70,6 +70,60 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 **首查**：`[Laner:SRC]` context 中 `direction/page`。
 
+### `LNR-SRC-PRE-006` — Riot Team roster credential 未配置
+
+**现象**：某场比赛的 Roster Pool 为空，赛前上下文进入降级状态；赛事目录/赛程本身可能仍可显示。
+
+**首查模块**：`RiotTeamRosterSource` → `LanerAppGraph` → BuildConfig credential。
+
+**行为**：不得使用赛程里的队伍顺序、历史首发或 UI 缓存补造当前名单。
+
+### `LNR-SRC-PRE-007` — Riot Team roster 请求/映射失败
+
+**现象**：赛事存在，但某一队或两队 roster pool 无法解析。
+
+**首查**：`[Laner:SRC]` / `[Laner:PRE]`、Riot `getTeams` 响应、Team identity alias/crosswalk。
+
+**行为**：Roster Pool 保持未知；绝不能因此把旧首发证据反推成当前完整 roster pool。
+
+### `LNR-SRC-PRE-008` — normalized 官方首发 Feed 不可用
+
+**现象**：Roster Pool 可存在，但 Starting Roster 显示“首发未确认”；网络源错误进入 PRE degraded diagnostics。
+
+**首查模块**：`NormalizedStartingRosterSource` → normalized feed endpoint → `PreMatchContextService` evidence validation。
+
+**关键判断**：
+- Feed 不可用 ≠ 名单池可以替代首发；
+- Team/League social 与 Official Site 均可成为官方证据；
+- 日期、对阵、赛事、五位置任一不匹配都必须拒绝；
+- 同 Authority 阵容冲突必须显示 `Conflict`，禁止静默选一个。
+
+**永久回归**：`PreMatchContextServiceTest` 中 roster/evidence/conflict 系列用例。
+
+### `LNR-SRC-PRE-009` — 全球 Staff normalized mirror 不可用
+
+**现象**：比赛与 roster 可正常展示，但 Staff 区域为空并显示降级状态。
+
+**首查模块**：`NormalizedTeamStaffSource` → staff mirror → Team identity mapping。
+
+**权威语义**：当前镜像内容主要由 Riot GCD 派生，因此 Adapter 标记为 `VERIFIED_PROVIDER`；不得把镜像配送地址本身伪装成直接官方 API。
+
+---
+
+## PRE UI / Compose
+
+### `LNR-UI-PRE-001` — PRE Context `produceState` 编译失败
+
+**首次发现**：LNR-011 / GitHub Actions run `34688581238`。
+
+**现象**：Core tests PASS，但 `:app:compileDebugKotlin` 失败，提示 `produceState` 不接受 `key4`，随后出现 `value`/suspend 调用级联错误。
+
+**根因**：`PreMatchScreen` 使用 4 个命名 key 调用 `produceState`，与当前 Compose API 的 overload 解析不兼容。
+
+**修复**：稳定的 `PreMatchContextService` 不作为重启 key，只保留 `scheduleSnapshot / selectedMatchId / refreshNonce` 三个 key。
+
+**回归证据**：GitHub Actions run `34688715420` 的 Android debug compile PASS。
+
 ---
 
 ## LIVE_MATCH 已锁定回归行为
@@ -84,4 +138,4 @@ LNR-<MODULE>-<STAGE>-<NNN>
 
 ## 当前阶段
 
-项目已进入 M1 Feature Migration。LNR-010 自动化验证通过，真实 Riot 在线拉取/Android 实机展示仍为 `WAITING EXTERNAL TEST`。
+项目已进入 M1 Feature Migration。LNR-010 与 LNR-011 的自动化代码验证均已通过；真实 Provider 在线拉取/Android 实机展示仍为 `WAITING EXTERNAL TEST`。

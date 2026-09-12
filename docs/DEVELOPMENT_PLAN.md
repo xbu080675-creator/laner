@@ -73,23 +73,51 @@
 - API credential 仅允许环境变量/Gradle Property 注入，不写入 Git；
 - `[Laner:SRC] / [Laner:PRE]` 诊断与 `LNR-SRC-PRE-001~004` 错误码。
 
-自动验证：GitHub Actions run `34687580424` 全部 PASS：
+自动验证：GitHub Actions run `34687580424` 全部 PASS。
+
+未完成的外部验收：真实在线 `getLeagues/getSchedule` 与 Android 实机展示仍为 `WAITING EXTERNAL TEST`。
+
+### LNR-011 — PRE Roster / Staff / Form / H2H
+状态：`WAITING EXTERNAL TEST`
+
+已实现：
+- `TeamRosterPool` 与 `OfficialStartingRoster` 独立领域事实；
+- `StartingRosterResolution = Unknown / Confirmed / Conflict`；
+- TOP/JUNGLE/MID/BOT/SUPPORT 五位置与五名不同选手硬不变量；
+- 名单池永远不得自动升级为官方首发；
+- `PreMatchContextService` 统一组合 Roster Pool / Starting Roster Evidence / Staff / Form / H2H；
+- Riot `getTeams` Roster Pool Adapter；
+- normalized official roster evidence Adapter；
+- normalized global staff Adapter；
+- Recent Form / H2H 仅从已验证 `COMPLETED` Series 派生且明确 W/L 视角；
+- PRE 页面点选比赛后同页展示首发证据、名单池、Staff、近期 Series、H2H；
+- 首发证据冲突显式展示，不静默覆盖；
+- `LNR-SRC-PRE-006~009` 错误码。
+
+自动验证：GitHub Actions run `34688715420` 全部 PASS：
 - Architecture boundary gate：PASS；
 - Domain/Application tests：PASS；
 - Android debug compile：PASS。
 
-未完成的外部验收：CI 无真实 LoL Esports credential，因此真实在线 `getLeagues/getSchedule` 与 Android 实机展示仍为 `WAITING EXTERNAL TEST`。在该证据完成前，PRE-001 / PRE-004 不标 DONE。
+已保留失败历史：run `34688581238` 中 Core PASS、Android compile FAIL，根因为 Compose `produceState` 使用 4 个命名 key 与当前版本重载不兼容；修为 3-key 后回归通过。
 
-### LNR-011 — PRE Roster / Staff / Form / H2H
+仍需外部验收：
+- 带真实 Riot credential 的 roster pool 在线数据；
+- normalized starting-roster/staff 网络配送；
+- Android 实机比赛点选与赛前上下文展示。
+
+`PRE-007` 已凭 Domain 不变量与自动化测试标记 `DONE`；其余真实数据展示能力在外部证据前不冒充 DONE。
+
+### LNR-012 — Standings / Qualification / Tournament Edition
 状态：`TODO`
 
-目标：在不破坏首发证据等级的前提下迁移名单池、官方首发、替补、教练组/管理人员、最近正式 Series 与 H2H，并为后续 OCR/AI 首发识别留下 Port，不在本任务提前接 AI。
+目标：迁移全球 Standings、积分/Championship Points、晋级路径、资格证据等级和 Tournament Edition 年度档案，并保持联赛排名与世界赛资格逻辑分离。
 
-第一批真实迁移顺序：
+## 第一批真实迁移顺序
 
 1. Global Competition Catalog / Schedule —— `LNR-010 WAITING EXTERNAL TEST`；
-2. PRE Roster / Staff / Form / H2H —— `LNR-011 TODO`；
-3. Standings / Qualification / Tournament Edition；
+2. PRE Roster / Staff / Form / H2H —— `LNR-011 WAITING EXTERNAL TEST`；
+3. Standings / Qualification / Tournament Edition —— `LNR-012 TODO`；
 4. LIVE Match State / Provider Arbitration / Unified Event / Timeline；
 5. POST Result / Stats / Replay / Archive；
 6. Android RiftScreen / Watch / Player / OTA；

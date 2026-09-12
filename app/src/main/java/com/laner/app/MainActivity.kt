@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
             LanerTheme {
                 LanerRoot(
                     scheduleService = appGraph.globalScheduleService,
+                    preMatchContextService = appGraph.preMatchContextService,
                 )
             }
         }
