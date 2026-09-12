@@ -3,28 +3,24 @@
 - Date: 2026-09-12
 - Executor: OpenAI / ChatGPT
 - Baseline: `main@b4904cae43b9e296e6badf989ef1769263a455fa`
-- Working branch: `feature/lnr-019-live-snapshot-hud`
-- Status: `TESTING`
+- Feature head: `502ef74930cd0f1a7670f6dab084d995991cd4da`
+- PR: `#9`
+- Merge commit: `64150f8cced159950013e4bdc3bbd9cf794a87b7`
+- Final status: `WAITING EXTERNAL TEST`
 
 ## Goal
-Prioritize tonight's real match validation path:
+Prioritize the real-match validation path:
 `Global Riot LIVE real frame → canonical LiveGameSnapshot → Application validation → GameTimeline → LIVE visible metrics`.
 
-Global-first is mandatory; Region is only a data dimension.
+Global-first remains mandatory; Region is only a data dimension.
 
 ## Administrative correction
-Initial work was mistakenly started as `LNR-017` on `feature/lnr-017-live-snapshot-hud`, but repository planning already reserves LNR-017 for Local AI/OCR and LNR-018 for final Migration Audit. History was not rewritten: old branch/record remains, code head `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5` was continued unchanged as formal LNR-019.
+Initial work mistakenly used `LNR-017`, which is already reserved for Local AI/OCR; LNR-018 is reserved for final Migration Audit. History was not rewritten. Old branch/record remains; code was continued unchanged as formal LNR-019.
 
-## Constitution Preflight
-`PASS` after task-ID correction. Reviewed latest constitution, main baseline/status, LNR-016 delivery, LIVE Domain/Application/Adapter/UI, provider identity and Riot historical LiveStats parser.
+## Constitution / Architecture
+Preflight and Post-change Compliance Review: `PASS`.
 
-## Scope / Non-goals
-In scope: Global Riot gameplay snapshot, canonical validation, Timeline ingest, full-width in-app LIVE visualization, tests/diagnostics/APK.
-
-Non-goals: AI Insight, full draggable system Overlay/RiftScreen editor, Watch/Player/OTA, unsupported event inference, Cito online verification.
-
-## Design
-Lifecycle and gameplay remain separate authorities:
+Lifecycle and gameplay stay separate:
 ```text
 ScheduledSeries
 ├─ LiveMatchStateService ← RiotGlobalLiveStateSource      # lifecycle authority
@@ -37,82 +33,62 @@ ScheduledSeries
                    LiveMatchScreen
 ```
 
-`LiveSnapshotService` cannot progress lifecycle. Provider IDs stay Adapter/mapping-local. UI cannot call Provider/Repository directly.
+`LiveSnapshotService` cannot progress lifecycle. UI cannot call Provider/Repository. Provider IDs remain Adapter/mapping-local.
 
-## Files changed
-### Core/Application
-- `LiveSnapshotPort.kt` — provider-neutral snapshot Port/result/status contracts.
-- `LiveSnapshotService.kt` — arbitration, canonical Match/Game/team validation, provenance, Timeline ingest, `LNR-APP-LIVE-002`.
-- `LiveSnapshotServiceTest.kt` — valid ingest + wrong GameId/team rejection.
-- `core/application/README.md` — LIVE lifecycle/snapshot boundary.
+## Delivered
+- `LiveSnapshotSourcePort / ProviderLiveSnapshot / LiveSnapshotResolution`.
+- `LiveSnapshotService` with `LNR-APP-LIVE-002` canonical Match/Game/team validation and Timeline ingest.
+- `RiotGlobalLiveSnapshotSource` with `LNR-SRC-LIVE-006~007`.
+- Riot provider identity → EventDetails active game → LiveStats last real frame → canonical `LiveGameSnapshot`.
+- Team gold/kills/towers/dragons/barons and player level/KDA/CS/gold/champion where explicitly present.
+- Existing canonical `GameTimeline` reused; no new LIVE store/schema.
+- Full-width `GAME DATA / 实时真帧` LIVE UI; gold lead only when both real gold values exist.
+- null remains unknown; explicit zero remains zero.
+- Application regressions for valid ingest / noncanonical GameId / wrong teams.
+- Adapter fixture regressions for canonical parsing / missing-vs-zero / unknown team identity.
+- Development plan/status/Feature Baseline/Troubleshooting/Changelog/module README synced.
 
-### Android Adapter / Composition / UI
-- `RiotGlobalLiveSnapshotSource.kt` — provider identity → EventDetails active game → LiveStats latest real frame.
-- `RiotGlobalLiveSnapshotSourceTest.kt` — fixture parser, null-vs-zero, unknown team rejection.
-- `LanerAppGraph.kt` — source/service wiring.
-- `MainActivity.kt` / `LanerRoot.kt` — service handoff.
-- `LiveMatchScreen.kt` — full-width verified gameplay data card.
-- `app/README.md` — current LIVE chain, diagnostics and tests.
+## Honest feature boundaries
+- LIVE-005/006/007/008/010 automated implementation is present but awaits real online/device evidence.
+- LIVE-006 currently means team total kill count, not KillEvent/MultiKill derivation.
+- LIVE-009 remains IN PROGRESS: Baron field exists, Herald/Atakhan are not globally normalized.
+- automatic Kill/Objective/GoldLead delta-event derivation is not part of LNR-019.
+- full Android system RiftScreen/overlay remains later work.
 
-### Governance
-- `DEVELOPMENT_PLAN.md`
-- `IMPLEMENTATION_STATUS.md`
-- `FEATURE_BASELINE.md`
-- `TROUBLESHOOTING.md`
-- `CHANGELOG.md`
-- this record.
+## Security / Data / Performance
+- Riot key behavior from LNR-016 unchanged; no new credential persistence/logging.
+- Provider game/team IDs never become canonical IDs.
+- Invalid canonical snapshot rejected before repository write.
+- Snapshot failure does not mutate lifecycle truth.
+- Manual LIVE refresh performs one lifecycle path plus one snapshot path; no high-frequency background polling added.
+- No interpolation or invented missing metrics.
 
-## Functional behavior
-Riot real frame fields are standardized when explicitly present:
-- Team: gold, total kills, towers, dragons, barons.
-- Player: level, K/D/A, CS, gold, champion.
+## Failure history
+### run `34699837518`
+Architecture PASS; Core test compile FAIL; downstream Android stages skipped.
 
-Missing stays `null`. UI uses “未知 / ?” and only computes gold lead when both team gold values exist. LIVE-009 stays IN PROGRESS because Herald/Atakhan are not yet globally normalized. Team total kills support does not imply KillEvent/MultiKill support; LIVE-014 remains TODO.
+Root cause: new `LiveSnapshotServiceTest` incorrectly imported unavailable `kotlinx.coroutines.runBlocking` and `org.junit.*` instead of using this Core module's existing `kotlin.test` + local Continuation harness. Production logic was not the failing surface.
 
-## Security / Data / Compatibility
-- Riot key behavior from LNR-016 unchanged; no credential persistence/logging added.
-- Provider game/team IDs do not become canonical IDs.
-- Existing Timeline schema reused; no storage migration.
-- Invalid canonical snapshot is rejected before repository write.
-- Snapshot adapter failure does not mutate lifecycle truth.
+Fix: `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5`; no production behavior changed.
 
-## Performance / Network
-A manual LIVE refresh performs lifecycle refresh plus one snapshot fetch path. No background high-frequency polling was added in LNR-019. Timeline persists only validated real snapshots; no interpolation.
+Permanent regressions: valid canonical ingest, noncanonical GameId rejection/no write, wrong team rejection/no write.
 
-## Tests
-### Application
-- valid canonical snapshot → Timeline write;
-- provider/raw GameId → `LNR-APP-LIVE-002`, no write;
-- wrong teams → reject, no write.
+## Verification evidence
+- `34699942180`: Architecture / Domain+Application / Android Adapter unit / Android build / APK upload all PASS.
+- interim artifact `10300336311`, digest `sha256:f0e5ab811470a82bcf0b2f402ca252b29b49da6288343c1263cc6c4268ebe245`.
+- final feature head `502ef74930cd0f1a7670f6dab084d995991cd4da` / run `34700371864`: all Gates + APK upload PASS.
+- final feature artifact `10300027543`, digest `sha256:e469bd19c7421df311d1ba207b2714c41321d14444c2e64c5ca7500017d5e075`.
+- PR #9 run `34700481940`: Architecture / Domain+Application / Android Adapter unit / Android build / APK upload all PASS.
+- PR #9 artifact `10299868008`, digest `sha256:98a77e9964aa4bf266e31986e0ac6533d8da5985066fda1b5fcd8dfad010d29f`.
+- merge `64150f8cced159950013e4bdc3bbd9cf794a87b7`.
 
-### Android Adapter
-- BLG/AL-style fixture parses canonical G4 team/player metrics;
-- explicit `barons=0` remains 0;
-- absent red `barons` remains null;
-- unknown provider team identity rejects frame.
-
-### CI history
-- run `34699837518`: Architecture PASS; Core test compile FAIL. New test incorrectly imported unavailable `kotlinx.coroutines.runBlocking` / `org.junit.*`; production code was not the failing surface. Android stages were correctly skipped.
-- fix `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5`: use existing `kotlin.test` + local Continuation suspend harness; no production changes.
-- run `34699942180`: Architecture / Domain+Application / Android Adapter unit / Android build / APK upload all PASS.
-- artifact `10300336311`, workflow artifact digest `sha256:f0e5ab811470a82bcf0b2f402ca252b29b49da6288343c1263cc6c4268ebe245`.
-- formal LNR-019 final exact-head / PR Gate: pending.
-
-## Status sync
-- DEVELOPMENT_PLAN: LNR-016 corrected to WAITING EXTERNAL TEST; reserved LNR-017/018 preserved; LNR-019 registered.
-- IMPLEMENTATION_STATUS: LNR-019 TESTING.
-- FEATURE_BASELINE: LIVE-005/006/007/008/010 → WAITING EXTERNAL TEST; LIVE-009 remains IN PROGRESS.
-- TROUBLESHOOTING: test-harness failure + new LIVE diagnostics archived.
-- CHANGELOG/module README synced.
-
-## Known issues / external validation
-- Real BLG vs AL EventDetails/LiveStats snapshot behavior is `WAITING EXTERNAL TEST` until Android device evidence exists.
-- Snapshot frames are persisted, but automatic Kill/Objective/GoldLead delta-event derivation is not part of this task.
-- Full Android system overlay/RiftScreen remains future work.
-- Cito remains DEFERRED.
+## External validation
+Real BLG vs AL Android EventDetails/LiveStats snapshot behavior is still `WAITING EXTERNAL TEST`. Fixture/CI PASS is not reported as online evidence. Cito remains DEFERRED.
 
 ## Rollback
-Feature branch is isolated. No schema migration. Before merge, revert LNR-019 commits or delete branch; after merge, revert task merge commit. Existing LNR-016 lifecycle path remains independently functional.
+Revert merge `64150f8cced159950013e4bdc3bbd9cf794a87b7` plus this closeout if full rollback is required. No storage migration was introduced; LNR-016 lifecycle path remains independently functional.
 
 ## Compliance conclusion
-Preflight PASS. Architecture remains `Domain ← Application ← Adapter/UI`; Global-first preserved; no UI→Provider; no missing-value fabrication; failures retained; final exact-head and PR Gate required before merge.
+Architecture/tests/docs/status/troubleshooting/remote Git evidence are consistent. Automated delivery is complete; real Provider/device certification is pending by design.
+
+**Final: `WAITING EXTERNAL TEST`.**
