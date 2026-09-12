@@ -85,6 +85,32 @@ class LiveMatchStateReducerTest {
     }
 
     @Test
+    fun nextGameWithoutProviderGameIdClearsPreviousGameId() {
+        val between = LiveMatchState(
+            matchId = matchId,
+            lifecycle = MatchLifecycleState.BETWEEN_GAMES,
+            currentGameId = GameId("lol:game:g1"),
+            currentGameNumber = 1,
+            lastObservedAtEpochMillis = 12_000L,
+        )
+
+        val result = LiveMatchStateReducer.reduce(
+            between,
+            signal(
+                lifecycle = MatchLifecycleState.IN_GAME,
+                gameId = null,
+                gameNumber = 2,
+                observedAt = 20_000L,
+                evidence = LiveStateEvidence.VERIFIED_FRAME,
+            ),
+        )
+
+        val applied = assertIs<LiveStateTransitionResult.Applied>(result)
+        assertEquals(2, applied.state.currentGameNumber)
+        assertEquals(null, applied.state.currentGameId)
+    }
+
+    @Test
     fun delayedOldGameCannotRewindNewGame() {
         val game2 = LiveMatchState(
             matchId = matchId,
