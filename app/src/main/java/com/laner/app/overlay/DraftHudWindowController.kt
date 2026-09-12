@@ -59,7 +59,7 @@ internal class DraftHudWindowController(
     }
 
     fun destroy() {
-        if (editing) setEditMode(false)
+        editing = false
         dock?.let { windowHost.remove(DOCK_WINDOW_NAME, it) }
         hud?.let { windowHost.remove(HUD_WINDOW_NAME, it) }
         hud = null
