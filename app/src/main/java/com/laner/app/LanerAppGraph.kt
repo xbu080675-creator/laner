@@ -1,6 +1,7 @@
 package com.laner.app
 
 import com.laner.app.data.archive.JsonTournamentEditionArchiveRepository
+import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotTeamRosterSource
@@ -24,6 +25,7 @@ class LanerAppGraph(
     private val riotCompetitionStructureSource = RiotCompetitionStructureSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
     )
+    private val official2026QualificationSource = Official2026QualificationSource()
     private val normalizedStartingRosterSource = NormalizedStartingRosterSource()
     private val normalizedTeamStaffSource = NormalizedTeamStaffSource()
     private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(
@@ -46,7 +48,7 @@ class LanerAppGraph(
         editionSources = listOf(riotCompetitionStructureSource),
         standingsSources = listOf(riotCompetitionStructureSource),
         championshipPointsSources = emptyList(),
-        qualificationSources = emptyList(),
+        qualificationSources = listOf(official2026QualificationSource),
         archiveRepository = editionArchiveRepository,
         diagnostics = diagnostics,
     )
