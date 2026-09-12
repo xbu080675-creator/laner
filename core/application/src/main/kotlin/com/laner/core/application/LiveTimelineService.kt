@@ -18,6 +18,13 @@ data class TimelineIngestResult(
     val invalidEventsRejected: Int,
 )
 
+data class TimelineReconcileResult(
+    val timeline: GameTimeline,
+    val generatedEventsStored: Int,
+    val previousGeneratedEventsRemoved: Int,
+    val invalidEventsRejected: Int,
+)
+
 /**
  * Provider-neutral canonical timeline ingestion and query service.
  *
@@ -103,14 +110,9 @@ class LiveTimelineService(
             }
         }
 
-        val mergedEvents = byKey.values.sortedWith(
-            compareBy<MatchEvent> { it.gameTimeSeconds ?: Int.MIN_VALUE }
-                .thenBy { it.sequence }
-                .thenBy { it.semanticKey() }
-        )
         val updated = existing.copy(
             snapshots = snapshots,
-            events = mergedEvents,
+            events = sortEvents(byKey.values),
         )
         if (updated != existing) repository.write(updated)
 
@@ -123,6 +125,43 @@ class LiveTimelineService(
         )
     }
 
+    /**
+     * Replaces only the events owned by [generatorProviderId] and preserves all provider-explicit or
+     * independently sourced events. This makes deterministic snapshot-delta derivation safe across
+     * reconnects, late/out-of-order snapshots and stronger same-second snapshot replacement.
+     */
+    suspend fun reconcileGeneratedEvents(
+        gameId: GameId,
+        generatorProviderId: String,
+        events: List<MatchEvent>,
+    ): TimelineReconcileResult? {
+        require(generatorProviderId.isNotBlank())
+        val existing = repository.read(gameId) ?: return null
+        val valid = events.filter {
+            it.matchId == existing.matchId && it.gameId == existing.gameId &&
+                it.provenance.providerId == generatorProviderId &&
+                it.provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE
+        }
+        val invalidCount = events.size - valid.size
+        val preserved = existing.events.filterNot { it.provenance.providerId == generatorProviderId }
+        val byKey = preserved.associateBy { it.semanticKey() }.toMutableMap()
+
+        valid.forEach { event ->
+            val key = event.semanticKey()
+            val current = byKey[key]
+            if (current == null || prefer(event, current)) byKey[key] = event
+        }
+
+        val updated = existing.copy(events = sortEvents(byKey.values))
+        if (updated != existing) repository.write(updated)
+        return TimelineReconcileResult(
+            timeline = updated,
+            generatedEventsStored = updated.events.count { it.provenance.providerId == generatorProviderId },
+            previousGeneratedEventsRemoved = existing.events.count { it.provenance.providerId == generatorProviderId },
+            invalidEventsRejected = invalidCount,
+        )
+    }
+
     suspend fun markCompleted(gameId: GameId): GameTimeline? {
         val existing = repository.read(gameId) ?: return null
         if (existing.completed) return existing
@@ -130,6 +169,12 @@ class LiveTimelineService(
         repository.write(updated)
         return updated
     }
+
+    private fun sortEvents(events: Collection<MatchEvent>): List<MatchEvent> = events.sortedWith(
+        compareBy<MatchEvent> { it.gameTimeSeconds ?: Int.MIN_VALUE }
+            .thenBy { it.sequence }
+            .thenBy { it.semanticKey() }
+    )
 
     private fun isTimelineFactSource(sourceClass: SourceClass): Boolean =
         sourceClass == SourceClass.LIVE_MATCH_SOURCE || sourceClass == SourceClass.POST_MATCH_SOURCE
