@@ -192,10 +192,13 @@ private fun AwardsCard(awards: List<VerifiedPostAward>) {
     }
 }
 
-private fun awardTitle(award: VerifiedPostAward): String = when {
-    award.gameNumber != null -> "G${award.gameNumber} · ${award.kind.name}"
-    award.gameId != null -> "${award.gameId.value} · ${award.kind.name}"
-    else -> "SERIES · ${award.kind.name}"
+private fun awardTitle(award: VerifiedPostAward): String {
+    val gameId = award.gameId
+    return when {
+        award.gameNumber != null -> "G${award.gameNumber} · ${award.kind.name}"
+        gameId != null -> "${gameId.value} · ${award.kind.name}"
+        else -> "SERIES · ${award.kind.name}"
+    }
 }
 
 @Composable
