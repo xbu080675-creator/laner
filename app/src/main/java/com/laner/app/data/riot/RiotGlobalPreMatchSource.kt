@@ -102,8 +102,8 @@ class RiotGlobalPreMatchSource(
                         externalId = externalId,
                         slug = slug,
                         name = name.ifBlank { slug.uppercase() },
-                        regionCode = regionCode.ifBlank { null },
-                        regionName = regionName.ifBlank { null },
+                        regionCode = regionCode.takeIf { it.isNotBlank() },
+                        regionName = regionName.takeIf { it.isNotBlank() },
                     )
                 )
             }
@@ -125,21 +125,21 @@ class RiotGlobalPreMatchSource(
             while (token.isNotBlank() && pageCount < MAX_PAGES_PER_DIRECTION) {
                 val visitKey = "$direction:$token"
                 if (!visited.add(visitKey)) break
-                val currentToken = token
-                val page = runCatching { fetchSchedulePage(currentToken) }
-                    .getOrElse { error ->
-                        warnings += DiagnosticFailure(
-                            code = ErrorCode("LNR-SRC-PRE-004"),
-                            message = "Schedule pagination degraded: ${safeMessage(error)}",
-                            retryable = true,
-                            context = mapOf(
-                                "provider" to providerId,
-                                "direction" to direction,
-                                "page" to pageCount.toString(),
-                            ),
-                        )
-                        break
-                    }
+                val page = try {
+                    fetchSchedulePage(token)
+                } catch (error: Throwable) {
+                    warnings += DiagnosticFailure(
+                        code = ErrorCode("LNR-SRC-PRE-004"),
+                        message = "Schedule pagination degraded: ${safeMessage(error)}",
+                        retryable = true,
+                        context = mapOf(
+                            "provider" to providerId,
+                            "direction" to direction,
+                            "page" to pageCount.toString(),
+                        ),
+                    )
+                    break
+                }
                 pages += page
                 token = schedulePageToken(page, direction)
                 pageCount += 1
@@ -190,7 +190,8 @@ class RiotGlobalPreMatchSource(
                 val league = event.optJSONObject("league")
                 val competitionExternalId = league?.optString("id").orEmpty()
                 val knownCompetition = competitionById[competitionExternalId]
-                val competitionSlug = league?.optString("slug").orEmpty().ifBlank { knownCompetition?.slug.orEmpty() }
+                val competitionSlug = league?.optString("slug").orEmpty()
+                    .ifBlank { knownCompetition?.slug.orEmpty() }
                 val competitionName = league?.optString("name").orEmpty()
                     .ifBlank { knownCompetition?.name.orEmpty() }
                     .ifBlank { competitionSlug.uppercase() }
@@ -271,7 +272,7 @@ class RiotGlobalPreMatchSource(
     }
 
     private fun safeMessage(error: Throwable): String =
-        error.message?.take(160)?.ifBlank { null } ?: error::class.java.simpleName
+        error.message?.take(160)?.takeIf { it.isNotBlank() } ?: error::class.java.simpleName
 
     private companion object {
         const val PERSISTED_BASE = "https://esports-api.lolesports.com/persisted/gw"
