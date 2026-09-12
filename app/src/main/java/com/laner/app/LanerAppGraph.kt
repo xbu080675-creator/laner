@@ -1,5 +1,6 @@
 package com.laner.app
 
+import com.laner.app.data.archive.JsonProviderMatchIdentityRepository
 import com.laner.app.data.archive.JsonTournamentEditionArchiveRepository
 import com.laner.app.data.live.JsonLiveMatchStateRepository
 import com.laner.app.data.live.JsonLiveTimelineRepository
@@ -8,6 +9,8 @@ import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
 import com.laner.app.data.riot.RiotGlobalPreMatchSource
+import com.laner.app.data.riot.RiotGlobalReplaySource
+import com.laner.app.data.riot.RiotGlobalResultSource
 import com.laner.app.data.riot.RiotTeamRosterSource
 import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
@@ -34,6 +37,15 @@ class LanerAppGraph(
     private val liveStateRepository = JsonLiveMatchStateRepository(File(filesDir, "live/state"))
     private val liveTimelineRepository = JsonLiveTimelineRepository(File(filesDir, "live/timeline"))
     private val postArchiveRepository = JsonPostMatchArchiveRepository(File(filesDir, "post/archive"))
+    private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
+    private val riotGlobalResultSource = RiotGlobalResultSource(
+        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        identityRepository = providerIdentityRepository,
+    )
+    private val riotGlobalReplaySource = RiotGlobalReplaySource(
+        apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
+        identityRepository = providerIdentityRepository,
+    )
 
     val globalScheduleService = GlobalScheduleService(listOf(riotPreMatchSource), diagnostics)
 
@@ -62,16 +74,15 @@ class LanerAppGraph(
     val liveTimelineService = LiveTimelineService(liveTimelineRepository)
 
     /**
-     * Result/game/replay capabilities remain explicit until verified adapters are added. Awards can
-     * already use the provenance-preserving mirror because they do not require provider raw IDs or
-     * private credentials. Verified Result/Game facts are cached locally after arbitration so POST
-     * can recover them later without pretending the cache is a new source authority.
+     * Global Riot POST is the baseline across every competition present in the Riot schedule:
+     * official SeriesResult + official Replay metadata. Regional providers are supplements only and
+     * can later add deeper CompletedGame/Stats without changing Domain/Application/UI structure.
      */
     val postMatchService = PostMatchService(
-        resultSources = emptyList(),
+        resultSources = listOf(riotGlobalResultSource),
         gameSources = emptyList(),
         awardSources = listOf(verifiedAwardsMirrorSource),
-        replaySources = emptyList(),
+        replaySources = listOf(riotGlobalReplaySource),
         archiveRepository = postArchiveRepository,
         diagnostics = diagnostics,
     )
