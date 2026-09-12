@@ -5,6 +5,19 @@ All notable project changes must be recorded here at release or milestone level.
 ## Unreleased
 
 ### M1 Feature Migration
+- Implemented `LNR-011` PRE context slice: Team Roster Pool, Official Starting Roster evidence, Staff, Recent Form and H2H.
+- Added pure-domain `TeamRosterPool`, `OfficialStartingRoster`, `StartingRosterResolution`, `StaffMember`, `TeamStaffSnapshot` and `RecentSeries` contracts.
+- Hard-separated roster pool from starting lineup: a clean five-player roster pool can never become an official starting roster without valid official evidence.
+- Added official starting-lineup validation for date, matchup, competition and exact TOP/JUNGLE/MID/BOT/SUPPORT coverage; conflicting equal-authority official lineups surface as `Conflict` instead of silent overwrite.
+- Added `PreMatchContextService` as the single Application orchestration entry; PRE UI does not compose Provider results directly.
+- Added Riot `getTeams` Roster Pool Adapter and normalized official starting-roster / global staff transitional adapters.
+- Preserved authority semantics: normalized staff mirror is `VERIFIED_PROVIDER` even when its upstream data derives from Riot GCD; the mirror transport itself is not presented as a direct official API.
+- Added completed-Series-only Recent Form and H2H derivation with explicit perspective for W/L.
+- Expanded PRE Compose UI so a selected match reveals starting evidence, roster pool, Staff, Recent Form and H2H on the same PRE phase page while the global schedule remains available below.
+- Added source failure mapping `LNR-SRC-PRE-006~009` and PRE context degraded UI.
+- CI run `34688581238` exposed an Android Compose compile issue in the first UI wiring (`produceState` four named keys); the failure is preserved. The call was reduced to three stable keys without business-semantic changes.
+- CI run `34688715420` passed Architecture boundary gate, Domain/Application tests and Android debug compilation after the fix.
+- `PRE-007` is now `DONE` by Domain invariant + automated regression tests. PRE-006/PRE-009/PRE-011/PRE-012 remain `WAITING EXTERNAL TEST`; PRE-008 remains `IN PROGRESS` because reliable substitute identification is not yet fully certified.
 - Implemented the first real PRE_MATCH data slice (`LNR-010`): global competition catalogue and schedule.
 - Added pure-domain `CompetitionKind`, `ScheduleState`, `CompetitionCatalogEntry`, `ScheduledTeam`, and `ScheduledSeries` models.
 - Added `GlobalPreMatchSourcePort` and `GlobalScheduleService`; Provider payloads are normalized and arbitrated in Application instead of UI/Adapter-owned global stores.
