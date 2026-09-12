@@ -52,8 +52,12 @@ class RiftScreenOverlayService : Service() {
     private var previewJob: Job? = null
     private var latestRiftPresentation = RiftScreenPresentationMapper.waiting("等待 Application LIVE truth")
 
+    @Volatile
+    private var destroyed = false
+
     override fun onCreate() {
         super.onCreate()
+        destroyed = false
         isRunning = true
         val graph = (application as LanerApplication).graph()
         windowHost = OverlayWindowHost(this, graph.diagnostics)
@@ -95,11 +99,13 @@ class RiftScreenOverlayService : Service() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        if (destroyed) return
         riftWindow.onConfigurationChanged()
         draftWindow.onConfigurationChanged()
     }
 
     private fun syncVisibility() {
+        if (destroyed) return
         if (hostInForeground || !Settings.canDrawOverlays(this)) {
             hideOverlay()
         } else {
@@ -113,7 +119,7 @@ class RiftScreenOverlayService : Service() {
     }
 
     private fun ensurePolling() {
-        if (pollingJob?.isActive == true) return
+        if (pollingJob?.isActive == true || destroyed) return
         pollingJob = scope.launch {
             while (isActive) {
                 if (!hostInForeground && Settings.canDrawOverlays(this@RiftScreenOverlayService)) {
@@ -125,10 +131,11 @@ class RiftScreenOverlayService : Service() {
     }
 
     private fun ensurePreviewCollection() {
-        if (previewJob?.isActive == true) return
+        if (previewJob?.isActive == true || destroyed) return
         previewJob = scope.launch {
             DraftHudPreviewSession.state.collect { state ->
                 mainHandler.post {
+                    if (destroyed) return@post
                     if (this@RiftScreenOverlayService::draftWindow.isInitialized) {
                         draftWindow.setPreviewState(state)
                         refreshOverlayMode()
@@ -144,6 +151,7 @@ class RiftScreenOverlayService : Service() {
     )
 
     private suspend fun refreshTruth() {
+        if (destroyed) return
         val now = System.currentTimeMillis()
         val graph = (application as LanerApplication).graph()
         val context = SourceRequestContext(
@@ -210,17 +218,18 @@ class RiftScreenOverlayService : Service() {
         }
 
         mainHandler.post {
+            if (destroyed) return@post
             if (!this@RiftScreenOverlayService::riftWindow.isInitialized ||
                 !this@RiftScreenOverlayService::draftWindow.isInitialized
             ) return@post
             latestRiftPresentation = truth.rift
             draftWindow.setVerifiedPresentation(truth.draft)
-            riftWindow.render(truth.rift)
             refreshOverlayMode()
         }
     }
 
     private fun refreshOverlayMode() {
+        if (destroyed) return
         if (!this::riftWindow.isInitialized || !this::draftWindow.isInitialized) return
         if (hostInForeground || !Settings.canDrawOverlays(this)) {
             hideOverlay()
@@ -282,9 +291,11 @@ class RiftScreenOverlayService : Service() {
     }
 
     override fun onDestroy() {
+        destroyed = true
         isRunning = false
         pollingJob?.cancel()
         previewJob?.cancel()
+        mainHandler.removeCallbacksAndMessages(null)
         DraftHudPreviewSession.stop()
         if (this::draftWindow.isInitialized) draftWindow.destroy()
         if (this::riftWindow.isInitialized) riftWindow.destroy()
