@@ -56,7 +56,9 @@ class JsonProviderMatchIdentityRepository(
     }
 
     private fun writeAll(values: List<ProviderMatchIdentity>) {
-        val parent = file.parentFile
+        val parent = requireNotNull(file.parentFile) {
+            "Provider identity file must have a parent directory: ${file.path}"
+        }
         check(parent.exists() || parent.mkdirs()) { "Could not create identity directory: ${parent.absolutePath}" }
         val rows = JSONArray()
         values.forEach { value ->
