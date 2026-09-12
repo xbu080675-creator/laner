@@ -16,12 +16,14 @@ import com.laner.core.domain.MatchEvent
 import com.laner.core.domain.MatchId
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.MatchStateChanged
+import com.laner.core.domain.MultiKillWindowEvent
 import com.laner.core.domain.ObjectiveTakenEvent
 import com.laner.core.domain.ObjectiveType
 import com.laner.core.domain.PlayerId
 import com.laner.core.domain.PlayerLiveState
 import com.laner.core.domain.SourceClass
 import com.laner.core.domain.SourceProvenance
+import com.laner.core.domain.TeamFightWindowEvent
 import com.laner.core.domain.TeamId
 import com.laner.core.domain.TeamLiveState
 import com.laner.core.domain.TimelineSnapshotPoint
@@ -40,6 +42,7 @@ import java.security.MessageDigest
  *
  * Provider payloads are deliberately absent from this schema. Only Laner Domain snapshots/events
  * are persisted. One file per GameId limits write blast radius and allows independent recovery.
+ * Schema v2 adds conservative tactical event windows while retaining read compatibility with v1.
  */
 class JsonLiveTimelineRepository(
     private val directory: File,
@@ -74,7 +77,7 @@ class JsonLiveTimelineRepository(
 
     private fun decodeTimeline(root: JSONObject): GameTimeline {
         val version = root.optInt("schema_version", -1)
-        require(version == SCHEMA_VERSION) { "Unsupported LIVE timeline schema: $version" }
+        require(version in SUPPORTED_SCHEMA_VERSIONS) { "Unsupported LIVE timeline schema: $version" }
         val matchId = MatchId(root.getString("match_id"))
         val gameId = GameId(root.getString("game_id"))
         return GameTimeline(
@@ -191,15 +194,31 @@ class JsonLiveTimelineRepository(
                     value.assistingPlayerIds.map { it.value }.sorted().forEach(::put)
                 })
                 .put("team_id", value.teamId?.value)
+                .put("count", value.count)
+                .put("observed_window_seconds", value.observedWindowSeconds)
+            is MultiKillWindowEvent -> node
+                .put("type", "MULTI_KILL_WINDOW")
+                .put("player_id", value.playerId.value)
+                .put("team_id", value.teamId.value)
+                .put("kill_count", value.killCount)
+                .put("window_seconds", value.windowSeconds)
+            is TeamFightWindowEvent -> node
+                .put("type", "TEAM_FIGHT_WINDOW")
+                .put("blue_kill_delta", value.blueKillDelta)
+                .put("red_kill_delta", value.redKillDelta)
+                .put("window_seconds", value.windowSeconds)
             is ObjectiveTakenEvent -> node
                 .put("type", "OBJECTIVE_TAKEN")
                 .put("team_id", value.teamId.value)
                 .put("objective", value.objective.name)
                 .put("detail", value.detail)
+                .put("count", value.count)
+                .put("observed_window_seconds", value.observedWindowSeconds)
             is GoldLeadChangedEvent -> node
                 .put("type", "GOLD_LEAD_CHANGED")
                 .put("leading_team_id", value.leadingTeamId?.value)
                 .put("gold_difference", value.goldDifference)
+                .put("observed_window_seconds", value.observedWindowSeconds)
             is DraftChangedEvent -> node
                 .put("type", "DRAFT_CHANGED")
                 .put("action", value.action.name)
@@ -238,6 +257,31 @@ class JsonLiveTimelineRepository(
                 victimId = node.optString("victim_id").takeIf { it.isNotBlank() }?.let(::PlayerId),
                 assistingPlayerIds = decodeStringSet(node.optJSONArray("assisting_player_ids")).map(::PlayerId).toSet(),
                 teamId = node.optString("team_id").takeIf { it.isNotBlank() }?.let(::TeamId),
+                count = node.optInt("count", 1),
+                observedWindowSeconds = nullableInt(node, "observed_window_seconds"),
+            )
+            "MULTI_KILL_WINDOW" -> MultiKillWindowEvent(
+                matchId = matchId,
+                gameId = requireNotNull(gameId) { "MultiKillWindowEvent requires game_id" },
+                sequence = sequence,
+                gameTimeSeconds = requireNotNull(gameTime) { "MultiKillWindowEvent requires game_time_seconds" },
+                provenance = provenance,
+                evidence = evidence,
+                playerId = PlayerId(node.getString("player_id")),
+                teamId = TeamId(node.getString("team_id")),
+                killCount = node.getInt("kill_count"),
+                windowSeconds = node.getInt("window_seconds"),
+            )
+            "TEAM_FIGHT_WINDOW" -> TeamFightWindowEvent(
+                matchId = matchId,
+                gameId = requireNotNull(gameId) { "TeamFightWindowEvent requires game_id" },
+                sequence = sequence,
+                gameTimeSeconds = requireNotNull(gameTime) { "TeamFightWindowEvent requires game_time_seconds" },
+                provenance = provenance,
+                evidence = evidence,
+                blueKillDelta = node.getInt("blue_kill_delta"),
+                redKillDelta = node.getInt("red_kill_delta"),
+                windowSeconds = node.getInt("window_seconds"),
             )
             "OBJECTIVE_TAKEN" -> ObjectiveTakenEvent(
                 matchId = matchId,
@@ -249,6 +293,8 @@ class JsonLiveTimelineRepository(
                 teamId = TeamId(node.getString("team_id")),
                 objective = ObjectiveType.valueOf(node.getString("objective")),
                 detail = node.optString("detail").takeIf { it.isNotBlank() },
+                count = node.optInt("count", 1),
+                observedWindowSeconds = nullableInt(node, "observed_window_seconds"),
             )
             "GOLD_LEAD_CHANGED" -> GoldLeadChangedEvent(
                 matchId = matchId,
@@ -259,6 +305,7 @@ class JsonLiveTimelineRepository(
                 evidence = evidence,
                 leadingTeamId = node.optString("leading_team_id").takeIf { it.isNotBlank() }?.let(::TeamId),
                 goldDifference = node.getInt("gold_difference"),
+                observedWindowSeconds = nullableInt(node, "observed_window_seconds"),
             )
             "DRAFT_CHANGED" -> DraftChangedEvent(
                 matchId = matchId,
@@ -296,7 +343,8 @@ class JsonLiveTimelineRepository(
         sourceUri = node.optString("source_uri").takeIf { it.isNotBlank() },
     )
 
-    private fun nullableInt(node: JSONObject, key: String): Int? = if (node.isNull(key)) null else node.getInt(key)
+    private fun nullableInt(node: JSONObject, key: String): Int? =
+        if (!node.has(key) || node.isNull(key)) null else node.getInt(key)
 
     private fun <T> decodeArray(array: JSONArray?, decoder: (JSONObject) -> T): List<T> = buildList {
         val source = array ?: return@buildList
@@ -331,6 +379,7 @@ class JsonLiveTimelineRepository(
         .joinToString("") { byte -> "%02x".format(byte) }
 
     private companion object {
-        const val SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = 2
+        val SUPPORTED_SCHEMA_VERSIONS = setOf(1, 2)
     }
 }
