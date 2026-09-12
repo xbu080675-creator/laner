@@ -53,6 +53,11 @@ fun LanerRoot(
     runtimeCredentialActive: Boolean,
     onSaveRuntimeCredential: (String) -> Unit,
     onClearRuntimeCredential: () -> Unit,
+    overlayPermissionGranted: Boolean,
+    riftScreenRunning: Boolean,
+    onRequestOverlayPermission: () -> Unit,
+    onStartRiftScreen: () -> Unit,
+    onStopRiftScreen: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
@@ -95,6 +100,11 @@ fun LanerRoot(
                         liveMatchStateService = liveMatchStateService,
                         liveSnapshotService = liveSnapshotService,
                         liveTimelineService = liveTimelineService,
+                        overlayPermissionGranted = overlayPermissionGranted,
+                        riftScreenRunning = riftScreenRunning,
+                        onRequestOverlayPermission = onRequestOverlayPermission,
+                        onStartRiftScreen = onStartRiftScreen,
+                        onStopRiftScreen = onStopRiftScreen,
                         modifier = Modifier.fillMaxSize(),
                     )
                     MatchPhase.POST_MATCH -> PostMatchScreen(

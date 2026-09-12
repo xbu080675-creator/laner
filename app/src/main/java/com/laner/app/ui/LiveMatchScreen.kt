@@ -33,6 +33,7 @@ import com.laner.core.application.LiveSnapshotResolution
 import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveStateLoadStatus
 import com.laner.core.application.LiveStateResolution
+import com.laner.core.application.LiveTargetSelector
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.SourceRequestContext
 import com.laner.core.domain.DraftChangedEvent
@@ -43,10 +44,8 @@ import com.laner.core.domain.MatchEvent
 import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.MatchStateChanged
 import com.laner.core.domain.ObjectiveTakenEvent
-import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
 import com.laner.core.domain.TeamLiveState
-import kotlin.math.abs
 
 private sealed interface LiveScreenState {
     data object Loading : LiveScreenState
@@ -66,6 +65,11 @@ fun LiveMatchScreen(
     liveMatchStateService: LiveMatchStateService,
     liveSnapshotService: LiveSnapshotService,
     liveTimelineService: LiveTimelineService,
+    overlayPermissionGranted: Boolean = false,
+    riftScreenRunning: Boolean = false,
+    onRequestOverlayPermission: () -> Unit = {},
+    onStartRiftScreen: () -> Unit = {},
+    onStopRiftScreen: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var refreshNonce by remember { mutableIntStateOf(0) }
@@ -83,7 +87,7 @@ fun LiveMatchScreen(
                 correlationId = "live-$now-$refreshNonce",
             )
             val schedule = scheduleService.load(context)
-            val target = selectLiveTarget(schedule.matches, now)
+            val target = LiveTargetSelector.select(schedule.matches, now)
             if (target == null) {
                 LiveScreenState.NoTarget(
                     reason = if (schedule.matches.isEmpty()) {
@@ -117,6 +121,15 @@ fun LiveMatchScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { LiveHeaderCard(onRefresh = { refreshNonce += 1 }) }
+        item {
+            RiftScreenControlCard(
+                overlayPermissionGranted = overlayPermissionGranted,
+                running = riftScreenRunning,
+                onRequestPermission = onRequestOverlayPermission,
+                onStart = onStartRiftScreen,
+                onStop = onStopRiftScreen,
+            )
+        }
         when (val current = state) {
             LiveScreenState.Loading -> item {
                 LiveMessageCard("正在建立赛中上下文", "先从标准赛程确定比赛目标，再读取 Application LIVE truth。")
@@ -145,6 +158,41 @@ private fun LiveHeaderCard(onRefresh: () -> Unit) {
                 Text("生命周期与 gameplay snapshot 分开取证；无真实帧就显示缺失，不生成假数据。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Button(onClick = onRefresh) { Text("刷新") }
+        }
+    }
+}
+
+@Composable
+private fun RiftScreenControlCard(
+    overlayPermissionGranted: Boolean,
+    running: Boolean,
+    onRequestPermission: () -> Unit,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Text("RIFTSCREEN / 赛事副屏", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(7.dp))
+            Text(
+                when {
+                    !overlayPermissionGranted -> "需要系统悬浮窗权限。授权后可在离开 Laner 时显示副屏。"
+                    running -> "RiftScreen 已运行；Laner 在前台时自动隐藏，退到后台后显示。"
+                    else -> "权限已就绪。启动后只读取 Application LIVE truth，不直连 Provider。"
+                },
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!overlayPermissionGranted) {
+                    Button(onClick = onRequestPermission) { Text("授权悬浮窗") }
+                } else if (running) {
+                    Button(onClick = onStop) { Text("停止 RiftScreen") }
+                } else {
+                    Button(onClick = onStart) { Text("启动 RiftScreen") }
+                }
+            }
         }
     }
 }
@@ -296,12 +344,6 @@ private fun LiveMessageCard(title: String, body: String) {
             Text(body, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-}
-
-internal fun selectLiveTarget(matches: List<ScheduledSeries>, nowEpochMillis: Long): ScheduledSeries? {
-    val live = matches.filter { it.state == ScheduleState.EVENT_LIVE }.minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
-    if (live != null) return live
-    return matches.filter { it.state != ScheduleState.COMPLETED }.minByOrNull { abs(nowEpochMillis - it.startTimeEpochMillis) }
 }
 
 private fun lifecycleLabel(state: MatchLifecycleState): String = when (state) {
