@@ -1,5 +1,6 @@
 package com.laner.app.ui
 
+import com.laner.core.application.LiveTargetSelector
 import com.laner.core.domain.CompetitionId
 import com.laner.core.domain.CompetitionKind
 import com.laner.core.domain.CompetitionRef
@@ -17,6 +18,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
+/** Regression coverage for the Application LIVE target policy consumed by LiveMatchScreen. */
 class LiveMatchScreenTest {
     @Test
     fun eventLiveAlwaysBeatsCloserUpcomingMatch() {
@@ -32,7 +34,7 @@ class LiveMatchScreenTest {
             state = ScheduleState.EVENT_LIVE,
         )
 
-        val selected = selectLiveTarget(listOf(upcoming, live), now)
+        val selected = LiveTargetSelector.select(listOf(upcoming, live), now)
 
         assertEquals(live.matchId, selected?.matchId)
     }
@@ -51,7 +53,7 @@ class LiveMatchScreenTest {
             state = ScheduleState.UPCOMING,
         )
 
-        val selected = selectLiveTarget(listOf(completed, upcoming), now)
+        val selected = LiveTargetSelector.select(listOf(completed, upcoming), now)
 
         assertEquals(upcoming.matchId, selected?.matchId)
     }
@@ -60,7 +62,7 @@ class LiveMatchScreenTest {
     fun onlyCompletedMatchesProduceNoLiveTarget() {
         val now = 3_000_000L
 
-        val selected = selectLiveTarget(
+        val selected = LiveTargetSelector.select(
             matches = listOf(
                 series("done-a", now - 10_000L, ScheduleState.COMPLETED),
                 series("done-b", now - 5_000L, ScheduleState.COMPLETED),
