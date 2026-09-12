@@ -30,6 +30,7 @@ import com.laner.core.application.PostMatchLoadStatus
 import com.laner.core.application.PostMatchQuery
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostMatchSnapshot
+import com.laner.core.application.PostTimelineService
 import com.laner.core.application.SourceRequestContext
 import com.laner.core.domain.ReplayAsset
 import com.laner.core.domain.ScheduleState
@@ -48,6 +49,7 @@ private sealed interface PostScreenState {
 fun PostMatchScreen(
     scheduleService: GlobalScheduleService,
     postMatchService: PostMatchService,
+    postTimelineService: PostTimelineService,
     modifier: Modifier = Modifier,
 ) {
     var refreshNonce by remember { mutableIntStateOf(0) }
@@ -88,6 +90,7 @@ fun PostMatchScreen(
                 item { PostTargetCard(current.match) }
                 item { PostSummaryCard(current.snapshot) }
                 item { PostCapabilityCard(current.snapshot) }
+                item { PostTimelineCard(current.match, current.snapshot, postTimelineService) }
                 item { ReplayCard(current.snapshot.bundle.replays) }
                 item { AwardsCard(current.snapshot.bundle.awards) }
             }
