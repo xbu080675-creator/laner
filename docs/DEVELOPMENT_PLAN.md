@@ -9,39 +9,19 @@
 ### LNR-000 — 工程立宪与基线初始化
 状态：`DONE`
 
-目标：建立工程宪法、项目范围、目标架构、状态、测试、兼容、故障和开发留档基础。
-
-验收：
-- 仓库存在完整治理文件；
-- 所有结论与空仓事实一致；
-- 有首份不可变开发记录；
-- 无业务代码；
-- Commit/Push 可追溯。
-
 ### LNR-001 — 旧工程功能基线提取
 状态：`TODO`
 
 目标：读取现有电竞观赛助手仓库，形成 `FEATURE_BASELINE.md`。
 
-必须逐项记录：
-- 功能名称；
-- Phase：`PRE_MATCH / LIVE_MATCH / POST_MATCH`；
-- Persona：`SPECTATOR / COACH_ANALYST / BOTH`；
-- User Question；
-- Decision Value；
-- 用户入口；
-- 数据来源；
-- UI/交互；
-- 成功表现；
-- 已知问题；
-- 迁移验收方式。
+必须逐项记录：功能名称、Phase、Persona、User Question、Decision Value、用户入口、数据来源、Source Class、UI/交互、成功表现、已知问题、迁移验收方式。
 
-任何用户可见业务功能如果无法归属三阶段之一，或无法说明它解决了什么真实用户问题，必须先进行架构评审，不得直接迁移。
+任何用户可见业务功能如果无法归属三阶段之一，或无法说明真实用户问题，不得直接迁移。
 
 ### LNR-002 — 旧工程架构与技术债审计
 状态：`TODO`
 
-目标：只分析，不复制。输出旧数据流、模块耦合、状态管理、网络、缓存、后台任务和故障模式。
+目标：只分析，不复制。输出旧数据流、模块耦合、状态管理、网络、缓存、后台任务和故障模式，并识别旧来源应归属的 Source Class。
 
 ### LNR-003 — 新架构冻结
 状态：`TODO`
@@ -49,13 +29,15 @@
 目标：在 LNR-001/002 证据基础上冻结 Laner vNext 的模块图、依赖 DAG、核心 Contracts、数据模型边界和首批错误码。
 
 验收必须包含：
-- 所有业务页面以 `PRE_MATCH / LIVE_MATCH / POST_MATCH` 为一级产品轴；
-- 细粒度 Match State 能稳定映射到三阶段；
-- 共享能力没有被错误建成第四业务阶段；
+- 三阶段一级产品轴；
+- Match State → 三阶段稳定映射；
+- 共享能力不成为第四业务阶段；
 - UI 不自行判断阶段；
-- 同一领域事实不会因观众/教练视图不同而复制业务实现；
-- Presentation 能从统一 Application Query 派生观众层和教练/分析层信息密度；
-- UI/UX 满足 `docs/UX_PRINCIPLES.md` 的“极简优先、酷炫服务信息”的强约束。
+- 观众/教练共享领域事实；
+- UX 满足极简 + 酷炫约束；
+- 所有外部 Provider 声明 `PRE_MATCH_SOURCE / LIVE_MATCH_SOURCE / POST_MATCH_SOURCE / GLOBAL_AI_ASSIST`；
+- AI 与事实权威层严格分离；
+- Source Orchestration 具备 provenance、authority、freshness、revision、fallback 设计。
 
 ### LNR-004 — 工程骨架与 CI Gate
 状态：`TODO`
@@ -65,37 +47,20 @@
 ### LNR-005 — 三阶段一级架构轴确立
 状态：`DONE`
 
-目标：将“赛前 / 赛中 / 赛后”从产品概念提升为所有页面、主路由、赛事查询和展示的一级架构分类轴。
-
-产物：
-- `docs/ARCHITECTURE.md` 更新；
-- `docs/decisions/ADR-001-three-phase-product-axis.md`；
-- 本任务开发留档。
-
 ### LNR-006 — 用户角色 × 比赛阶段产品矩阵
 状态：`DONE`
-
-目标：以“教练/分析人员”和“普通观众”在赛前、赛中、赛后真正关心的问题为功能设计来源，禁止仅因“数据能拿到”就堆功能。
-
-统一公式：
-
-```text
-Feature = Persona × Match Phase × User Question
-```
-
-产物：
-- `docs/PRODUCT_PERSPECTIVE_MATRIX.md`
-- `docs/ARCHITECTURE.md` 产品设计约束更新
-- 本任务开发留档
 
 ### LNR-007 — 极简 × 酷炫体验北极星
 状态：`DONE`
 
-目标：将“极简、酷炫”定义为 Laner 的统一交互与视觉准则，其中信息清晰、操作效率和不打扰观赛优先于视觉表现。
+### LNR-008 — 四类数据/API 源架构
+状态：`DONE`
+
+目标：将 Laner 外部来源固定分为赛前源、赛中源、赛后源、全局 AI 辅助源，并明确事实源与 AI 辅助源的权威边界。
 
 产物：
-- `docs/UX_PRINCIPLES.md`
-- `docs/PROJECT_SCOPE.md` 体验原则更新
+- `docs/SOURCE_ARCHITECTURE.md`
+- `docs/ARCHITECTURE.md` Source Orchestration 更新
 - 本任务开发留档
 
 ## M1 — Core Migration
@@ -104,16 +69,6 @@ Feature = Persona × Match Phase × User Question
 
 ## 速度原则
 
-允许：
-- 并行读取与分析；
-- 一次完成同一责任域内的一组改动；
-- 使用自动化测试、生成和检查减少人工重复；
-- 在需求已确定时直接实现，不重复讨论已确认需求。
+允许并行读取与分析、一次完成同一责任域内的一组改动、使用自动化减少重复，并在需求已确定时直接实现。
 
-禁止：
-- 为赶进度跨模块乱改；
-- 跳过测试；
-- 跳过留档；
-- 先写临时代码以后再重构；
-- 把未执行测试写成 PASS；
-- 在功能基线未知时删除旧能力。
+禁止为赶进度跨模块乱改、跳过测试/留档、先写临时代码以后再重构、把未执行测试写成 PASS、在功能基线未知时删除旧能力。
