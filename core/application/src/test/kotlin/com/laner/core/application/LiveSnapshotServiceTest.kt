@@ -11,11 +11,13 @@ import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.TeamId
 import com.laner.core.domain.TeamLiveState
 import com.laner.core.domain.TeamRef
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class LiveSnapshotServiceTest {
     private val matchId = MatchId("match:test")
@@ -24,7 +26,7 @@ class LiveSnapshotServiceTest {
     private val query = LiveMatchSourceQuery(matchId, 1_000L, listOf(blue, red))
 
     @Test
-    fun validSnapshotIsIngestedIntoCanonicalTimeline() = runBlocking {
+    fun validSnapshotIsIngestedIntoCanonicalTimeline() = runSuspend {
         val repo = MemoryTimelineRepository()
         val service = LiveSnapshotService(
             sources = listOf(FakeSource(snapshot())),
@@ -35,18 +37,16 @@ class LiveSnapshotServiceTest {
 
         assertEquals(LiveSnapshotLoadStatus.READY, result.status)
         assertNotNull(result.snapshot)
-        val stored = repo.read(GameIdentity.canonical(matchId, 1))
-        assertNotNull(stored)
-        assertEquals(1, stored!!.snapshots.size)
+        val stored = assertNotNull(repo.read(GameIdentity.canonical(matchId, 1)))
+        assertEquals(1, stored.snapshots.size)
         assertEquals(21_000, stored.snapshots.single().snapshot.blue.gold)
     }
 
     @Test
-    fun wrongCanonicalGameIdIsRejectedWithoutWritingTimeline() = runBlocking {
+    fun wrongCanonicalGameIdIsRejectedWithoutWritingTimeline() = runSuspend {
         val repo = MemoryTimelineRepository()
-        val bad = snapshot().copy(
-            game = snapshot().game.copy(gameId = GameId("provider-game-raw")),
-        )
+        val base = snapshot()
+        val bad = base.copy(game = base.game.copy(gameId = GameId("provider-game-raw")))
         val service = LiveSnapshotService(
             sources = listOf(FakeSource(bad)),
             timelineService = LiveTimelineService(repo),
@@ -61,11 +61,12 @@ class LiveSnapshotServiceTest {
     }
 
     @Test
-    fun wrongTeamsAreRejected() = runBlocking {
+    fun wrongTeamsAreRejected() = runSuspend {
         val repo = MemoryTimelineRepository()
         val other = TeamId("team:other")
-        val bad = snapshot().copy(
-            game = snapshot().game.copy(redTeamId = other),
+        val base = snapshot()
+        val bad = base.copy(
+            game = base.game.copy(redTeamId = other),
             red = TeamLiveState(other, gold = 20_000),
         )
         val service = LiveSnapshotService(
@@ -113,5 +114,14 @@ class LiveSnapshotServiceTest {
         private val values = mutableMapOf<GameId, GameTimeline>()
         override suspend fun read(gameId: GameId): GameTimeline? = values[gameId]
         override suspend fun write(timeline: GameTimeline) { values[timeline.gameId] = timeline }
+    }
+
+    private fun <T> runSuspend(block: suspend () -> T): T {
+        var result: Result<T>? = null
+        block.startCoroutine(object : Continuation<T> {
+            override val context = EmptyCoroutineContext
+            override fun resumeWith(value: Result<T>) { result = value }
+        })
+        return result!!.getOrThrow()
     }
 }
