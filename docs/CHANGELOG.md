@@ -6,6 +6,19 @@ All notable project changes must be recorded here at release or milestone level.
 
 ### M1 Feature Migration
 
+#### LNR-021 — Tactical HUD / LIVE Event Derivation
+- Added deterministic `LiveEventDerivationService` on canonical Timeline snapshots; Presentation does not derive match facts.
+- Added conservative aggregate Kill delta, player-backed kill delta, `MultiKillWindowEvent`, `TeamFightWindowEvent`, Tower/Dragon/Baron delta and `GoldLeadChangedEvent`.
+- Missing evidence remains missing: no invented killer/victim pairing, no dragon subtype/soul/elder inference, no fake HP/cooldown/position data.
+- Added `LiveTimelineService.reconcileGeneratedEvents` so late/out-of-order or stronger same-second snapshots can replace only Laner-generated derived events while preserving Provider explicit / Draft / lifecycle events.
+- Upgraded LIVE Timeline persistence to schema v2 for the new event fields/types while retaining v1 read compatibility and write-forward migration.
+- Added Tactical HUD Presentation/View/WindowController and preserved visible overlay priority `Draft > Tactical > RiftScreen`.
+- Tactical Verified cards use 25s game-time TTL plus 30s wall-clock freshness so a frozen game clock after provider loss cannot leave a stale tactical card permanently visible.
+- Added Android-only Tactical Preview marked `LOCAL PREVIEW · NOT FACT`; it never enters Core, source arbitration, repositories or Timeline.
+- Preserved Failure A: run `34709821178` passed Architecture/Core but failed Android production compile because `LiveMatchScreen.eventLabel()` had not yet exhausted the expanded `MatchEvent` sealed hierarchy. Fix `403bba4e874ad37978179618e84dceaafb9f06f8` added the missing `MultiKillWindowEvent / TeamFightWindowEvent` branches without hiding future omissions behind a catch-all `else`.
+- Implementation baseline head `b83a83c0c8908b8da1755d306958352fbfe389cf` / run `34710012697` passed Architecture/Core/App Unit/Android compile/APK upload and produced artifact `10303071228` (`sha256:1e0d24bd8e5423216442a97d70c6307f128a93f22476e462b9942e62da906d6f`).
+- `LIVE-014 / LIVE-015 / LIVE-030` advance to `WAITING EXTERNAL TEST`; real Riot online event triggering and Android overlay behavior are not claimed PASS from CI.
+
 #### LNR-020 — RiftScreen / Draft HUD Android Overlay
 - Rebuilt the legacy RiftScreen behavior on process-level Application services instead of copying the legacy `MatchSessionStore` architecture.
 - Added system-overlay Foreground Service presentation using canonical schedule/lifecycle/snapshot/Timeline truth only.
