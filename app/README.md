@@ -119,11 +119,14 @@ LNR-020 历史自动证据：
 - 原功能 Android system-overlay 行为仍为 `WAITING EXTERNAL TEST`。
 
 LNR-020 合规整改：
-- 事故 `INC-LNR-020-001`；
-- 当前整改 PR #12；
+- 事故 `INC-LNR-020-001`：`CLOSED`；
+- PR #12 final head `249c42208ab6105ad26b78215b47fbd754d889e9`；
+- exact-head run `34708127194`：Architecture/Core/App Unit/Android compile/APK upload PASS；
+- PR #12 merge `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`；
+- post-merge main run `34708285172`：Architecture/Core/App Unit/Android compile/APK upload PASS；
 - `LiveMatchContextServiceTest` 覆盖 Current LIVE Context；
 - `OverlayWindowOperationTest` 锁定 WindowManager diagnostics 错误码；
-- 最终 Gate 以整改开发记录为准，未跑完前不得将本段描述为 PASS。
+- Android 真机项继续 `WAITING EXTERNAL TEST`，不因合规整改关闭而升级。
 
 ## 故障定位
 PRE：`UI → GlobalSchedule/PreMatchContext → Port → Adapter`。
