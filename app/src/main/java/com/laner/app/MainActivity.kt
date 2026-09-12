@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
                 LanerRoot(
                     scheduleService = appGraph.globalScheduleService,
                     preMatchContextService = appGraph.preMatchContextService,
+                    startingRosterAssistService = appGraph.startingRosterAssistService,
                     competitionStructureService = appGraph.competitionStructureService,
                     liveMatchStateService = appGraph.liveMatchStateService,
                     liveTimelineService = appGraph.liveTimelineService,
