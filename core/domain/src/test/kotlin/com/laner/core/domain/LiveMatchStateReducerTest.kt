@@ -151,7 +151,7 @@ class LiveMatchStateReducerTest {
     }
 
     @Test
-    fun duplicateSignalIsIdempotent() {
+    fun duplicateSignalRefreshesHeartbeatWithoutCreatingTransition() {
         val game1 = LiveMatchState(
             matchId = matchId,
             lifecycle = MatchLifecycleState.IN_GAME,
@@ -162,11 +162,45 @@ class LiveMatchStateReducerTest {
 
         val result = LiveMatchStateReducer.reduce(
             game1,
-            signal(MatchLifecycleState.IN_GAME, GameId("lol:game:g1"), 1, 11_000L),
+            signal(MatchLifecycleState.IN_GAME, GameId("lol:game:g1"), 1, 15_000L),
         )
 
         val ignored = assertIs<LiveStateTransitionResult.Ignored>(result)
         assertEquals(LiveStateIgnoreReason.DUPLICATE, ignored.reason)
+        assertEquals(15_000L, ignored.state.lastObservedAtEpochMillis)
+    }
+
+    @Test
+    fun delayedPostGameAfterNewerInGameHeartbeatIsIgnored() {
+        val game1 = LiveMatchState(
+            matchId = matchId,
+            lifecycle = MatchLifecycleState.IN_GAME,
+            currentGameId = GameId("lol:game:g1"),
+            currentGameNumber = 1,
+            lastObservedAtEpochMillis = 10_000L,
+        )
+
+        val heartbeat = LiveMatchStateReducer.reduce(
+            game1,
+            signal(
+                MatchLifecycleState.IN_GAME,
+                GameId("lol:game:g1"),
+                1,
+                20_000L,
+                LiveStateEvidence.VERIFIED_FRAME,
+            ),
+        )
+        val refreshed = assertIs<LiveStateTransitionResult.Ignored>(heartbeat).state
+
+        val delayed = LiveMatchStateReducer.reduce(
+            refreshed,
+            signal(MatchLifecycleState.POST_GAME, GameId("lol:game:g1"), 1, 15_000L),
+        )
+
+        val ignored = assertIs<LiveStateTransitionResult.Ignored>(delayed)
+        assertEquals(LiveStateIgnoreReason.STALE_OBSERVATION, ignored.reason)
+        assertEquals(MatchLifecycleState.IN_GAME, ignored.state.lifecycle)
+        assertEquals(20_000L, ignored.state.lastObservedAtEpochMillis)
     }
 
     @Test
