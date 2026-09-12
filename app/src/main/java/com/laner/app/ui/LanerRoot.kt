@@ -29,10 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.laner.core.application.GlobalScheduleService
 import com.laner.core.domain.MatchPhase
 
 @Composable
-fun LanerRoot() {
+fun LanerRoot(
+    scheduleService: GlobalScheduleService,
+) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
     Surface(
@@ -53,10 +56,18 @@ fun LanerRoot() {
             Spacer(Modifier.height(18.dp))
             AnimatedContent(
                 targetState = selectedPhase,
+                modifier = Modifier.weight(1f),
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "laner-phase",
             ) { phase ->
-                PhaseEmptyState(phase)
+                when (phase) {
+                    MatchPhase.PRE_MATCH -> PreMatchScreen(
+                        scheduleService = scheduleService,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    MatchPhase.LIVE_MATCH,
+                    MatchPhase.POST_MATCH -> PhaseEmptyState(phase)
+                }
             }
         }
     }
@@ -168,7 +179,7 @@ private val MatchPhase.headline: String
 
 private val MatchPhase.migrationMessage: String
     get() = when (this) {
-        MatchPhase.PRE_MATCH -> "正在迁移赛程、首发、阵容、排名、资格路径与赛前情报。未接入的真实数据保持空缺，不使用假数据填充。"
+        MatchPhase.PRE_MATCH -> "全球赛事目录与赛程已开始迁移；其它赛前能力仍按真实完成度逐项接入。"
         MatchPhase.LIVE_MATCH -> "正在迁移统一赛事状态、实时事件、Timeline 与 RiftScreen。只有经过 Source Orchestration 的事实才会进入这里。"
         MatchPhase.POST_MATCH -> "正在迁移终局数据、历史小局、Timeline、回放与复盘。当前骨架不会把未迁移能力伪装成可用。"
     }

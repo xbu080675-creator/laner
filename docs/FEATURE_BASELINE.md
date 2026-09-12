@@ -13,7 +13,7 @@
 - Phase: `PRE_MATCH / LIVE_MATCH / POST_MATCH / SHARED`
 - Persona: `SPECTATOR / COACH_ANALYST / BOTH / SYSTEM`
 - Source: `PRE_MATCH_SOURCE / LIVE_MATCH_SOURCE / POST_MATCH_SOURCE / GLOBAL_AI_ASSIST / PLATFORM`
-- Migration: `TODO / IN PROGRESS / TESTING / DONE / APPROVED_REPLACEMENT`
+- Migration: `TODO / IN PROGRESS / TESTING / WAITING EXTERNAL TEST / DONE / APPROVED_REPLACEMENT`
 
 ---
 
@@ -21,10 +21,10 @@
 
 | ID | 功能 | Persona | Source | Legacy evidence | Laner 归属 | Migration |
 |---|---|---|---|---|---|---|
-| PRE-001 | 全球/赛区赛事目录 | BOTH | PRE_MATCH_SOURCE | README / ScheduleCenter | Competition Catalog Query | TODO |
+| PRE-001 | 全球/赛区赛事目录 | BOTH | PRE_MATCH_SOURCE | README / ScheduleCenter | Competition Catalog Query | WAITING EXTERNAL TEST |
 | PRE-002 | 联赛 / 国际赛事双入口 | SPECTATOR | PRE_MATCH_SOURCE | dev.47 | Competition Navigation | TODO |
 | PRE-003 | 赛区订阅与首页目标控制 | SPECTATOR | PRE_MATCH_SOURCE | dev.47-48 | User Preference + Competition Filter | TODO |
-| PRE-004 | 赛程中心与本地时区显示 | BOTH | PRE_MATCH_SOURCE | ScheduleCenterUi / dev.47 | Schedule Query | TODO |
+| PRE-004 | 赛程中心与本地时区显示 | BOTH | PRE_MATCH_SOURCE | ScheduleCenterUi / dev.47 | Schedule Query | WAITING EXTERNAL TEST |
 | PRE-005 | 赛事倒计时与状态 | SPECTATOR | PRE_MATCH_SOURCE | RiftLabApp PreScreen | Match Lifecycle Query | TODO |
 | PRE-006 | 首发阵容 | BOTH | PRE_MATCH_SOURCE | StartingRosterCenter / PreScreen | Roster Query | TODO |
 | PRE-007 | 名单池与首发严格分离 | BOTH | PRE_MATCH_SOURCE | dev.71 / PreScreen | Roster Evidence Policy | TODO |
@@ -53,6 +53,7 @@
 - 不允许无可靠来源时填造 Rank、伤病、转会、首发变化。
 - 所有数据必须带 provenance / authority / freshness。
 - 用户必须能从“这场比赛”继续下钻到队伍、选手、赛事、资格路径与历史事实。
+- `WAITING EXTERNAL TEST` 表示实现与自动化已具备，但真实 Provider/实机证据尚未完成；不得等价为 DONE。
 
 ---
 
@@ -60,8 +61,8 @@
 
 | ID | 功能 | Persona | Source | Legacy evidence | Laner 归属 | Migration |
 |---|---|---|---|---|---|---|
-| LIVE-001 | EVENT_LIVE / GAME_LIVE / BETWEEN_GAMES 生命周期 | BOTH | LIVE_MATCH_SOURCE | README / dev.60 | Match State Engine | TODO |
-| LIVE-002 | 赛事开始 != 游戏开始 | BOTH | LIVE_MATCH_SOURCE | dev.60 / RiftLabApp | Match State Engine | TODO |
+| LIVE-001 | EVENT_LIVE / GAME_LIVE / BETWEEN_GAMES 生命周期 | BOTH | LIVE_MATCH_SOURCE | README / dev.60 / 2026-09-12 legacy real-device intermission PASS | Match State Engine | TODO |
+| LIVE-002 | 赛事开始 != 游戏开始 | BOTH | LIVE_MATCH_SOURCE | dev.60 / RiftLabApp / 2026-09-12 legacy real-device intermission PASS | Match State Engine | TODO |
 | LIVE-003 | Riot/LPL/Cito 等多实时源 | SYSTEM | LIVE_MATCH_SOURCE | data providers | Source Orchestration | TODO |
 | LIVE-004 | 来源优先级、降级、fallback | SYSTEM | LIVE_MATCH_SOURCE | MatchSessionStore/providers | Source Arbitration | TODO |
 | LIVE-005 | 实时经济 | BOTH | LIVE_MATCH_SOURCE | LiveSnapshot UI | Live Domain | TODO |
@@ -101,6 +102,7 @@
 - 统一事件必须可追溯来源，不允许 Provider 自由文本直接成为赛事事实。
 - 事件重复、乱序、重连必须幂等处理。
 - 赛中 UI 必须自动跟随 Match State，不由页面自行猜状态。
+- 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线，证据见 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`。
 
 ---
 
@@ -160,12 +162,12 @@
 | SH-021 | 全球人员 / Staff 镜像 | SYSTEM | PRE_MATCH_SOURCE | GlobalTeamStaff | Provider Adapter | TODO |
 | SH-022 | 全球 Awards 镜像 | SYSTEM | POST_MATCH_SOURCE | GlobalVerifiedAwards | Provider Adapter | TODO |
 | SH-023 | International Event Mirror | SYSTEM | PRE_MATCH_SOURCE | InternationalEventMirrorProvider | Provider Adapter | TODO |
-| SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | TODO |
+| SH-024 | Riot Persisted Gateway / LoL Esports | SYSTEM | ALL | LolEsportsApiClient | Provider Adapter | IN PROGRESS |
 | SH-025 | Cito REST/WebSocket optional provider | SYSTEM | ALL | CitoDataPlane | Provider Adapter | TODO |
 | SH-026 | Bilibili VOD resolver | SYSTEM | POST_MATCH_SOURCE | BilibiliVodRepository | Provider Adapter | TODO |
 | SH-027 | OCR 多语言（中/日/韩） | SYSTEM | GLOBAL_AI_ASSIST | app dependencies | OCR Adapter | TODO |
 | SH-028 | AI 输出 FACT_BACKED / INFERENCE / UNVERIFIED | BOTH | GLOBAL_AI_ASSIST | Laner LNR-008 | AI Evidence | IN PROGRESS |
-| SH-029 | 错误/来源/降级状态可视化 | BOTH | ALL | old UI source labels | Diagnostics Contract | TODO |
+| SH-029 | 错误/来源/降级状态可视化 | BOTH | ALL | old UI source labels | Diagnostics Contract | IN PROGRESS |
 | SH-030 | 不制造假事实 / 缺失保持未知 | BOTH | ALL | legacy rules | Domain Invariant | IN PROGRESS |
 
 ---

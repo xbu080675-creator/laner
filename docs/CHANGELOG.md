@@ -4,6 +4,22 @@ All notable project changes must be recorded here at release or milestone level.
 
 ## Unreleased
 
+### M1 Feature Migration
+- Implemented the first real PRE_MATCH data slice (`LNR-010`): global competition catalogue and schedule.
+- Added pure-domain `CompetitionKind`, `ScheduleState`, `CompetitionCatalogEntry`, `ScheduledTeam`, and `ScheduledSeries` models.
+- Added `GlobalPreMatchSourcePort` and `GlobalScheduleService`; Provider payloads are normalized and arbitrated in Application instead of UI/Adapter-owned global stores.
+- Preserved the legacy safeguard that a premature provider `completed` flag cannot finish a series without BO-winning score or winner evidence.
+- Kept schedule-level `EVENT_LIVE` separate from Match Lifecycle `IN_GAME`; PRE UI explicitly says “赛事已开始 · 不代表游戏开局”.
+- Added cross-source schedule deduplication using global competition/team identity, time tolerance, authority, timestamp and revision ordering.
+- Added explicit PRE source states `READY / DEGRADED / UNAVAILABLE`; catalogue/pagination sub-failures preserve already acquired real schedule facts.
+- Added Riot LoL Esports PRE Adapter for `getLeagues` and global `getSchedule` pagination.
+- Removed the legacy pattern of repository-embedded LoL Esports credential from the migration path. Laner accepts only `LOL_ESPORTS_API_KEY` environment injection or `lolEsportsApiKey` Gradle property; missing configuration returns `LNR-SRC-PRE-001` rather than inventing data.
+- Added `[Laner:SRC] / [Laner:PRE]` diagnostics and `LNR-SRC-PRE-001~004` failure mapping.
+- Added real PRE Compose UI for global competition filtering, local-time schedule rendering, source status/provenance and manual resync; no mock match data is used.
+- Added schedule normalization regression tests. GitHub Actions run `34687580424` passed architecture boundary, Domain/Application tests and Android debug compilation.
+- LNR-010 remains `WAITING EXTERNAL TEST` until a credentialed online fetch and Android real-device display are verified.
+- Archived 2026-09-12 legacy real-device evidence that intermission vs actual new-game start recognition is already good behavior and must survive LIVE migration.
+
 ### Migration Foundation
 - Locked the legacy behavior baseline to `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43` and verified that current source is `1.0.0-dev.94`, newer than the stale README baseline.
 - Added `docs/FEATURE_BASELINE.md` as the complete migration checklist for PRE / LIVE / POST / shared platform capabilities and future Sandbox commitments.

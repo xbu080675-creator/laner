@@ -3,6 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+val lolEsportsApiKey = providers.environmentVariable("LOL_ESPORTS_API_KEY")
+    .orElse(providers.gradleProperty("lolEsportsApiKey"))
+    .getOrElse("")
+val escapedLolEsportsApiKey = lolEsportsApiKey
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
+
 android {
     namespace = "com.laner.app"
     compileSdk = 36
@@ -11,12 +18,14 @@ android {
         applicationId = "com.riftlab.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "2.0.0-dev.1"
+        versionCode = 2
+        versionName = "2.0.0-dev.2"
+        buildConfigField("String", "LOL_ESPORTS_API_KEY", "\"$escapedLolEsportsApiKey\"")
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -40,6 +49,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
