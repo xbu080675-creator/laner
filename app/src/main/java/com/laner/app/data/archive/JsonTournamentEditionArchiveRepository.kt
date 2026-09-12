@@ -65,6 +65,7 @@ class JsonTournamentEditionArchiveRepository(
             temp.delete()
             throw error
         }
+        Unit
     }
 
     private fun encodeEdition(edition: TournamentEdition): JSONObject = JSONObject()
