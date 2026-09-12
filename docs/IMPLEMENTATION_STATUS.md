@@ -7,7 +7,7 @@
 - Functional migration: `IN PROGRESS`
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
 - LNR-020 Block 1: frozen after `INC-LNR-020-001 / CLOSED`
-- LNR-021 Block 2 working branch: `feature/lnr-021-tactical-live-events`
+- LNR-021 Block 2: engineering delivery merged; separate constitution re-audit required before freeze
 - Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”。
 
 ## Task Status
@@ -25,7 +25,7 @@
 | LNR-018 | Compatibility / Full Regression / Migration Audit | TODO |
 | LNR-019 | Global LIVE Snapshot / Timeline / Match HUD | WAITING EXTERNAL TEST |
 | LNR-020 | RiftScreen / Draft HUD Android Overlay | WAITING EXTERNAL TEST (functional) / COMPLIANCE PASS |
-| LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST (automatic implementation) |
+| LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST / ENGINEERING DELIVERY MERGED |
 
 ## Block 1 / LNR-020 Frozen Truth
 - Original functional merge: PR #10 / `967e112d6efcf8e6daa86f0b007cedc39b63b04c`；post-merge main run `34706047380` PASS。
@@ -35,7 +35,16 @@
 - `INC-LNR-020-001 = CLOSED`；Block 1 不再接受顺手功能改动。
 - `LIVE-024~029` 继续等待 Android 真机证据；`LIVE-012` 仍 TODO。
 
-## LNR-021 Delivered Truth
+## Block 2 / LNR-021 Delivered Truth
+### Stable anchors
+- Baseline before Block 2: `main@87f90a89ad7a35fdb9717ef1003fa984bba4fdab`；
+- PR #15 final feature head: `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5`；
+- final push run `34712441374`: Architecture / Domain+Application / Android Adapter unit / Android debug compile / APK upload PASS；
+- final PR run `34712444119`: all same Gates PASS；
+- PR #15 merge: `6c72a748a23758c975d78a78e80092b16d225d34`；
+- post-merge main run `34712560708`: all Gates PASS；
+- main artifact `10303469002`；digest `sha256:8d6ba46a3ef8664eb3e480634f3e305d339b2bec227ae4d95b9b8f71a887ba4a`。
+
 ### Canonical event derivation
 ```text
 Verified LiveGameSnapshot
@@ -73,24 +82,15 @@ Verified LiveGameSnapshot
 - `JsonLiveTimelineRepository` 仍可读取 v1；下一次写入自动升级 v2；
 - corrupt / unsupported schema 继续显式失败；不要求用户手动清缓存。
 
-## LNR-021 Verification / Failure History
+## LNR-021 Failure History
 ### Failure A — preserved
 - run `34709821178`；
 - Architecture boundary PASS；Domain/Application PASS；
 - Android Adapter Unit 阶段 production `:app:compileDebugKotlin` FAIL；
 - root cause：`LiveMatchScreen.eventLabel()` 未穷举新 `MultiKillWindowEvent / TeamFightWindowEvent`；
 - fix：`403bba4e874ad37978179618e84dceaafb9f06f8`；
-- permanent rule：Domain sealed event 扩展必须同步所有 Presentation exhaustive mapper，禁止用 catch-all `else` 掩盖遗漏。
-
-### Implementation baseline PASS
-- head `b83a83c0c8908b8da1755d306958352fbfe389cf`；
-- run `34710012697`：Architecture / Domain+Application / Android Adapter unit / Android debug compile / APK upload 全 PASS；
-- artifact `10303071228`；digest `sha256:1e0d24bd8e5423216442a97d70c6307f128a93f22476e462b9942e62da906d6f`。
-
-### Final stale-card hardening
-- `TacticalHudPresentation.isDisplayableAt()` 增加 wall-clock expiry 回归；
-- Preview 明确不使用 Provider freshness；
-- 当前分支正在完成最终 exact-head Gate / PR / post-merge main Gate，最终稳定锚点写入 LNR-021 开发记录/closeout。
+- permanent rule：Domain sealed event 扩展必须同步所有 Presentation exhaustive mapper，禁止用 catch-all `else` 掩盖遗漏；
+- Troubleshooting: `LNR-UI-LIVE-004`。
 
 ## Waiting External Test / Honest Gaps
 - LNR-021 `LIVE-014 / LIVE-015 / LIVE-030` 自动实现存在，但真实 Riot online 触发仍未证明；
@@ -102,4 +102,4 @@ Verified LiveGameSnapshot
 - Cito remains DEFERRED。
 
 ## Next
-先完成 LNR-021 exact-head Gate → PR → merge → main Gate → 文档 closeout。之后按用户规则对 Block 2 单独执行工程宪法复查；若有偏离，先记录和整改，再冻结第二块并进入第 3 块 Watch Hub + 播放器。
+按用户规定，在进入 Block 3 前先对 **Block 2 / LNR-021** 做独立工程宪法复查：重新读取届时最新 main 与宪法，产出合规/违宪记录；若发现偏离，先整改并重新闭环。只有该复查与必要整改完成后，第二块才能冻结，之后才进入第 3 块 Watch Hub + 播放器。
