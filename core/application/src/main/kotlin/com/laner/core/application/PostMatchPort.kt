@@ -11,11 +11,13 @@ import com.laner.core.domain.VerifiedPostAward
 
 data class PostMatchQuery(
     val matchId: MatchId,
+    val competitionSlug: String? = null,
     val scheduledStartEpochMillis: Long? = null,
     val bestOf: Int? = null,
     val teams: List<TeamRef> = emptyList(),
 ) {
     init {
+        require(competitionSlug == null || competitionSlug.isNotBlank())
         require(scheduledStartEpochMillis == null || scheduledStartEpochMillis >= 0)
         require(bestOf == null || bestOf > 0)
         require(teams.isEmpty() || teams.size == 2)
@@ -25,6 +27,7 @@ data class PostMatchQuery(
     companion object {
         fun from(series: ScheduledSeries): PostMatchQuery = PostMatchQuery(
             matchId = series.matchId,
+            competitionSlug = series.competitionSlug,
             scheduledStartEpochMillis = series.startTimeEpochMillis,
             bestOf = series.bestOf,
             teams = series.teams.map { it.team },
