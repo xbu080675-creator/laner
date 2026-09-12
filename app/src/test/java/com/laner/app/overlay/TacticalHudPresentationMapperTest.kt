@@ -88,6 +88,53 @@ class TacticalHudPresentationMapperTest {
     }
 
     @Test
+    fun verifiedPresentationExpiresByWallClockEvenWhenGameClockStops() {
+        val result = TacticalHudPresentationMapper.from(
+            match = series(),
+            stateResolution = state(MatchLifecycleState.IN_GAME),
+            snapshotResolution = snapshotResolution(snapshot(1_005)),
+            timeline = timeline(
+                KillEvent(
+                    matchId = matchId,
+                    gameId = gameId,
+                    sequence = 1,
+                    gameTimeSeconds = 1_000,
+                    provenance = derivedProvenance(),
+                    evidence = EventEvidence.VERIFIED_DELTA,
+                    killerId = null,
+                    victimId = null,
+                    teamId = leftId,
+                    count = 1,
+                    observedWindowSeconds = 10,
+                )
+            ),
+        )
+
+        assertTrue(result.active)
+        assertEquals(31_000L, result.validUntilEpochMillis)
+        assertTrue(result.isDisplayableAt(31_000L))
+        assertFalse(result.isDisplayableAt(31_001L))
+    }
+
+    @Test
+    fun localPreviewDoesNotPretendToUseProviderFreshness() {
+        val preview = TacticalHudPresentation(
+            active = true,
+            sourceMode = TacticalHudSourceMode.PREVIEW,
+            phase = TacticalHudPhase.GLOBAL,
+            clock = "00:00",
+            matchLabel = "PREVIEW",
+            headline = "preview",
+            explanation = "not fact",
+            evidence = emptyList(),
+            players = emptyList(),
+            sourceLabel = "LOCAL PREVIEW · NOT FACT",
+        )
+
+        assertTrue(preview.isDisplayableAt(Long.MAX_VALUE))
+    }
+
+    @Test
     fun teamFightWinsSameSecondPriorityOverAggregateKill() {
         val events = listOf(
             KillEvent(
