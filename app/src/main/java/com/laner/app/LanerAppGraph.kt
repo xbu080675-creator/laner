@@ -25,11 +25,26 @@ import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
 import java.io.File
+import okhttp3.OkHttpClient
 
 class LanerAppGraph(
     filesDir: File,
 ) {
     private val diagnostics = AndroidDiagnosticsPort()
+
+    /**
+     * Riot LiveStats currently expects the same public LoL Esports web-client token as the
+     * persisted gateway. Keep transport authentication in Adapter composition; Core never sees it.
+     */
+    private val riotLiveHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .header("x-api-key", BuildConfig.LOL_ESPORTS_API_KEY)
+                .build()
+            chain.proceed(request)
+        }
+        .build()
+
     private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
     private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
     private val riotCompetitionStructureSource = RiotCompetitionStructureSource(apiKey = BuildConfig.LOL_ESPORTS_API_KEY)
@@ -45,6 +60,7 @@ class LanerAppGraph(
     private val riotGlobalLiveSource = RiotGlobalLiveSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
         identityRepository = providerIdentityRepository,
+        client = riotLiveHttpClient,
     )
     private val riotGlobalResultSource = RiotGlobalResultSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
@@ -57,6 +73,7 @@ class LanerAppGraph(
     private val riotGlobalHistoricalTimelineSource = RiotGlobalHistoricalTimelineSource(
         apiKey = BuildConfig.LOL_ESPORTS_API_KEY,
         identityRepository = providerIdentityRepository,
+        client = riotLiveHttpClient,
     )
 
     val globalScheduleService = GlobalScheduleService(listOf(riotPreMatchSource), diagnostics)
@@ -91,11 +108,6 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
-    /**
-     * Global Riot POST is the baseline across every competition present in the Riot schedule:
-     * official SeriesResult + official Replay metadata. Regional providers are supplements only and
-     * can later add deeper CompletedGame/Stats without changing Domain/Application/UI structure.
-     */
     val postMatchService = PostMatchService(
         resultSources = listOf(riotGlobalResultSource),
         gameSources = emptyList(),
