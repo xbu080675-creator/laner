@@ -19,12 +19,13 @@ data class TimelineIngestResult(
 )
 
 /**
- * Provider-neutral timeline ingestion and query service.
+ * Provider-neutral canonical timeline ingestion and query service.
  *
- * Events are deduplicated by factual semantic identity rather than transport sequence. Out-of-order
- * arrival is accepted and the persisted timeline is re-sorted by game time. Same-second snapshots
- * are arbitrated by provenance instead of last-write-wins. UI reads through [load] and never touches
- * a platform repository directly.
+ * Real-time LIVE frames and historical POST frames share the same GameTimeline. PRE and AI sources
+ * are rejected. Events are deduplicated by factual semantic identity rather than transport sequence.
+ * Out-of-order arrival is accepted and the persisted timeline is re-sorted by game time. Same-second
+ * snapshots are arbitrated by provenance instead of last-write-wins. UI reads through [load] and
+ * never touches a platform repository directly.
  */
 class LiveTimelineService(
     private val repository: LiveTimelineRepository,
@@ -36,7 +37,9 @@ class LiveTimelineService(
         provenance: SourceProvenance,
         events: List<MatchEvent> = emptyList(),
     ): TimelineIngestResult {
-        require(provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE)
+        require(isTimelineFactSource(provenance.sourceClass)) {
+            "Timeline facts require LIVE_MATCH_SOURCE or POST_MATCH_SOURCE"
+        }
         val game = snapshot.game
         val existing = repository.read(game.gameId)
             ?: GameTimeline(
@@ -77,7 +80,7 @@ class LiveTimelineService(
 
         val validIncoming = events.filter {
             it.matchId == game.matchId && it.gameId == game.gameId &&
-                it.provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE
+                isTimelineFactSource(it.provenance.sourceClass)
         }
         val invalidCount = events.size - validIncoming.size
         val byKey = existing.events.associateBy { it.semanticKey() }.toMutableMap()
@@ -127,6 +130,9 @@ class LiveTimelineService(
         repository.write(updated)
         return updated
     }
+
+    private fun isTimelineFactSource(sourceClass: SourceClass): Boolean =
+        sourceClass == SourceClass.LIVE_MATCH_SOURCE || sourceClass == SourceClass.POST_MATCH_SOURCE
 
     private fun prefer(candidate: MatchEvent, current: MatchEvent): Boolean {
         val evidence = evidenceStrength(candidate.evidence).compareTo(evidenceStrength(current.evidence))
