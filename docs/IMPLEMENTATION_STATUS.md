@@ -3,20 +3,22 @@
 ## Current Baseline
 
 - Repository: `xbu080675-creator/laner`
-- Default branch: `main`
-- Project phase: `M0 / Project Foundation`
-- Business implementation: `NOT STARTED`
-- Functional migration: `NOT STARTED`
+- Working branch: `feature/migration-foundation`
+- Project phase: `M0 / Migration Foundation COMPLETE`
+- Business implementation: `STARTED`
+- Functional migration: `IN PROGRESS`
+- Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
+- Legacy source version: `1.0.0-dev.94 / versionCode 94`
 
 ## Task Status
 
 | Task | Title | Status |
 |---|---|---|
 | LNR-000 | 工程立宪与基线初始化 | DONE |
-| LNR-001 | 旧工程功能基线提取 | TODO |
-| LNR-002 | 旧工程架构与技术债审计 | TODO |
-| LNR-003 | 新架构冻结 | TODO |
-| LNR-004 | 工程骨架与 CI Gate | TODO |
+| LNR-001 | 旧工程功能基线提取 | DONE |
+| LNR-002 | 旧工程架构与技术债审计 | DONE |
+| LNR-003 | 新架构冻结 | DONE |
+| LNR-004 | 工程骨架与 CI Gate | DONE |
 | LNR-005 | 三阶段一级架构轴确立 | DONE |
 | LNR-006 | 用户角色 × 比赛阶段产品矩阵 | DONE |
 | LNR-007 | 极简 × 酷炫体验北极星 | DONE |
@@ -25,25 +27,34 @@
 
 ## Current Truth
 
-当前仓库只包含工程治理、产品模型、UX 原则、数据源分类与架构基线文档，不应被描述为“APP 已开始重写”或“已有功能可测试”。
+Laner 已进入真实代码开发。目前完成的是**可编译、可测试、受架构 Gate 保护的迁移地基**，不是完整功能迁移。
 
-已确立：
+当前已验证存在：
 
-- 所有用户可见业务页面以 `PRE_MATCH / LIVE_MATCH / POST_MATCH` 为一级轴；
-- 功能设计遵循 `Persona × Match Phase × User Question`；
-- UX 北极星为“极简 + 酷炫”，清晰、快速、不打扰观赛优先；
-- 外部来源统一分为 `PRE_MATCH_SOURCE / LIVE_MATCH_SOURCE / POST_MATCH_SOURCE / GLOBAL_AI_ASSIST`；
-- 前三类属于赛事事实来源体系，AI 属于辅助解释/推断层，不得覆盖已确认赛事事实；
-- Source Orchestration 必须区分速度与权威度，并保存 provenance/revision；
-- Laner 采用全球赛事统一管理架构，`Region` 只是领域属性/筛选维度，不是独立业务模块；
-- 赛区专属 Provider 可以存在，但必须进入统一 Source/Normalization/Identity/Competition 数据管线；
-- Team / Player / Competition / Match 等采用全局内部身份，不按赛区复制业务实体；
-- “全局架构”不等于“当前全球全部赛区均已验证支持”，支持状态仍须由真实数据源与测试证据决定。
+- `:core:domain` 纯 Kotlin Domain；
+- `:core:application` 纯 Kotlin Application/Port；
+- `:app` Android/Compose Composition Root；
+- PRE/LIVE/POST 三阶段 Android 壳；
+- Match Lifecycle；
+- Global Competition IDs；
+- Source Class / Provenance / Authority / Freshness / Revision；
+- AI 与事实路径硬隔离；
+- Standard Match Event 初版；
+- Application FactArbiter；
+- 稳定 ErrorCode / Diagnostics Port；
+- Domain/Application Unit Tests；
+- GitHub Actions Architecture Gate + Core Tests + Android Debug Compile。
 
-## Blocking Conditions Before Business Code
+## Verification Evidence
 
-- `FEATURE_BASELINE.md` 尚未完成；
-- 旧工程真实代码尚未完成本轮审计；
-- 技术栈与目标模块尚未冻结。
+- 首轮 CI：FAIL —— CI 错配 Gradle 9.4.0，而 AGP 9.4.0 要求最低 Gradle 9.6.0；已保留失败证据。
+- 修复后 CI run `34686592578`：PASS。
+  - Architecture boundary gate: PASS
+  - Domain and application tests: PASS
+  - Android debug compile: PASS
 
-因此当前任何业务实现都应视为过早。
+当前 UI 不展示假比赛数据；旧功能只有在 `docs/FEATURE_BASELINE.md` 对应条目通过真实迁移验收后才可标记 DONE。
+
+## Next
+
+立即进入 `M1` 第一批真实功能迁移：Global Competition Catalog / Schedule / PRE data。
