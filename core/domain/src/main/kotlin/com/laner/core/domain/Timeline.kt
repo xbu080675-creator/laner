@@ -8,7 +8,6 @@ data class TimelineSnapshotPoint(
 ) {
     init {
         require(gameTimeSeconds >= 0)
-        require(snapshot.game.gameId == snapshot.game.gameId)
         require(provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE)
     }
 }
