@@ -22,28 +22,31 @@
 | LNR-016 | Testable Android Platform / Riot Global LIVE / APK Delivery | WAITING EXTERNAL TEST |
 | LNR-017 | Starting Roster Vision / Staged Diagnostics | TESTING |
 
-## LNR-017 Current Truth
-- normalized roster schema-v3 `announcements` are no longer discarded.
-- raw official announcements remain discovery metadata and cannot become `OfficialStartingRoster` by themselves.
-- Application owns `RosterAssistStage` and target/announcement correlation; Android OCR is behind `StartingRosterVisionPort`.
-- bundled ML Kit OCR always runs Latin; LPL/LCP/PCS add Chinese, LCK adds Korean, LJL adds Japanese.
-- two-column poster parser uses OCR geometry to separate left/right candidates.
-- OCR authority is `DERIVED`; even a complete five-role result is explicitly `OCR_COMPLETE_UNVERIFIED` until normalized date/matchup evidence arrives.
-- PRE UI has a visible `STARTING ROSTER PIPELINE` panel with 60s polling and manual recheck.
-- panel distinguishes no announcement / discovered / OCR failure / partial / complete-unverified / normalized evidence available.
-- stable diagnostics: `LNR-SRC-PRE-010~013`.
-- build target bumped to `2.0.0-dev.4 / versionCode 4`.
+## LNR-017 Delivered Code Truth
+- normalized schema-v3 `announcements` are preserved instead of discarded；
+- official announcement discovery remains distinct from official starting-roster fact；
+- Application owns `RosterAssistStage` and correlation; Android OCR stays behind `StartingRosterVisionPort`；
+- bundled ML Kit: Latin + LPL/LCP/PCS Chinese + LCK Korean + LJL Japanese；
+- two-column geometry extraction separates left/right candidates；
+- OCR authority is always `DERIVED`；five-role completeness remains `OCR_COMPLETE_UNVERIFIED`；
+- normalized formal evidence still goes through existing `PreMatchContextService` validation；
+- PRE UI exposes a 60s low-frequency `STARTING ROSTER PIPELINE` card + manual recheck；
+- visible diagnostics `LNR-SRC-PRE-010~013`；
+- test build `2.0.0-dev.4 / versionCode 4`。
 
-## Verification So Far
-- run `34700136865`: Architecture PASS, Domain/Application PASS, Android Adapter/compile phase FAIL.
-- preserved root causes: wrong ML Kit Latin options package + cross-module nullable smart-cast in Compose.
-- fixes: `ad23d8cf493c773b5ff3d6dd6b07b3333a380171` and `a711dce3947b80405af741d69a8c342b191c121c`.
-- latest exact-head CI: pending.
+## Verification
+- `34700136865`: Architecture/Core PASS, App phase FAIL；wrong ML Kit Latin package + Compose cross-module nullable smart cast；failure preserved。
+- fixes `ad23d8cf493c773b5ff3d6dd6b07b3333a380171` + `a711dce3947b80405af741d69a8c342b191c121c`。
+- `34700236839`: Architecture/Core PASS，production app compile passed，App unit compile FAIL because new tests used undeclared `kotlin.test` API；failure preserved。
+- fixes `5d763c34301858293ceef6b5257077dc9b866ce3` + `3879249053832c606f30a6122c31269db9327812`。
+- code head `3879249053832c606f30a6122c31269db9327812` / run `34700457400`: Architecture / Domain+Application / Android Adapter unit / Android build / APK upload all PASS。
+- artifact `10300252185`, `laner-debug-3879249053832c606f30a6122c31269db9327812`, digest `sha256:91bc80ef7988ee7687b2a0bb5e024317fd702679b5daaa00af41b9edb580f241`。
+- docs exact-head / PR Gate / merge: pending。
 
-## Existing External Test Boundary
-- BLG vs AL Riot LIVE online/device evidence remains pending from LNR-016.
-- tonight's actual official starting-roster publication + Android OCR/diagnostic behavior is `WAITING EXTERNAL TEST` until user tests the new APK.
-- fixture/CI PASS never equals social-source/real-image/device PASS.
+## External Test Boundary
+- BLG vs AL Riot LIVE online/device evidence remains pending from LNR-016；
+- tonight's actual official lineup publication, image download, Android OCR, stage transitions and final normalized evidence behavior remain `WAITING EXTERNAL TEST`；
+- fixture/CI PASS never equals social-source/real-image/device PASS。
 
 ## Next
-LNR-017 exact-head Gate → APK artifact → docs/status closure → PR Gate/merge → user real-device lineup test. If the chain fails, diagnose by visible stage/code before changing architecture.
+final docs exact-head Gate → PR Gate → merge → user real-device lineup test。If real test fails, use visible stage/code to locate discovery vs image vs OCR vs evidence-validation break before changing architecture。
