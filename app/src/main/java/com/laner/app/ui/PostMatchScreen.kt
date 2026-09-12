@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import com.laner.core.application.PostMatchSnapshot
 import com.laner.core.application.SourceRequestContext
 import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.VerifiedPostAward
 import kotlin.math.abs
 
 private sealed interface PostScreenState {
@@ -85,6 +87,7 @@ fun PostMatchScreen(
                 item { PostTargetCard(current.match) }
                 item { PostSummaryCard(current.snapshot) }
                 item { PostCapabilityCard(current.snapshot) }
+                item { AwardsCard(current.snapshot.bundle.awards) }
             }
         }
     }
@@ -146,7 +149,7 @@ private fun PostCapabilityCard(snapshot: PostMatchSnapshot) {
         PostMatchLoadStatus.READY -> "POST facts ready"
         PostMatchLoadStatus.DEGRADED -> "部分赛后来源不可用，已保留可验证事实"
         PostMatchLoadStatus.CONFLICT -> "赛后事实存在冲突，未静默覆盖"
-        PostMatchLoadStatus.UNAVAILABLE -> "当前尚未接入可验证 POST Source"
+        PostMatchLoadStatus.UNAVAILABLE -> "当前尚未接入足够的可验证 POST Source"
     }
     Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
@@ -160,6 +163,39 @@ private fun PostCapabilityCard(snapshot: PostMatchSnapshot) {
             }
         }
     }
+}
+
+@Composable
+private fun AwardsCard(awards: List<VerifiedPostAward>) {
+    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp)) {
+            Text("VERIFIED AWARDS / 已核实奖项", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            if (awards.isEmpty()) {
+                Text("暂无已核实 MVP / POG 记录。不会根据 KDA、伤害或评分自动推奖项。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                awards.forEachIndexed { index, award ->
+                    if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    Text(awardTitle(award), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${award.player.handle} · ${award.player.teamId?.value ?: "team unknown"}",
+                        fontSize = 13.sp,
+                    )
+                    Text(
+                        "${award.label} · ${award.provenance.providerId}",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun awardTitle(award: VerifiedPostAward): String = when {
+    award.gameNumber != null -> "G${award.gameNumber} · ${award.kind.name}"
+    award.gameId != null -> "${award.gameId.value} · ${award.kind.name}"
+    else -> "SERIES · ${award.kind.name}"
 }
 
 @Composable
