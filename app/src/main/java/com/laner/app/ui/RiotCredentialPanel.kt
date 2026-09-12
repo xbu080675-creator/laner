@@ -42,9 +42,9 @@ fun RiotCredentialPanel(
                 )
                 Text(
                     text = when {
-                        runtimeOverrideActive -> "设备本地 Key 生效中"
-                        configured -> "构建时 Key 生效中"
-                        else -> "点此配置，Key 仅保存在 APP 私有目录",
+                        runtimeOverrideActive -> "临时 Key 生效中 · 退出进程即清除"
+                        configured -> "构建时 Secret 生效中"
+                        else -> "点此临时配置 · 不落盘",
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -60,7 +60,7 @@ fun RiotCredentialPanel(
         var value by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { open = false },
-            title = { Text("配置 Riot LoL Esports API Key") },
+            title = { Text("临时配置 Riot LoL Esports API Key") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -72,7 +72,7 @@ fun RiotCredentialPanel(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text(
-                        "不会写入日志、Git 或赛事 provenance。保存后当前页面的数据服务会立即重建。",
+                        "仅保存在当前 APP 进程内存中，不写入文件、日志、Git 或赛事 provenance。保存后数据服务立即重建。",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -84,7 +84,7 @@ fun RiotCredentialPanel(
                         onSave(value)
                         open = false
                     },
-                ) { Text("保存并重连") }
+                ) { Text("应用并重连") }
             },
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -92,7 +92,7 @@ fun RiotCredentialPanel(
                         OutlinedButton(onClick = {
                             onClearRuntimeOverride()
                             open = false
-                        }) { Text("清除本地 Key") }
+                        }) { Text("清除临时 Key") }
                     }
                     OutlinedButton(onClick = { open = false }) { Text("取消") }
                 }
