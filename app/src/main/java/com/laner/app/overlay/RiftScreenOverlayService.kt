@@ -29,12 +29,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Foreground-service lifecycle/composition coordinator for RiftScreen and Draft HUD.
+ * Foreground-service lifecycle/composition coordinator for RiftScreen, Draft HUD and Tactical HUD.
  *
  * Window operations live in dedicated controllers. LIVE business orchestration lives in
  * LiveMatchContextService. This class only schedules refreshes, maps Application results to
@@ -47,6 +47,7 @@ class RiftScreenOverlayService : Service() {
     private lateinit var windowHost: OverlayWindowHost
     private lateinit var riftWindow: RiftScreenWindowController
     private lateinit var draftWindow: DraftHudWindowController
+    private lateinit var tacticalWindow: TacticalHudWindowController
 
     private var pollingJob: Job? = null
     private var previewJob: Job? = null
@@ -63,6 +64,7 @@ class RiftScreenOverlayService : Service() {
         windowHost = OverlayWindowHost(this, graph.diagnostics)
         riftWindow = RiftScreenWindowController(this, windowHost) { stopSelf() }
         draftWindow = DraftHudWindowController(this, windowHost)
+        tacticalWindow = TacticalHudWindowController(this, windowHost)
         createNotificationChannel()
         startAsForeground()
         ensurePreviewCollection()
@@ -87,6 +89,18 @@ class RiftScreenOverlayService : Service() {
                 DraftHudPreviewSession.stop()
                 syncVisibility()
             }
+            ACTION_TACTICAL_PREVIEW_AUTO -> {
+                TacticalHudPreviewSession.startAuto()
+                syncVisibility()
+            }
+            ACTION_TACTICAL_PREVIEW_NEXT -> {
+                TacticalHudPreviewSession.next()
+                syncVisibility()
+            }
+            ACTION_TACTICAL_PREVIEW_STOP -> {
+                TacticalHudPreviewSession.stop()
+                syncVisibility()
+            }
             ACTION_SHOW,
             ACTION_SYNC -> syncVisibility()
             else -> syncVisibility()
@@ -102,6 +116,7 @@ class RiftScreenOverlayService : Service() {
         if (destroyed) return
         riftWindow.onConfigurationChanged()
         draftWindow.onConfigurationChanged()
+        tacticalWindow.onConfigurationChanged()
     }
 
     private fun syncVisibility() {
@@ -116,6 +131,7 @@ class RiftScreenOverlayService : Service() {
     private fun hideOverlay() {
         if (this::riftWindow.isInitialized) riftWindow.hide()
         if (this::draftWindow.isInitialized) draftWindow.hide()
+        if (this::tacticalWindow.isInitialized) tacticalWindow.hide()
     }
 
     private fun ensurePolling() {
@@ -133,13 +149,18 @@ class RiftScreenOverlayService : Service() {
     private fun ensurePreviewCollection() {
         if (previewJob?.isActive == true || destroyed) return
         previewJob = scope.launch {
-            DraftHudPreviewSession.state.collect { state ->
+            combine(DraftHudPreviewSession.state, TacticalHudPreviewSession.state) { draft, tactical ->
+                draft to tactical
+            }.collect { (draft, tactical) ->
                 mainHandler.post {
                     if (destroyed) return@post
                     if (this@RiftScreenOverlayService::draftWindow.isInitialized) {
-                        draftWindow.setPreviewState(state)
-                        refreshOverlayMode()
+                        draftWindow.setPreviewState(draft)
                     }
+                    if (this@RiftScreenOverlayService::tacticalWindow.isInitialized) {
+                        tacticalWindow.setPreviewState(tactical)
+                    }
+                    refreshOverlayMode()
                 }
             }
         }
@@ -148,6 +169,7 @@ class RiftScreenOverlayService : Service() {
     private data class OverlayTruth(
         val rift: RiftScreenPresentation,
         val draft: DraftHudPresentation,
+        val tactical: TacticalHudPresentation,
     )
 
     private suspend fun refreshTruth() {
@@ -171,6 +193,7 @@ class RiftScreenOverlayService : Service() {
                         }
                     ),
                     draft = DraftHudPresentation.inactive(),
+                    tactical = TacticalHudPresentation.inactive(),
                 )
                 is LiveMatchContextResult.Ready -> OverlayTruth(
                     rift = RiftScreenPresentationMapper.from(
@@ -184,12 +207,19 @@ class RiftScreenOverlayService : Service() {
                         result.liveState,
                         result.timeline,
                     ),
+                    tactical = TacticalHudPresentationMapper.from(
+                        result.match,
+                        result.liveState,
+                        result.snapshot,
+                        result.timeline,
+                    ),
                 )
                 is LiveMatchContextResult.Failed -> OverlayTruth(
                     rift = RiftScreenPresentationMapper.waiting(
                         "读取失败 · ${result.failure.code.value}"
                     ),
                     draft = DraftHudPresentation.inactive(),
+                    tactical = TacticalHudPresentation.inactive(),
                 )
             }
         } catch (error: Exception) {
@@ -214,23 +244,30 @@ class RiftScreenOverlayService : Service() {
             OverlayTruth(
                 rift = RiftScreenPresentationMapper.waiting("读取失败 · ${failure.code.value}"),
                 draft = DraftHudPresentation.inactive(),
+                tactical = TacticalHudPresentation.inactive(),
             )
         }
 
         mainHandler.post {
             if (destroyed) return@post
             if (!this@RiftScreenOverlayService::riftWindow.isInitialized ||
-                !this@RiftScreenOverlayService::draftWindow.isInitialized
+                !this@RiftScreenOverlayService::draftWindow.isInitialized ||
+                !this@RiftScreenOverlayService::tacticalWindow.isInitialized
             ) return@post
             latestRiftPresentation = truth.rift
             draftWindow.setVerifiedPresentation(truth.draft)
+            tacticalWindow.setVerifiedPresentation(truth.tactical)
             refreshOverlayMode()
         }
     }
 
+    /** Legacy-visible priority retained: Draft > Tactical > normal RiftScreen. */
     private fun refreshOverlayMode() {
         if (destroyed) return
-        if (!this::riftWindow.isInitialized || !this::draftWindow.isInitialized) return
+        if (!this::riftWindow.isInitialized ||
+            !this::draftWindow.isInitialized ||
+            !this::tacticalWindow.isInitialized
+        ) return
         if (hostInForeground || !Settings.canDrawOverlays(this)) {
             hideOverlay()
             return
@@ -238,9 +275,17 @@ class RiftScreenOverlayService : Service() {
 
         val draftActive = draftWindow.showEffective()
         if (draftActive) {
+            tacticalWindow.hide()
+            riftWindow.hide()
+            return
+        }
+        draftWindow.hide()
+
+        val tacticalActive = tacticalWindow.showEffective()
+        if (tacticalActive) {
             riftWindow.hide()
         } else {
-            draftWindow.hide()
+            tacticalWindow.hide()
             riftWindow.render(latestRiftPresentation)
             riftWindow.show()
         }
@@ -270,12 +315,15 @@ class RiftScreenOverlayService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setContentTitle("Laner RiftScreen 正在运行")
-            .setContentText("赛事副屏 / Draft HUD · 本地预览不会写入赛事事实")
+            .setContentText("赛事副屏 / Draft / Tactical HUD · 本地预览不是赛事事实")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(android.R.drawable.ic_media_play, "HUD预览", actionIntent(ACTION_DRAFT_PREVIEW_AUTO, 2001))
-            .addAction(android.R.drawable.ic_media_next, "下一步", actionIntent(ACTION_DRAFT_PREVIEW_NEXT, 2002))
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停止预览", actionIntent(ACTION_DRAFT_PREVIEW_STOP, 2003))
+            .addAction(android.R.drawable.ic_media_play, "Draft预览", actionIntent(ACTION_DRAFT_PREVIEW_AUTO, 2001))
+            .addAction(android.R.drawable.ic_media_next, "Draft下一步", actionIntent(ACTION_DRAFT_PREVIEW_NEXT, 2002))
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停Draft", actionIntent(ACTION_DRAFT_PREVIEW_STOP, 2003))
+            .addAction(android.R.drawable.ic_media_play, "战术预览", actionIntent(ACTION_TACTICAL_PREVIEW_AUTO, 2011))
+            .addAction(android.R.drawable.ic_media_next, "战术下一步", actionIntent(ACTION_TACTICAL_PREVIEW_NEXT, 2012))
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "停战术", actionIntent(ACTION_TACTICAL_PREVIEW_STOP, 2013))
             .build()
     }
 
@@ -297,6 +345,8 @@ class RiftScreenOverlayService : Service() {
         previewJob?.cancel()
         mainHandler.removeCallbacksAndMessages(null)
         DraftHudPreviewSession.stop()
+        TacticalHudPreviewSession.stop()
+        if (this::tacticalWindow.isInitialized) tacticalWindow.destroy()
         if (this::draftWindow.isInitialized) draftWindow.destroy()
         if (this::riftWindow.isInitialized) riftWindow.destroy()
         scope.cancel()
@@ -315,6 +365,9 @@ class RiftScreenOverlayService : Service() {
         const val ACTION_DRAFT_PREVIEW_AUTO = "com.laner.app.overlay.DRAFT_PREVIEW_AUTO"
         const val ACTION_DRAFT_PREVIEW_NEXT = "com.laner.app.overlay.DRAFT_PREVIEW_NEXT"
         const val ACTION_DRAFT_PREVIEW_STOP = "com.laner.app.overlay.DRAFT_PREVIEW_STOP"
+        const val ACTION_TACTICAL_PREVIEW_AUTO = "com.laner.app.overlay.TACTICAL_PREVIEW_AUTO"
+        const val ACTION_TACTICAL_PREVIEW_NEXT = "com.laner.app.overlay.TACTICAL_PREVIEW_NEXT"
+        const val ACTION_TACTICAL_PREVIEW_STOP = "com.laner.app.overlay.TACTICAL_PREVIEW_STOP"
         private const val ACTION_SYNC = "com.laner.app.overlay.RIFTSCREEN_SYNC"
 
         @Volatile

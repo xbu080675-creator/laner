@@ -106,6 +106,7 @@ class LiveMatchContextServiceTest {
                 diagnostics = diagnostics,
             ),
             liveTimelineService = timelineService,
+            liveEventDerivationService = LiveEventDerivationService(timelineService),
             diagnostics = diagnostics,
         )
     }

@@ -41,7 +41,7 @@ data class GameTimeline(
 
 /**
  * Provider-independent event identity used for reconnect/idempotency handling.
- * Sequence, provenance and descriptive text are intentionally excluded because different
+ * Sequence, provenance and descriptive/window metadata are intentionally excluded because different
  * providers/reconnects may assign different transport metadata to the same factual event.
  */
 fun MatchEvent.semanticKey(): String = when (this) {
@@ -50,10 +50,19 @@ fun MatchEvent.semanticKey(): String = when (this) {
     )
     is KillEvent -> listOf(
         "kill", matchId.value, gameId.value, gameTimeSeconds.toString(), killerId?.value.orEmpty(),
-        victimId?.value.orEmpty(), teamId?.value.orEmpty(), assistingPlayerIds.map { it.value }.sorted().joinToString(","),
+        victimId?.value.orEmpty(), teamId?.value.orEmpty(), count.toString(),
+        assistingPlayerIds.map { it.value }.sorted().joinToString(","),
+    )
+    is MultiKillWindowEvent -> listOf(
+        "multi-kill-window", matchId.value, gameId.value, gameTimeSeconds.toString(), playerId.value,
+        teamId.value, killCount.toString(),
+    )
+    is TeamFightWindowEvent -> listOf(
+        "team-fight-window", matchId.value, gameId.value, gameTimeSeconds.toString(),
+        blueKillDelta.toString(), redKillDelta.toString(),
     )
     is ObjectiveTakenEvent -> listOf(
-        "objective", matchId.value, gameId.value, gameTimeSeconds.toString(), teamId.value, objective.name,
+        "objective", matchId.value, gameId.value, gameTimeSeconds.toString(), teamId.value, objective.name, count.toString(),
     )
     is GoldLeadChangedEvent -> listOf(
         "gold-lead", matchId.value, gameId.value, gameTimeSeconds.toString(), leadingTeamId?.value.orEmpty(), goldDifference.toString(),

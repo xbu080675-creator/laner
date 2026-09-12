@@ -3,19 +3,12 @@
 ## Current Baseline
 - Repository: `xbu080675-creator/laner`
 - Authoritative branch: `main`
-- LNR-019 merge: `64150f8cced159950013e4bdc3bbd9cf794a87b7`
-- LNR-020 original merge (PR #10): `967e112d6efcf8e6daa86f0b007cedc39b63b04c`
-- LNR-020 original post-merge main Gate: run `34706047380` PASS
-- Constitution incident: `INC-LNR-020-001 / CLOSED`
-- Compliance remediation merge (PR #12): `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`
-- Remediation exact-head Gate: run `34708127194` PASS
-- Remediation post-merge main Gate: run `34708285172` PASS
-- Remediation closeout merge (PR #13): `e92bb65b2469cbeb23e56a531890945880f99eba`
-- Closeout post-merge main Gate: run `34708701976` PASS
-- Baseline SHA policy: long-lived status docs record stable task/PR merge anchors, not a self-referential “current main SHA” that becomes stale when the document itself is merged.
 - Project phase: `M1 / Feature Migration`
 - Functional migration: `IN PROGRESS`
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
+- LNR-020 Block 1: frozen after `INC-LNR-020-001 / CLOSED`
+- LNR-021 Block 2 working branch: `feature/lnr-021-tactical-live-events`
+- Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”。
 
 ## Task Status
 | Task | Title | Status |
@@ -32,78 +25,81 @@
 | LNR-018 | Compatibility / Full Regression / Migration Audit | TODO |
 | LNR-019 | Global LIVE Snapshot / Timeline / Match HUD | WAITING EXTERNAL TEST |
 | LNR-020 | RiftScreen / Draft HUD Android Overlay | WAITING EXTERNAL TEST (functional) / COMPLIANCE PASS |
+| LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST (automatic implementation) |
 
-## LNR-020 Delivered Functional Truth
-- RiftScreen is rebuilt on process-level `LanerApplication / LanerAppGraph`; the legacy `MatchSessionStore` architecture was not copied.
-- original LNR-020 functional code is merged by PR #10 at `967e112d…`; post-merge main run `34706047380` passed its automated Gate.
-- RiftScreen has `MINI / COMPACT / EXPANDED`, drag, close and host-foreground auto-hide/background-show behavior.
-- verified Draft HUD activates only from canonical `DRAFT` lifecycle and canonical `DraftChangedEvent` facts.
-- schedule order is only left/right until a real side-selection fact exists; role/matchup is not inferred from missing evidence.
-- Android-only `DraftHudPreviewSession` is explicitly `LOCAL PREVIEW · NOT FACT` and cannot write Core/repositories/Timeline.
-- HUD supports Edit / Lock, per-module drag, scale, alpha, visibility, reset and independent landscape/portrait layout profiles.
-- Lock applies real `FLAG_NOT_TOUCHABLE` to the full-screen HUD while the edge dock remains operable.
-- `LIVE-024~029` remain `WAITING EXTERNAL TEST`; `LIVE-012` remains TODO because HUD Presentation is not a real Draft Provider.
+## Block 1 / LNR-020 Frozen Truth
+- Original functional merge: PR #10 / `967e112d6efcf8e6daa86f0b007cedc39b63b04c`；post-merge main run `34706047380` PASS。
+- Compliance remediation merge: PR #12 / `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`；exact-head run `34708127194` PASS；post-merge run `34708285172` PASS。
+- Closeout merge: PR #13 / `e92bb65b2469cbeb23e56a531890945880f99eba`；post-merge run `34708701976` PASS。
+- Final factual-status correction merge: `87f90a89ad7a35fdb9717ef1003fa984bba4fdab`；main run `34708959768` PASS。
+- `INC-LNR-020-001 = CLOSED`；Block 1 不再接受顺手功能改动。
+- `LIVE-024~029` 继续等待 Android 真机证据；`LIVE-012` 仍 TODO。
 
-## LNR-020 Compliance Remediation Truth
-`INC-LNR-020-001` confirmed seven engineering-process/architecture deviations. The incident is now closed without rewriting the original task history.
-
-Current chain is:
+## LNR-021 Delivered Truth
+### Canonical event derivation
 ```text
-GlobalScheduleService
-→ LiveTargetSelector
-→ LiveMatchStateService + LiveSnapshotService
-→ canonical GameId selection
-→ LiveTimelineService
-→ LiveMatchContextService / LiveMatchContextResult
-→ Presentation Mapper
-→ RiftScreenWindowController / DraftHudWindowController
+Verified LiveGameSnapshot
+→ LiveTimelineService ingest
+→ canonical GameTimeline snapshots
+→ LiveEventDerivationService
+→ LiveTimelineService.reconcileGeneratedEvents
+→ canonical MatchEvent
+→ LiveMatchContextResult
+→ TacticalHudPresentationMapper
+→ TacticalHudWindowController
 → OverlayWindowHost
-→ WindowManager
 ```
 
-Remediation delivered:
-- single Application `LiveMatchContextService` so Compose LIVE and Overlay no longer duplicate current-LIVE orchestration;
-- typed `NoTarget / Ready / Failed` result and `LNR-APP-LIVE-003` unexpected-failure diagnostics;
-- `OverlayWindowHost` with `[Laner:OVERLAY]` and stable `LNR-OVR-WINDOW-001~004` codes instead of silent WindowManager `runCatching`;
-- dedicated `RiftScreenWindowController` and `DraftHudWindowController`, reducing `RiftScreenOverlayService` to lifecycle/scheduling/composition duties;
-- `LNR-OVR-REFRESH-001` for Presentation mapper failures;
-- permanent `LiveMatchContextServiceTest` and `OverlayWindowOperationTest` regressions;
-- LNR-020 Failure A/B registered in `TROUBLESHOOTING.md`;
-- root README / ARCHITECTURE / PROJECT_SCOPE / plan/status/module docs corrected from stale M0 or in-progress facts to the real M1 state.
+已实现：
+- aggregate Kill delta；没有明确配对证据时 killer/victim 保持 null；
+- 当 player kill delta 可完整解释 team delta 时，允许绑定 canonical PlayerId；
+- `MultiKillWindowEvent`：<=20s 采样窗内同一选手 kill delta >=2，仅称“采样窗口多杀”，不冒充官方 multi-kill；
+- `TeamFightWindowEvent`：<=20s 窗口内双方总 kill delta >=3，仅称“团战窗口”；
+- `GoldLeadChangedEvent`：±250g deadband，只有领先方明确易手才生成；
+- Tower / Dragon / Baron delta；Dragon 不推断龙种/龙魂/远古龙；Herald/Atakhan 仍未全局标准化；
+- `reconcileGeneratedEvents` 只替换 `laner-live-event-derivation` 自己的派生事件，不删除 Provider explicit / lifecycle / Draft facts；
+- late/out-of-order/stronger same-second snapshot 后可重新派生，避免陈旧 local-derived event 残留。
 
-Remediation evidence:
-- PR #12 final head `249c42208ab6105ad26b78215b47fbd754d889e9`;
-- exact-head run `34708127194`: Architecture/Core/App Unit/Android compile/APK upload PASS;
-- artifact `10302087059`, digest `sha256:59eca5214f84e4a231a613b90663fd4d30f613629f3128b4f846716ab56a4509`;
-- PR #12 merge `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`;
-- post-merge main run `34708285172`: Architecture/Core/App Unit/Android compile/APK upload PASS;
-- main artifact `10301779315`, digest `sha256:69d61f7bea45a209f56f171e0e9c4f48f24953fdd802b03ade4013851b5a34c4`;
-- PR #13 documentation closeout merge `e92bb65b2469cbeb23e56a531890945880f99eba`;
-- closeout post-merge main run `34708701976`: Architecture/Core/App Unit/Android compile/APK upload PASS.
+### Tactical HUD
+- Verified Tactical 只在 canonical lifecycle=`IN_GAME` 激活；
+- 用户可见窗口优先级保持旧行为：`Draft > Tactical > RiftScreen`；
+- Tactical window 使用 `FLAG_NOT_TOUCHABLE`，不抢底层观赛操作；
+- 25s game-time TTL + 30s wall-clock freshness；Provider/Timeline 停更时旧卡不会永久挂屏；
+- 不显示现有事实链不存在的 HP、技能/召唤师技能 CD、位置等模拟字段；
+- `TacticalHudPreviewSession` 仅用于本地视觉测试，固定 `LOCAL PREVIEW · NOT FACT`，不进入 Core/Repository/Timeline。
 
-**Compliance status: PASS / incident CLOSED.**
+### Persistence
+- LIVE Timeline schema 从 v1 升到 v2，以保存新增 Tactical event 字段/类型；
+- `JsonLiveTimelineRepository` 仍可读取 v1；下一次写入自动升级 v2；
+- corrupt / unsupported schema 继续显式失败；不要求用户手动清缓存。
 
-## LNR-020 Historical Verification
-- foundation run `34704014273`: Architecture/Core PASS; App unit compile FAIL because legacy UI test still referenced deleted private `selectLiveTarget`; failure preserved.
-- fix `8b17f94ed75ba417eed017bd4c4d45ba63b5e9a9` aligned the regression with Application `LiveTargetSelector`.
-- foundation push run `34704124799` and PR run `34704127811`: Architecture/Core/App Unit/Android build/APK upload all PASS.
-- Draft HUD PR run `34705468018`: Architecture/Core and production `compileDebugKotlin` PASS; 35 App tests with one incorrect new-test assertion failure; production implementation was not the failing surface.
-- test fix `871e1a0ad257c465dc51720df46fb66cceeae7cc` checks the intended unknown-team isolation property.
-- PR run `34705512479`: Architecture / Domain+Application / Android Adapter unit / Android build / APK upload all PASS.
-- original final exact-head feature run `34705831066` / PR run `34705833067` PASS; artifact `10301775664`.
-- PR #10 merged to main as `967e112d…`; post-merge run `34706047380` PASS.
-- incident and remediation history remain preserved in `docs/development/`; no historical FAIL was rewritten into PASS.
+## LNR-021 Verification / Failure History
+### Failure A — preserved
+- run `34709821178`；
+- Architecture boundary PASS；Domain/Application PASS；
+- Android Adapter Unit 阶段 production `:app:compileDebugKotlin` FAIL；
+- root cause：`LiveMatchScreen.eventLabel()` 未穷举新 `MultiKillWindowEvent / TeamFightWindowEvent`；
+- fix：`403bba4e874ad37978179618e84dceaafb9f06f8`；
+- permanent rule：Domain sealed event 扩展必须同步所有 Presentation exhaustive mapper，禁止用 catch-all `else` 掩盖遗漏。
+
+### Implementation baseline PASS
+- head `b83a83c0c8908b8da1755d306958352fbfe389cf`；
+- run `34710012697`：Architecture / Domain+Application / Android Adapter unit / Android debug compile / APK upload 全 PASS；
+- artifact `10303071228`；digest `sha256:1e0d24bd8e5423216442a97d70c6307f128a93f22476e462b9942e62da906d6f`。
+
+### Final stale-card hardening
+- `TacticalHudPresentation.isDisplayableAt()` 增加 wall-clock expiry 回归；
+- Preview 明确不使用 Provider freshness；
+- 当前分支正在完成最终 exact-head Gate / PR / post-merge main Gate，最终稳定锚点写入 LNR-021 开发记录/closeout。
 
 ## Waiting External Test / Honest Gaps
-- Android system-overlay permission flow cannot be proven by JVM/CI.
-- foreground hide / background show, drag/bounds, MINI/COMPACT/EXPANDED and close require real-device verification.
-- Draft HUD Edit/Lock, module drag, scale, alpha, visibility, reset and portrait/landscape profile switching require real-device verification.
-- Lock touch-through requires verification while interacting with the underlying game/viewer app.
-- real verified Draft data requires a real Draft source; `LIVE-012` remains TODO.
-- Tactical HUD remains `LIVE-030 TODO` and was not included in remediation.
-- `LIVE-014` Kill/MultiKill/TeamFightWindow and `LIVE-015` GoldLeadChange remain TODO.
-- BLG vs AL / other live Riot online evidence from LNR-019 also remains external.
-- Cito remains DEFERRED.
+- LNR-021 `LIVE-014 / LIVE-015 / LIVE-030` 自动实现存在，但真实 Riot online 触发仍未证明；
+- Android Tactical HUD 的系统 overlay 权限、真实窗口层级、touch-through、横竖屏视觉、断流退场行为需要真机验证；
+- 真实官方 multi-kill / killer-victim / dragon subtype 仍依赖未来明确 Provider event evidence，当前不得声称已拥有；
+- `LIVE-009` Herald/Atakhan 仍 `IN PROGRESS`；
+- `LIVE-012` real Draft Provider 仍 TODO；
+- LNR-019 BLG vs AL / 其他真实赛事 online evidence 继续外部补证；
+- Cito remains DEFERRED。
 
 ## Next
-`INC-LNR-020-001` 已关闭。Block 2 `Tactical HUD + live event layer` 现在可以在**新的 Constitution Preflight** 后开始；LNR-020 Android 真机证据继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
+先完成 LNR-021 exact-head Gate → PR → merge → main Gate → 文档 closeout。之后按用户规则对 Block 2 单独执行工程宪法复查；若有偏离，先记录和整改，再冻结第二块并进入第 3 块 Watch Hub + 播放器。

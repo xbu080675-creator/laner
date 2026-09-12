@@ -19,6 +19,7 @@ import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
+import com.laner.core.application.LiveEventDerivationService
 import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveSnapshotService
@@ -93,6 +94,7 @@ class LanerAppGraph(
     )
 
     val liveTimelineService = LiveTimelineService(liveTimelineRepository)
+    val liveEventDerivationService = LiveEventDerivationService(liveTimelineService)
 
     val liveSnapshotService = LiveSnapshotService(
         sources = listOf(riotGlobalLiveSnapshotSource),
@@ -105,6 +107,7 @@ class LanerAppGraph(
         liveMatchStateService = liveMatchStateService,
         liveSnapshotService = liveSnapshotService,
         liveTimelineService = liveTimelineService,
+        liveEventDerivationService = liveEventDerivationService,
         diagnostics = diagnostics,
     )
 

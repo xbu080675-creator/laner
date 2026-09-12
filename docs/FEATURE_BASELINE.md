@@ -73,8 +73,8 @@
 | LIVE-011 | 终局前装备/Item Spike | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Player Live State | TODO |
 | LIVE-012 | BP / Draft 实时状态 | BOTH | LIVE_MATCH_SOURCE | OfficialDraftProvider | Draft Domain | TODO |
 | LIVE-013 | 统一事件模型 | BOTH | LIVE_MATCH_SOURCE | dev.72 / RiftLabApp | Event Domain | IN PROGRESS |
-| LIVE-014 | Kill / MultiKill / TeamFightWindow | BOTH | LIVE_MATCH_SOURCE | Timeline model | Event Domain | TODO |
-| LIVE-015 | GoldLeadChange | BOTH | LIVE_MATCH_SOURCE | Timeline | Event Domain | TODO |
+| LIVE-014 | Kill / MultiKill / TeamFightWindow | BOTH | LIVE_MATCH_SOURCE | Timeline model | Event Domain | WAITING EXTERNAL TEST |
+| LIVE-015 | GoldLeadChange | BOTH | LIVE_MATCH_SOURCE | Timeline | Event Domain | WAITING EXTERNAL TEST |
 | LIVE-016 | Pause / Resume（可确认时） | BOTH | LIVE_MATCH_SOURCE | dev.72 roadmap | Match State | TODO |
 | LIVE-017 | 本地 Timeline 持续采集 | BOTH | LIVE_MATCH_SOURCE | MatchTimelineStore/Capture | Timeline Repository | IN PROGRESS |
 | LIVE-018 | 状态周期快照 + 关键事件额外落点 | COACH_ANALYST | LIVE_MATCH_SOURCE | dev.34 | Timeline Capture | IN PROGRESS |
@@ -89,7 +89,7 @@
 | LIVE-027 | HUD 拖动 / Scale / Alpha / Visibility / Reset | BOTH | PLATFORM | dev.63 | HUD Layout | WAITING EXTERNAL TEST |
 | LIVE-028 | 横竖屏独立 HUD Profile | BOTH | PLATFORM | dev.63 | HUD Layout Persistence | WAITING EXTERNAL TEST |
 | LIVE-029 | LOCK 后触摸穿透 | SPECTATOR | PLATFORM | dev.63 | Android Overlay Adapter | WAITING EXTERNAL TEST |
-| LIVE-030 | Tactical HUD / 战术副屏 | COACH_ANALYST | PLATFORM | TacticalHudOverlay | HUD Presentation | TODO |
+| LIVE-030 | Tactical HUD / 战术副屏 | COACH_ANALYST | PLATFORM | TacticalHudOverlay | HUD Presentation | WAITING EXTERNAL TEST |
 | LIVE-031 | Bilibili 观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
 | LIVE-032 | 虎牙观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
 | LIVE-033 | LoL Esports / YouTube / Twitch / X 观赛入口 | SPECTATOR | PLATFORM | dev.60 | Watch Hub | TODO |
@@ -102,10 +102,13 @@
 - 赛中 UI 必须自动跟随 Match State，不由页面自行猜状态。
 - 旧版已实机通过的“场间未开局 vs 新局真实开局”是必须保留的行为基线。
 - LNR-019 已完成 LIVE-005/006/007/008/010 的 Global Riot snapshot 自动链路；在真实 Android online evidence 前保持 `WAITING EXTERNAL TEST`。
-- `LIVE-006` 当前指团队实时击杀总数；KillEvent/MultiKill 事件识别仍属于 LIVE-014，不得混为已完成。
-- `LIVE-009` 当前仅覆盖 Baron 字段，Herald/Atakhan 未统一，因此保持 `IN PROGRESS`。
+- `LIVE-006` 当前继续表示团队实时击杀总数；LNR-021 另在 canonical Timeline snapshot 之上实现 LIVE-014 的保守 Kill/MultiKill/TeamFightWindow 派生，二者不得混为同一事实类型。
+- LNR-021 已实现 LIVE-014 / LIVE-015 / LIVE-030 自动链路：aggregate Kill delta、player-backed MultiKillWindow、TeamFightWindow、GoldLeadChange、Tower/Dragon/Baron delta 与 Tactical HUD；真实 Riot online + Android overlay 视觉/触摸/断流行为尚待补证，因此保持 `WAITING EXTERNAL TEST`。
+- MultiKill 只能称“采样窗口多杀”，TeamFight 只能称“团战窗口”；没有 killer/victim 配对、龙种、龙魂、远古龙、HP、技能/召唤师技能 CD 等证据时必须保持未知。
+- Tactical HUD 使用 25s 游戏时间 TTL + 30s wall-clock freshness；Provider 停更时不得让旧战术卡永久挂屏。
+- `LIVE-009` 当前覆盖 Baron count/delta；Herald/Atakhan 未统一，因此保持 `IN PROGRESS`。
 - LNR-020 已完成 LIVE-024~029 的新架构实现与自动 Gate；系统悬浮窗权限、后台显示、拖动、横竖屏 Profile 与 Lock 触摸穿透必须真机补证，因此保持 `WAITING EXTERNAL TEST`。
-- LNR-020 的本地 Draft HUD Preview 明确为 `LOCAL PREVIEW · NOT FACT`，不得写入 Core / Repository / Timeline；真实 Draft Provider 未迁移，所以 LIVE-012 仍为 `TODO`。
+- LNR-020 的本地 Draft HUD Preview 与 LNR-021 Tactical Preview 都明确为 `LOCAL PREVIEW · NOT FACT`，不得写入 Core / Repository / Timeline；真实 Draft Provider 未迁移，所以 LIVE-012 仍为 `TODO`。
 
 ---
 
