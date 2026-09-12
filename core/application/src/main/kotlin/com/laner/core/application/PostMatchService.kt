@@ -36,13 +36,16 @@ data class PostMatchSnapshot(
  * Application authority for POST facts.
  *
  * Result, completed games, awards and replay metadata are independent capabilities. A failure in
- * one capability never erases valid facts already returned by another source.
+ * one capability never erases valid facts already returned by another source. The device archive
+ * is fallback-only: fresh external candidates replace the cached fact for the same capability/game
+ * while missing facts may still be recovered from the last verified archive.
  */
 class PostMatchService(
     private val resultSources: List<PostResultSourcePort>,
     private val gameSources: List<CompletedGameSourcePort>,
     private val awardSources: List<PostAwardSourcePort>,
     private val replaySources: List<ReplaySourcePort>,
+    private val archiveRepository: PostMatchArchiveRepository? = null,
     private val diagnostics: DiagnosticsPort? = null,
 ) {
     suspend fun load(
@@ -51,8 +54,9 @@ class PostMatchService(
     ): PostMatchSnapshot {
         val failures = mutableListOf<DiagnosticFailure>()
         val conflicts = mutableListOf<PostMatchConflict>()
+        val archived = loadArchive(query.matchId, failures)
 
-        val results = resultSources.mapNotNull { source ->
+        val externalResults = resultSources.mapNotNull { source ->
             when (val read = source.readResult(query, context)) {
                 is ProviderRead.Success -> read.value?.takeIf {
                     validateMatch(it.matchId, query.matchId, source.providerId, "result", failures)
@@ -63,16 +67,21 @@ class PostMatchService(
                 }
             }
         }
-        val selectedResult = results.reduceOrNull(::preferResult)
-        if (results.map { resultKey(it) }.distinct().size > 1) {
+        val resultCandidates = if (externalResults.isNotEmpty()) {
+            externalResults
+        } else {
+            listOfNotNull(archived?.result)
+        }
+        val selectedResult = resultCandidates.reduceOrNull(::preferResult)
+        if (externalResults.map { resultKey(it) }.distinct().size > 1) {
             conflicts += PostMatchConflict(
                 factType = "SERIES_RESULT",
                 key = query.matchId.value,
-                providers = results.map { it.provenance.providerId }.toSet(),
+                providers = externalResults.map { it.provenance.providerId }.toSet(),
             )
         }
 
-        val gameCandidates = gameSources.flatMap { source ->
+        val externalGameCandidates = gameSources.flatMap { source ->
             when (val read = source.readGames(query, context)) {
                 is ProviderRead.Success -> read.value.filter {
                     validateMatch(it.matchId, query.matchId, source.providerId, "game", failures)
@@ -83,14 +92,18 @@ class PostMatchService(
                 }
             }
         }
+        val externalGameNumbers = externalGameCandidates.map { it.gameNumber }.toSet()
+        val fallbackGames = archived?.games.orEmpty().filter { it.gameNumber !in externalGameNumbers }
+        val gameCandidates = externalGameCandidates + fallbackGames
         val games = gameCandidates
             .groupBy { it.gameNumber }
             .mapNotNull { (gameNumber, candidates) ->
-                if (candidates.map { it.gameId }.distinct().size > 1) {
+                val externalForGame = externalGameCandidates.filter { it.gameNumber == gameNumber }
+                if (externalForGame.map { it.gameId }.distinct().size > 1) {
                     conflicts += PostMatchConflict(
                         factType = "GAME_ID",
                         key = "${query.matchId.value}:G$gameNumber",
-                        providers = candidates.map { it.provenance.providerId }.toSet(),
+                        providers = externalForGame.map { it.provenance.providerId }.toSet(),
                     )
                 }
                 candidates.reduceOrNull { best, next -> if (prefer(next.provenance, best.provenance)) next else best }
@@ -145,6 +158,20 @@ class PostMatchService(
             awards = awards,
             replays = replays,
         )
+
+        val archiveFactConflict = conflicts.any { it.factType == "SERIES_RESULT" || it.factType == "GAME_ID" }
+        if (!archiveFactConflict && (selectedResult != null || games.isNotEmpty())) {
+            saveArchive(
+                PostArchiveSnapshot(
+                    matchId = query.matchId,
+                    result = selectedResult,
+                    games = games,
+                    storedAtEpochMillis = context.nowEpochMillis,
+                ),
+                failures,
+            )
+        }
+
         val hasAnyFact = selectedResult != null || games.isNotEmpty() || awards.isNotEmpty() || replays.isNotEmpty()
         val status = when {
             conflicts.isNotEmpty() -> PostMatchLoadStatus.CONFLICT
@@ -169,6 +196,7 @@ class PostMatchService(
                     "games" to games.size.toString(),
                     "awards" to awards.size.toString(),
                     "replays" to replays.size.toString(),
+                    "archive" to (archived != null).toString(),
                     "failures" to failures.size.toString(),
                     "conflicts" to conflicts.size.toString(),
                 ),
@@ -176,6 +204,56 @@ class PostMatchService(
         )
 
         return PostMatchSnapshot(bundle, status, failures, conflicts)
+    }
+
+    private suspend fun loadArchive(
+        matchId: MatchId,
+        failures: MutableList<DiagnosticFailure>,
+    ): PostArchiveSnapshot? {
+        val repository = archiveRepository ?: return null
+        return try {
+            repository.load(matchId)?.takeIf { snapshot ->
+                if (snapshot.matchId == matchId) {
+                    true
+                } else {
+                    failures += DiagnosticFailure(
+                        code = ErrorCode("LNR-APP-POST-002"),
+                        message = "POST archive returned another match",
+                        retryable = false,
+                        context = mapOf(
+                            "requested_match" to matchId.value,
+                            "archived_match" to snapshot.matchId.value,
+                        ),
+                    )
+                    false
+                }
+            }
+        } catch (error: Throwable) {
+            failures += DiagnosticFailure(
+                code = ErrorCode("LNR-APP-POST-003"),
+                message = "POST archive read failed: ${safeMessage(error)}",
+                retryable = true,
+                context = mapOf("match_id" to matchId.value),
+            )
+            null
+        }
+    }
+
+    private suspend fun saveArchive(
+        snapshot: PostArchiveSnapshot,
+        failures: MutableList<DiagnosticFailure>,
+    ) {
+        val repository = archiveRepository ?: return
+        try {
+            repository.save(snapshot)
+        } catch (error: Throwable) {
+            failures += DiagnosticFailure(
+                code = ErrorCode("LNR-APP-POST-004"),
+                message = "POST archive write failed: ${safeMessage(error)}",
+                retryable = true,
+                context = mapOf("match_id" to snapshot.matchId.value),
+            )
+        }
     }
 
     private fun validateMatch(
@@ -243,6 +321,9 @@ class PostMatchService(
         asset.externalPartId ?: "",
         asset.sourceUrl,
     ).joinToString("|")
+
+    private fun safeMessage(error: Throwable): String =
+        error.message?.take(160)?.takeIf { it.isNotBlank() } ?: error::class.java.simpleName
 
     private companion object {
         const val POST_FRESHNESS_OVERRIDE_MILLIS = 5L * 60L * 1000L
