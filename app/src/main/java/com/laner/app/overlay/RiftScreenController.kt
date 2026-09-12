@@ -22,17 +22,20 @@ class RiftScreenController(private val context: Context) {
         )
     }
 
-    fun start(): Boolean {
-        if (!hasOverlayPermission()) return false
-        ContextCompat.startForegroundService(
-            context,
+    fun start(): Boolean = startAction(RiftScreenOverlayService.ACTION_SHOW)
+
+    fun startDraftPreview(): Boolean = startAction(RiftScreenOverlayService.ACTION_DRAFT_PREVIEW_AUTO)
+
+    fun stopDraftPreview() {
+        if (!isRunning()) return
+        context.startService(
             Intent(context, RiftScreenOverlayService::class.java)
-                .setAction(RiftScreenOverlayService.ACTION_SHOW),
+                .setAction(RiftScreenOverlayService.ACTION_DRAFT_PREVIEW_STOP),
         )
-        return true
     }
 
     fun stop() {
+        if (!isRunning()) return
         context.startService(
             Intent(context, RiftScreenOverlayService::class.java)
                 .setAction(RiftScreenOverlayService.ACTION_STOP),
@@ -41,5 +44,14 @@ class RiftScreenController(private val context: Context) {
 
     fun setHostForeground(foreground: Boolean) {
         RiftScreenOverlayService.setHostForeground(context, foreground)
+    }
+
+    private fun startAction(action: String): Boolean {
+        if (!hasOverlayPermission()) return false
+        ContextCompat.startForegroundService(
+            context,
+            Intent(context, RiftScreenOverlayService::class.java).setAction(action),
+        )
+        return true
     }
 }
