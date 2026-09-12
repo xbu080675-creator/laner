@@ -2,6 +2,7 @@ package com.laner.core.application
 
 import com.laner.core.domain.DiagnosticFailure
 import com.laner.core.domain.ErrorCode
+import com.laner.core.domain.EventEvidence
 import com.laner.core.domain.FreshnessClass
 import com.laner.core.domain.LiveMatchState
 import com.laner.core.domain.LiveMatchStateReducer
@@ -11,6 +12,7 @@ import com.laner.core.domain.LiveStateSignal
 import com.laner.core.domain.LiveStateTransitionResult
 import com.laner.core.domain.MatchId
 import com.laner.core.domain.MatchLifecycleState
+import com.laner.core.domain.MatchStateChanged
 import com.laner.core.domain.SourceClass
 import com.laner.core.domain.SourceProvenance
 import kotlin.math.abs
@@ -35,6 +37,7 @@ data class LiveStateResolution(
     val failures: List<DiagnosticFailure>,
     val conflicts: List<LiveProviderConflict>,
     val appliedTransitions: List<Pair<MatchLifecycleState, MatchLifecycleState>>,
+    val stateEvents: List<MatchStateChanged>,
 )
 
 /**
@@ -93,6 +96,7 @@ class LiveMatchStateService(
                 failures = failures,
                 conflicts = emptyList(),
                 appliedTransitions = emptyList(),
+                stateEvents = emptyList(),
             )
         }
 
@@ -102,12 +106,23 @@ class LiveMatchStateService(
 
         val conflicts = mutableListOf<LiveProviderConflict>()
         val applied = mutableListOf<Pair<MatchLifecycleState, MatchLifecycleState>>()
+        val stateEvents = mutableListOf<MatchStateChanged>()
         var state = current
 
         transitionSequence(state, selected.signal).forEach { signal ->
             when (val result = LiveMatchStateReducer.reduce(state, signal)) {
                 is LiveStateTransitionResult.Applied -> {
                     applied += result.previous.lifecycle to result.state.lifecycle
+                    stateEvents += MatchStateChanged(
+                        matchId = matchId,
+                        gameId = result.state.currentGameId,
+                        sequence = signal.observedAtEpochMillis * 10L + stateEvents.size,
+                        gameTimeSeconds = null,
+                        provenance = signal.provenance,
+                        evidence = eventEvidence(signal.evidence),
+                        previous = result.previous.lifecycle,
+                        current = result.state.lifecycle,
+                    )
                     state = result.state
                 }
                 is LiveStateTransitionResult.Ignored -> state = result.state
@@ -161,6 +176,7 @@ class LiveMatchStateService(
             failures = failures,
             conflicts = conflicts,
             appliedTransitions = applied,
+            stateEvents = stateEvents,
         )
     }
 
@@ -262,6 +278,12 @@ class LiveMatchStateService(
         LiveStateEvidence.VERIFIED_FRAME -> 3
         LiveStateEvidence.PROVIDER_EXPLICIT -> 2
         LiveStateEvidence.DERIVED -> 1
+    }
+
+    private fun eventEvidence(evidence: LiveStateEvidence): EventEvidence = when (evidence) {
+        LiveStateEvidence.VERIFIED_FRAME -> EventEvidence.VERIFIED_FRAME
+        LiveStateEvidence.PROVIDER_EXPLICIT -> EventEvidence.PROVIDER_EXPLICIT
+        LiveStateEvidence.DERIVED -> EventEvidence.DERIVED_WINDOW
     }
 
     private fun emitFailure(failure: DiagnosticFailure) {
