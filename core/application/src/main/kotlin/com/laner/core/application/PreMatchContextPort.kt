@@ -1,6 +1,8 @@
 package com.laner.core.application
 
 import com.laner.core.domain.DataAuthority
+import com.laner.core.domain.DiagnosticFailure
+import com.laner.core.domain.ScheduledSeries
 import com.laner.core.domain.TeamRef
 
 data class ProviderRosterPlayer(
@@ -105,10 +107,44 @@ data class ProviderStartingRosterEvidence(
     }
 }
 
+/**
+ * Official/social announcement discovered by the normalized collector but not necessarily parsed.
+ * It is discovery metadata only and MUST NOT become a Starting Roster fact by itself.
+ */
+data class ProviderStartingRosterAnnouncement(
+    val id: String,
+    val league: String,
+    val team: String,
+    val platform: String,
+    val account: String,
+    val sourceCategory: String,
+    val observedAtEpochMillis: Long,
+    val publishedAtEpochMillis: Long? = null,
+    val sourceUri: String? = null,
+    val imageUrls: List<String> = emptyList(),
+    val textSnippet: String = "",
+    val parseStatus: String = "UNPARSED",
+    val candidateBasis: String = "",
+    val candidateTeams: List<String> = emptyList(),
+    val candidateScore: Int = 0,
+) {
+    init {
+        require(id.isNotBlank())
+        require(team.isNotBlank())
+        require(platform.isNotBlank())
+        require(account.isNotBlank())
+        require(observedAtEpochMillis >= 0)
+        require(publishedAtEpochMillis == null || publishedAtEpochMillis >= 0)
+        require(candidateScore >= 0)
+    }
+}
+
 data class ProviderStartingRosterSnapshot(
     val evidence: List<ProviderStartingRosterEvidence>,
     val observedAtEpochMillis: Long,
     val sourceUri: String? = null,
+    val announcements: List<ProviderStartingRosterAnnouncement> = emptyList(),
+    val diagnostics: List<DiagnosticFailure> = emptyList(),
 ) {
     init { require(observedAtEpochMillis >= 0) }
 }
@@ -118,6 +154,18 @@ interface StartingRosterSourcePort {
     val authority: DataAuthority
 
     suspend fun read(
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderStartingRosterSnapshot>
+}
+
+/** Android/network/image recognition lives behind this port. Application remains the final verifier. */
+interface StartingRosterAssistPort {
+    val providerId: String
+    val authority: DataAuthority
+
+    suspend fun assist(
+        match: ScheduledSeries,
+        announcements: List<ProviderStartingRosterAnnouncement>,
         context: SourceRequestContext,
     ): ProviderRead<ProviderStartingRosterSnapshot>
 }
