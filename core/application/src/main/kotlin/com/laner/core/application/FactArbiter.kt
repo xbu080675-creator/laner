@@ -50,7 +50,7 @@ class FactArbiter(
     private fun <T> candidateComparator(now: Long): Comparator<FactCandidate<T>> =
         compareByDescending<FactCandidate<T>> { verificationWeight(it.verification) }
             .thenByDescending { it.provenance.authority.weight }
-            .thenByDescending { it.provenance.isWithinFreshnessTarget(now) }
+            .thenByDescending { if (it.provenance.isWithinFreshnessTarget(now)) 1 else 0 }
             .thenByDescending {
                 it.provenance.sourceTimestampEpochMillis ?: it.provenance.observedAtEpochMillis
             }
