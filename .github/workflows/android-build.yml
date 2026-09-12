@@ -41,5 +41,8 @@ jobs:
       - name: Domain and application tests
         run: gradle :core:domain:test :core:application:test --stacktrace
 
+      - name: Android adapter unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+
       - name: Android debug compile
         run: gradle :app:assembleDebug --stacktrace
