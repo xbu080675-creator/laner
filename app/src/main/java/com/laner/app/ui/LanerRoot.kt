@@ -34,6 +34,7 @@ import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
+import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
 import com.laner.core.domain.MatchPhase
 
@@ -45,6 +46,7 @@ fun LanerRoot(
     liveMatchStateService: LiveMatchStateService,
     liveTimelineService: LiveTimelineService,
     postMatchService: PostMatchService,
+    postTimelineService: PostTimelineService,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
@@ -86,6 +88,7 @@ fun LanerRoot(
                     MatchPhase.POST_MATCH -> PostMatchScreen(
                         scheduleService = scheduleService,
                         postMatchService = postMatchService,
+                        postTimelineService = postTimelineService,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
