@@ -4,6 +4,35 @@ import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.GameId
 import com.laner.core.domain.LiveMatchState
 import com.laner.core.domain.MatchId
+import com.laner.core.domain.ScheduledSeries
+import com.laner.core.domain.TeamRef
+
+/**
+ * Provider-neutral LIVE lookup context.
+ *
+ * Canonical Laner identity remains [matchId]. Team/time hints come from the normalized schedule and
+ * may be used by an Adapter to discover its own external match id. Provider raw ids never enter
+ * this query or become Domain identity.
+ */
+data class LiveMatchSourceQuery(
+    val matchId: MatchId,
+    val scheduledStartEpochMillis: Long? = null,
+    val teams: List<TeamRef> = emptyList(),
+) {
+    init {
+        require(scheduledStartEpochMillis == null || scheduledStartEpochMillis >= 0)
+        require(teams.isEmpty() || teams.size == 2) { "LIVE source lookup must contain zero or two teams" }
+        require(teams.map { it.id }.distinct().size == teams.size)
+    }
+
+    companion object {
+        fun from(series: ScheduledSeries): LiveMatchSourceQuery = LiveMatchSourceQuery(
+            matchId = series.matchId,
+            scheduledStartEpochMillis = series.startTimeEpochMillis,
+            teams = series.teams.map { it.team },
+        )
+    }
+}
 
 /**
  * Provider-neutral live observation.
@@ -40,7 +69,7 @@ interface LiveStateSourcePort {
     val authority: DataAuthority
 
     suspend fun readLiveState(
-        matchId: MatchId,
+        query: LiveMatchSourceQuery,
         context: SourceRequestContext,
     ): ProviderRead<ProviderLiveObservation>
 }
