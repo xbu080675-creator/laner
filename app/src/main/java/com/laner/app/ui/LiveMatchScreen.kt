@@ -109,9 +109,7 @@ fun LiveMatchScreen(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            LiveHeaderCard(onRefresh = { refreshNonce += 1 })
-        }
+        item { LiveHeaderCard(onRefresh = { refreshNonce += 1 }) }
         when (val current = state) {
             LiveScreenState.Loading -> item {
                 LiveMessageCard(
@@ -120,16 +118,10 @@ fun LiveMatchScreen(
                 )
             }
             is LiveScreenState.NoTarget -> item {
-                LiveMessageCard(
-                    title = "暂无赛中目标",
-                    body = current.reason,
-                )
+                LiveMessageCard(title = "暂无赛中目标", body = current.reason)
             }
             is LiveScreenState.Failed -> item {
-                LiveMessageCard(
-                    title = "赛中状态读取失败",
-                    body = current.message,
-                )
+                LiveMessageCard(title = "赛中状态读取失败", body = current.message)
             }
             is LiveScreenState.Ready -> {
                 item { LiveTargetCard(current.match) }
@@ -160,14 +152,10 @@ private fun LiveHeaderCard(onRefresh: () -> Unit) {
                     letterSpacing = 1.sp,
                 )
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "比赛发生什么，为什么",
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                Text(text = "比赛发生什么，为什么", fontSize = 21.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "页面只消费 Application truth；没有可验证 LIVE Source 时明确降级，不生成假数据。",
+                    text = "页面只消费 Application truth；Riot Global LIVE 无证据时明确降级，不生成假数据。",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -194,16 +182,8 @@ private fun LiveTargetCard(match: ScheduledSeries) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = "$left  vs  $right",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = match.competition.name,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = "$left  vs  $right", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(text = match.competition.name, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -219,7 +199,7 @@ private fun LiveAuthorityCard(resolution: LiveStateResolution) {
     }
     val body = when (resolution.status) {
         LiveStateLoadStatus.UNAVAILABLE ->
-            "当前没有已验证的实时 Provider。Cito 在线验收暂缓；若本地存在 last-known state 会保留，否则保持未知。"
+            "Riot Global LIVE 暂未返回可验证状态。检查临时 Riot Key、比赛目标与下方来源诊断；Cito 仍是延后补充源。"
         LiveStateLoadStatus.CONFLICT ->
             "不同事实发生冲突，Application 已阻止静默覆盖。"
         LiveStateLoadStatus.DEGRADED ->
@@ -241,11 +221,7 @@ private fun LiveAuthorityCard(resolution: LiveStateResolution) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = lifecycleLabel(state.lifecycle),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            Text(text = lifecycleLabel(state.lifecycle), fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Text(
                 text = "Source $statusText · ${resolution.selectedProviderId ?: "NO VERIFIED SOURCE"}",
                 fontSize = 12.sp,
@@ -253,18 +229,27 @@ private fun LiveAuthorityCard(resolution: LiveStateResolution) {
             )
             state.currentGameNumber?.let { gameNumber ->
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "当前 G$gameNumber",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
+                Text(text = "当前 G$gameNumber", fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(10.dp))
-            Text(
-                text = body,
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = body, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (resolution.failures.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "SOURCE DIAGNOSTICS / 来源诊断",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.height(6.dp))
+                resolution.failures.take(3).forEach { failure ->
+                    Text(
+                        text = "${failure.code.value} · ${failure.message}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }
@@ -307,19 +292,12 @@ private fun LiveTimelineCard(
                     )
                     if (timeline.events.isEmpty()) {
                         Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "本地 Timeline 暂无事件。",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Text(text = "本地 Timeline 暂无事件。", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         Spacer(Modifier.height(10.dp))
                         timeline.events.takeLast(8).forEachIndexed { index, event ->
                             if (index > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                            Text(
-                                text = "${eventTime(event)}  ${eventLabel(event)}",
-                                fontSize = 13.sp,
-                            )
+                            Text(text = "${eventTime(event)}  ${eventLabel(event)}", fontSize = 13.sp)
                             Text(
                                 text = "${event.evidence.name} · ${event.provenance.providerId}",
                                 fontSize = 11.sp,
