@@ -25,6 +25,19 @@ jobs:
         with:
           gradle-version: "9.4.0"
 
+      - name: Architecture boundary gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R -n -E '^import (android|androidx|okhttp3|org\.json|retrofit2)\.' core/domain/src core/application/src; then
+            echo 'Core boundary violation: platform/network import found.' >&2
+            exit 1
+          fi
+          if grep -R -n -E 'com\.laner\.app' core/domain/src core/application/src; then
+            echo 'Core boundary violation: app package referenced from Core.' >&2
+            exit 1
+          fi
+
       - name: Domain and application tests
         run: gradle :core:domain:test :core:application:test --stacktrace
 
