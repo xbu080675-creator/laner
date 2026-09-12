@@ -270,7 +270,7 @@ private fun LiveMessageCard(title: String, body: String) {
     }
 }
 
-private fun selectLiveTarget(
+internal fun selectLiveTarget(
     matches: List<ScheduledSeries>,
     nowEpochMillis: Long,
 ): ScheduledSeries? {
