@@ -10,7 +10,9 @@
 - Compliance remediation merge (PR #12): `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`
 - Remediation exact-head Gate: run `34708127194` PASS
 - Remediation post-merge main Gate: run `34708285172` PASS
-- Current authoritative main: `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`
+- Remediation closeout merge (PR #13): `e92bb65b2469cbeb23e56a531890945880f99eba`
+- Closeout post-merge main Gate: run `34708701976` PASS
+- Baseline SHA policy: long-lived status docs record stable task/PR merge anchors, not a self-referential “current main SHA” that becomes stale when the document itself is merged.
 - Project phase: `M1 / Feature Migration`
 - Functional migration: `IN PROGRESS`
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
@@ -75,7 +77,9 @@ Remediation evidence:
 - artifact `10302087059`, digest `sha256:59eca5214f84e4a231a613b90663fd4d30f613629f3128b4f846716ab56a4509`;
 - PR #12 merge `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`;
 - post-merge main run `34708285172`: Architecture/Core/App Unit/Android compile/APK upload PASS;
-- main artifact `10301779315`, digest `sha256:69d61f7bea45a209f56f171e0e9c4f48f24953fdd802b03ade4013851b5a34c4`.
+- main artifact `10301779315`, digest `sha256:69d61f7bea45a209f56f171e0e9c4f48f24953fdd802b03ade4013851b5a34c4`;
+- PR #13 documentation closeout merge `e92bb65b2469cbeb23e56a531890945880f99eba`;
+- closeout post-merge main run `34708701976`: Architecture/Core/App Unit/Android compile/APK upload PASS.
 
 **Compliance status: PASS / incident CLOSED.**
 
