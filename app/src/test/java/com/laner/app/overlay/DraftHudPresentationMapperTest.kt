@@ -83,7 +83,8 @@ class DraftHudPresentationMapperTest {
 
         assertTrue(result.leftPicks.isEmpty())
         assertTrue(result.rightPicks.isEmpty())
-        assertFalse(result.latestAction.contains("LEFT"))
+        assertFalse(result.leftPicks.contains("Garen"))
+        assertFalse(result.rightPicks.contains("Garen"))
     }
 
     private fun resolution(lifecycle: MatchLifecycleState): LiveStateResolution = LiveStateResolution(
