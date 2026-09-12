@@ -14,6 +14,7 @@ import com.laner.app.data.riot.RiotGlobalPreMatchSource
 import com.laner.app.data.riot.RiotGlobalReplaySource
 import com.laner.app.data.riot.RiotGlobalResultSource
 import com.laner.app.data.riot.RiotTeamRosterSource
+import com.laner.app.data.roster.MlKitStartingRosterVisionSource
 import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
 import com.laner.core.application.CompetitionStructureService
@@ -23,6 +24,7 @@ import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.StartingRosterAssistService
 import java.io.File
 
 class LanerAppGraph(
@@ -41,6 +43,7 @@ class LanerAppGraph(
     )
     private val official2026QualificationSource = Official2026QualificationSource()
     private val normalizedStartingRosterSource = NormalizedStartingRosterSource()
+    private val rosterVisionSource = MlKitStartingRosterVisionSource()
     private val normalizedTeamStaffSource = NormalizedTeamStaffSource()
     private val verifiedAwardsMirrorSource = VerifiedAwardsMirrorSource()
     private val editionArchiveRepository = JsonTournamentEditionArchiveRepository(File(filesDir, "archive"))
@@ -69,6 +72,12 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
+    val startingRosterAssistService = StartingRosterAssistService(
+        normalizedSource = normalizedStartingRosterSource,
+        visionSources = listOf(rosterVisionSource),
+        diagnostics = diagnostics,
+    )
+
     val competitionStructureService = CompetitionStructureService(
         editionSources = listOf(riotCompetitionStructureSource),
         standingsSources = listOf(riotCompetitionStructureSource),
@@ -78,10 +87,7 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
-    /**
-     * Riot LiveStats is the first global LIVE baseline. Cito remains an optional future realtime
-     * provider; it is not required for basic LIVE lifecycle verification.
-     */
+    /** Riot LiveStats is the first global LIVE baseline; Cito remains optional/deferred. */
     val liveMatchStateService = LiveMatchStateService(
         sources = listOf(riotGlobalLiveStateSource),
         repository = liveStateRepository,
