@@ -3,75 +3,81 @@
 - Date: 2026-09-12
 - Executor: OpenAI / ChatGPT
 - Baseline: `main@939567a011a7aef27a6c17a2134a297c1151457b`
-- Working branch: `feature/lnr-016-testable-android-platform`
-- Status: `TESTING`
+- Feature branch final head: `9ddaab98ee430360865ca36484bc7fede42d7fe6`
+- PR: `#8`
+- Merge commit: `c7cb479175d6e64560d4478418a3ba73c36ddbce`
+- Status: `WAITING EXTERNAL TEST`
 
 ## Request / Goal
-在 BLG vs AL 再次测试前优先交付可安装、可现场配置 Riot Key、可验证 Global Riot LIVE 生命周期的数据测试包；不等待 Cito。
+在 BLG vs AL 再次测试前交付可安装、可现场配置 Riot Key、可验证 Global Riot LIVE 生命周期的数据测试包；不等待 Cito。
 
-## Constitution Preflight
-`PASS`。已读取工程宪法、main、计划/状态、LIVE Application contract、Riot Global POST/LiveStats Adapter 与 Android Composition/UI/CI。
+## Constitution / Architecture
+Preflight + post-change compliance：`PASS`。
 
-## Acceptance
-- CI 产出可安装 debug APK artifact；
-- 不把 Riot Key 编译进公共测试包也能现场配置；
-- 临时 Key 只在进程内存，不落盘/日志/Git/provenance；
-- LIVE Application 不再 `sources = emptyList()`；
-- Global Riot LIVE 只用 canonical teams/time 定位目标，provider ids 不成为 Domain ID；
-- BLG/AL、LCK 等共用同一 discovery/parser；
-- 无真实 frame/状态证据保持未知/降级，不伪造 IN_GAME；
-- UI 直接显示稳定来源错误码，便于无 adb 实机排障；
-- Architecture/Core/App unit/Android compile 全 PASS 才交包。
-
-## Design
+LIVE flow：
 `LiveMatchSourceQuery → Riot global schedule unique event → ProviderMatchIdentityRepository → getEventDetails → current provider game → LiveStats real frame probe → ProviderLiveObservation → LiveMatchStateService → UI`。
 
-canonical GameId 仍由 `GameIdentity.canonical(matchId, gameNumber)` 生成。
+- Region 仍只是数据维度；BLG/AL 与 LCK fixture 共用同一 discovery/parser。
+- provider raw event/match/game ID 不成为 canonical Domain ID。
+- canonical GameId 仍由 `GameIdentity.canonical(matchId, gameNumber)` 生成。
+- lifecycle authority 仍在 Application，不在 Adapter/UI。
 
-## Implemented
-- `RiotGlobalLiveStateSource`：global target discovery + EventDetails + LiveStats frame probe；
-- stable LIVE errors `LNR-SRC-LIVE-002~005`；
-- AppGraph wires Riot Global LIVE as first real LIVE source；
-- BLG/AL + T1/GEN fixtures exercise same discovery parser；
-- `RiotCredentialPanel` + MainActivity memory-only temporary key；
-- changing key rebuilds `LanerAppGraph` immediately；
-- LIVE UI shows `SOURCE DIAGNOSTICS` with error code/message；
-- CI uploads `app-debug.apk` artifact for successful runs；
-- test version `2.0.0-dev.3`, versionCode 3。
+## Delivered
+- `RiotGlobalLiveStateSource`：全球目标定位、EventDetails、LiveStats frame probe；
+- `LNR-SRC-LIVE-002~005` 稳定错误码；
+- AppGraph 首次接入真实 Global Riot LIVE source，不再 `sources = emptyList()`；
+- Android runtime Riot Key 临时输入；修改后立即重建 Composition graph；
+- runtime Key 仅在当前进程内存，退出进程即消失；
+- LIVE UI 直接显示 `SOURCE DIAGNOSTICS` 错误码/原因，实机不接 adb 也可定位数据链断点；
+- CI 成功后上传 `app-debug.apk`；
+- build `2.0.0-dev.3 / versionCode 3`。
 
 ## Security correction
-Initial implementation briefly introduced an app-private plaintext credential file. Constitution review rejected it because ordinary private storage is not an approved Secret Store. The file implementation and tests were removed before delivery. Runtime test key is now process-memory only and disappears when the process exits.
+早期实现曾短暂加入 app-private plaintext credential 文件。工程宪法复核后判定普通私有文件不是正式 Secret Store，因此在交付前删除文件实现与测试。最终测试包只保留内存临时 Key，不写磁盘、日志、Git、provenance。
 
-## Failure History
-### run `34697683655` — real Android compile failure
-- Architecture: PASS
-- Domain/Application: PASS
-- Android Adapter/compile: FAIL
-- APK upload: skipped
+## Failure history
+### run `34697683655`
+- Architecture PASS
+- Domain/Application PASS
+- Android compile FAIL
+- APK upload skipped
 
-Root cause: `RiotCredentialPanel.kt` had malformed `when` syntax caused by a trailing comma after the `else` expression; Compose `Text` therefore received an `Any`/invalid expression.
+根因：`RiotCredentialPanel.kt` 的 `when` 文案 `else` expression 后存在错误尾逗号，导致 Compose `Text` 收到非法/`Any` expression。
 
-Fix: commit `2cddeb872d7854829b54750db31f8739e37f0d2a` repairs the `when` expression without changing credential semantics.
+修复：`2cddeb872d7854829b54750db31f8739e37f0d2a`。
 
-### run `34697846793` — first installable green build
-Head `2cddeb872d7854829b54750db31f8739e37f0d2a`.
-Architecture / Domain+Application / Android Adapter unit tests / Android debug build: PASS.
-Artifact:
-- id `10299088400`
-- name `laner-debug-2cddeb872d7854829b54750db31f8739e37f0d2a`
-- artifact digest `sha256:86e833a7d7a27c165a37682e0763464b25ff2be9a6c5e9fac577a5a1af48a650`
-- expires 2026-09-15
+### first installable green build
+run `34697846793` / head `2cddeb872d7854829b54750db31f8739e37f0d2a`：Architecture / Core / App unit / Android build PASS。
 
-This is a valid fallback test APK, but a later head adds in-app source diagnostics and must pass its own Gate before becoming the preferred build.
+### final preferred build
+head `9ddaab98ee430360865ca36484bc7fede42d7fe6`。
+run `34698280239`：Architecture / Domain+Application / Android Adapter unit / Android debug build / APK upload 全 PASS。
 
-### final diagnostics head
-Commit `b3549098852061c962e33bc2f1b2650828f4e07a` adds visible `LNR-SRC-LIVE-*` diagnostics. Exact-head run `34698154124`: pending.
+Preferred artifact：
+- id `10299341967`
+- name `laner-debug-9ddaab98ee430360865ca36484bc7fede42d7fe6`
+- artifact digest `sha256:9c9b883ef32bf08d0a8e841789807d0b421f32052032a21471d972ac3e1a81aa`
+- extracted APK SHA-256 `e6dc6bdf5e802a1d006de8ac8e3b134b5779e436ef7f9e0b4990350540204bf7`
 
-## Online/Device evidence
-BLG vs AL online fetch and Android real-device result remain `WAITING EXTERNAL TEST`. Fixture/CI PASS is not reported as online success.
+### PR Gate / merge
+PR #8 run `34698393156`：Architecture / Domain+Application / Android Adapter unit / Android debug build / APK upload 全 PASS。
+
+Merged main as `c7cb479175d6e64560d4478418a3ba73c36ddbce`。
+
+## External test boundary
+仍未宣称 BLG vs AL online PASS。真实设备需要确认：
+1. Riot Key 能否建立 PRE schedule；
+2. 是否正确选中 BLG vs AL；
+3. getEventDetails 是否定位当前 Gx；
+4. LiveStats 是否返回真实 frame；
+5. Application lifecycle 是否得到 PRE_EVENT / EVENT_LIVE_PRE_GAME / IN_GAME / BETWEEN_GAMES 等正确状态。
+
+失败时以 UI 的 `LNR-SRC-LIVE-002~005` 为排障入口。Cito 仍 DEFERRED。
 
 ## Rollback
-Feature branch is isolated. Runtime key has no persisted migration. Before merge, delete/revert branch; after merge, revert task merge commit.
+完整回滚：revert merge `c7cb479175d6e64560d4478418a3ba73c36ddbce`。runtime credential 无持久化迁移，无需数据清理。
 
-## Compliance
-Code/tests/security correction/failure evidence are archived. Final exact-head Gate + preferred APK artifact + PR Gate + merge/status sync remain before task closeout.
+## Compliance conclusion
+Code / tests / security correction / docs / failure history / APK artifact / PR Gate / merge evidence 完整。自动交付完成，真实 Provider + Android device 认证等待 BLG vs AL 测试。
+
+**Final: `WAITING EXTERNAL TEST`。**
