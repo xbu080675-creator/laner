@@ -10,7 +10,10 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 
-class RiftScreenOverlayView(context: Context) : FrameLayout(context) {
+class RiftScreenOverlayView(
+    context: Context,
+    private val onClose: () -> Unit,
+) : FrameLayout(context) {
     enum class Mode { MINI, COMPACT, EXPANDED }
 
     private var mode = Mode.COMPACT
@@ -27,7 +30,14 @@ class RiftScreenOverlayView(context: Context) : FrameLayout(context) {
     }
     private val title = label("RIFTSCREEN · 等待比赛", 11f, 0xFF6CEBFF.toInt(), true)
     private val timer = label("--:--", 11f, 0xFF9AA6B8.toInt(), true)
-    private val modeText = label("COMPACT ›", 10f, 0xFF6CEBFF.toInt(), true)
+    private val modeText = label("COMPACT ›", 10f, 0xFF6CEBFF.toInt(), true).apply {
+        setPadding(dp(10), 0, 0, 0)
+        setOnClickListener { cycleMode() }
+    }
+    private val close = label("×", 20f, 0xFF8C98AA.toInt(), true).apply {
+        setPadding(dp(12), 0, 0, 0)
+        setOnClickListener { onClose() }
+    }
     private val leftTeam = label("—", 14f, Color.WHITE, true).apply { gravity = Gravity.START }
     private val center = label("VS", 17f, Color.WHITE, true).apply { gravity = Gravity.CENTER }
     private val rightTeam = label("—", 14f, Color.WHITE, true).apply { gravity = Gravity.END }
@@ -35,7 +45,7 @@ class RiftScreenOverlayView(context: Context) : FrameLayout(context) {
     private val details = label("GOLD —:— · BARON —:—", 11f, 0xFFD9DFE8.toInt(), false)
     private val source = label("NO VERIFIED SOURCE", 10f, 0xFF8D98AA.toInt(), false)
     private val status = label("等待 Application LIVE truth", 10f, 0xFF718097.toInt(), false)
-    private val hint = label("轻点切换尺寸 · 拖动可移动", 9f, 0xFF617087.toInt(), false)
+    private val hint = label("轻点尺寸标签切换 · 拖动空白区移动", 9f, 0xFF617087.toInt(), false)
     private val accent = View(context).apply { setBackgroundColor(0xFF6CEBFF.toInt()) }
 
     init {
@@ -49,8 +59,8 @@ class RiftScreenOverlayView(context: Context) : FrameLayout(context) {
         }
         header.addView(title, LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
         header.addView(timer)
-        modeText.setPadding(dp(10), 0, 0, 0)
         header.addView(modeText)
+        header.addView(close)
         root.addView(header)
 
         root.addView(accent, LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dp(2)).apply {
