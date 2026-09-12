@@ -150,13 +150,15 @@ class RiotGlobalReplaySource(
         val unique = candidates.distinctBy { it.eventId }
         if (unique.size != 1) return null
         val winner = unique.single()
-        return ProviderMatchIdentity(
+        val identity = ProviderMatchIdentity(
             providerId = providerId,
             matchId = query.matchId,
             externalEventId = winner.eventId,
             externalMatchId = winner.matchId.takeIf { it.isNotBlank() },
             observedAtEpochMillis = observedAtEpochMillis,
-        ).also(identityRepository::upsert)
+        )
+        identityRepository.upsert(identity)
+        return identity
     }
 
     internal fun parseScheduleCandidates(root: JSONObject, query: PostMatchQuery): List<ScheduleCandidate> {
