@@ -130,7 +130,7 @@ object LiveMatchStateReducer {
                     signal,
                 )
             }
-            return apply(current, signal)
+            return apply(current, signal, newGame = true)
         }
 
         if (sameKnownGameNumber(current, signal) && hasConflictingKnownGameId(current, signal)) {
@@ -159,16 +159,17 @@ object LiveMatchStateReducer {
             )
         }
 
-        return apply(current, signal)
+        return apply(current, signal, newGame = false)
     }
 
     private fun apply(
         current: LiveMatchState,
         signal: LiveStateSignal,
+        newGame: Boolean,
     ): LiveStateTransitionResult.Applied {
         val next = current.copy(
             lifecycle = signal.lifecycle,
-            currentGameId = signal.gameId ?: current.currentGameId,
+            currentGameId = if (newGame) signal.gameId else signal.gameId ?: current.currentGameId,
             currentGameNumber = signal.gameNumber ?: current.currentGameNumber,
             lastObservedAtEpochMillis = maxOf(current.lastObservedAtEpochMillis, signal.observedAtEpochMillis),
             provenance = signal.provenance,
