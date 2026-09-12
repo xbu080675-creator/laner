@@ -24,8 +24,8 @@ android {
         applicationId = "com.riftlab.app"
         minSdk = 28
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.0.0-dev.3"
+        versionCode = 4
+        versionName = "2.0.0-dev.4"
         buildConfigField("String", "LOL_ESPORTS_API_KEY", "\"$escapedLolEsportsApiKey\"")
         buildConfigField("String", "LPL_TJSTATS_AUTH", "\"$escapedLplTjstatsAuth\"")
     }
@@ -58,6 +58,12 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Bundled OCR: no first-run Play Services model download is required for tonight's device test.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
