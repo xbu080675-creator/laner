@@ -50,48 +50,12 @@ Android LIVE state/timeline 持久化、schema/atomic write、Application truth 
 ### LNR-015 — Global POST Result / Archive / Historical Timeline / Replay
 状态：`WAITING EXTERNAL TEST`
 
-PR #7 已合并 main。已交付：
-- 强类型 Series Result / Completed Game / Stats / Awards / Replay / Historical Timeline 边界；
-- Global-first `PostSourceCapability` orchestration；
-- canonical GameId 与 Provider identity mapping；
-- fallback-only POST archive；
-- verified Awards；
-- Riot global Result / Replay；
-- Riot historical LiveStats Timeline；
-- POST Compose 与按局 backfill。
-
-PR Gate `34696964926` PASS，merge `0ed5cdfa882b74cdb1b7a6e87dd6ee60856f40ca`。真实 Riot online 与 Android device POST 仍待验收。
+PR #7 已合并 main。强类型 POST facts、Global-first orchestration、canonical GameId/provider identity、fallback-only archive、verified Awards、Riot global Result/Replay、Riot historical Timeline、POST Compose 与按局 backfill 已交付。真实 Riot online 与 Android device POST 仍待验收。
 
 ### LNR-016 — Testable Android Platform / Riot Global LIVE / APK Delivery
-状态：`TESTING`
+状态：`WAITING EXTERNAL TEST`
 
-当前优先目标是给实机赛事测试提供可安装、可诊断的数据包，同时开启 Android 平台迁移轮次。
-
-本阶段已实现：
-- `RiotGlobalLiveStateSource`：global schedule 唯一定位 → provider identity mapping → EventDetails → LiveStats real-frame probe；
-- LIVE Application 不再使用空 Source 列表；
-- BLG/AL 与 LCK fixture 共用同一 discovery/parser，不增加赛区业务分支；
-- canonical GameId 继续由 Laner 生成，provider raw IDs 不进入 Domain identity；
-- Android 顶部提供 Riot Key 临时输入；测试 Key **仅驻留当前进程内存**，退出进程即清除，不落盘、不进日志/Git/provenance；
-- 改 Key 后 Composition graph 立即重建；
-- LIVE UI 显示 `LNR-SRC-LIVE-002~005` 稳定来源诊断码；
-- CI 在 Gate 全绿后上传 `app-debug.apk` artifact；
-- test build `2.0.0-dev.3 / versionCode 3`。
-
-历史证据：
-- run `34697683655`：Architecture/Core PASS，Android compile FAIL；runtime key Compose 文案 `when` 语法错误，失败留档；
-- fix `2cddeb872d7854829b54750db31f8739e37f0d2a`；
-- run `34697846793`：Architecture / Core / App unit / Android build PASS，并产出 artifact id `10299088400`；
-- 最新 UI diagnostics / docs exact-head 仍需自己 Gate 后才作为正式首选测试包。
-
-本阶段紧急测试 DoD：
-1. final exact-head Architecture/Core/App/Android PASS；
-2. 对应 APK artifact 存在；
-3. PR Gate PASS 并合并 main；
-4. BLG vs AL 真实设备结果记为 `PASS / DEGRADED / FAIL`，不得用 fixture 代替；
-5. 若失败，必须依据 `LNR-SRC-LIVE-*` 错误码确定断点。
-
-LNR-016 后续 Android 深化仍包括 RiftScreen/HUD、Watch Hub、Player、OTA；这些不得阻塞当前数据链测试包交付。
+PR #8 已合并 main。已交付第一条 Global Riot LIVE lifecycle baseline、runtime memory-only Riot Key、设备侧 `LNR-SRC-LIVE-002~005` diagnostics 与 installable debug APK。final feature run `34698280239`、PR run `34698393156` 全 PASS；merge `c7cb479175d6e64560d4478418a3ba73c36ddbce`。真实 BLG vs AL Android online evidence 待补。
 
 ### LNR-017 — Local AI / OCR / Roster Assist
 状态：`TODO`
@@ -103,9 +67,24 @@ LNR-016 后续 Android 深化仍包括 RiftScreen/HUD、Watch Hub、Player、OTA
 
 兼容导入、Feature Baseline 全量销账、真实设备/Provider 回归、性能/安全/数据审计、release closure。只有 Migration Audit PASS 后才能宣称完整迁移完成。
 
+### LNR-019 — Global LIVE Snapshot / Timeline / Match HUD
+状态：`TESTING`
+
+今晚真实赛事测试优先增量：
+- Global Riot LiveStats 真帧标准化为 canonical `LiveGameSnapshot`；
+- team gold/kills/towers/dragons/barons 与 player level/KDA/CS/gold/champion；
+- `LiveSnapshotService` 在 Application 二次校验 canonical Match/Game/team identity 后才写 Timeline；
+- lifecycle authority 与 snapshot ingestion 严格分离；
+- LIVE 页面新增全宽真帧卡片与经济差；null 保持“未知”，不伪造成 0；
+- region-neutral，同一链覆盖 LPL/LCK/国际赛事。
+
+任务号纠正：该工作最初误用 `LNR-017`，但 `LNR-017/018` 已被本计划预留。旧 branch/record 保留作为历史，后续正式归档使用 `LNR-019`，不改写失败与提交历史。
+
+当前自动证据：旧编号 branch run `34699837518` 暴露 Core test harness 依赖错误；fix `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5` 后 run `34699942180` Architecture/Core/App/Android/APK 全 PASS。最终 LNR-019 exact-head / PR Gate 尚待收口。
+
 ## 当前推进顺序
-1. LNR-016 当前 Riot Global LIVE Android 测试包交付与 BLG vs AL 实机数据验收；
-2. LNR-016 Android RiftScreen / Watch / Player / OTA；
+1. LNR-019 final exact-head → APK → PR/merge → BLG vs AL 实机真帧验收；
+2. LNR-016 后续 Android RiftScreen / Watch / Player / OTA；
 3. LNR-017 AI / OCR；
 4. LNR-018 完整兼容性 / 回归 / Migration Audit。
 
