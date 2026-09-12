@@ -33,6 +33,7 @@ import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveTimelineService
+import com.laner.core.application.PostMatchService
 import com.laner.core.application.PreMatchContextService
 import com.laner.core.domain.MatchPhase
 
@@ -43,6 +44,7 @@ fun LanerRoot(
     competitionStructureService: CompetitionStructureService,
     liveMatchStateService: LiveMatchStateService,
     liveTimelineService: LiveTimelineService,
+    postMatchService: PostMatchService,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.PRE_MATCH) }
 
@@ -57,10 +59,7 @@ fun LanerRoot(
         ) {
             LanerHeader()
             Spacer(Modifier.height(16.dp))
-            PhaseSwitcher(
-                selected = selectedPhase,
-                onSelect = { selectedPhase = it },
-            )
+            PhaseSwitcher(selected = selectedPhase, onSelect = { selectedPhase = it })
             Spacer(Modifier.height(18.dp))
             AnimatedContent(
                 targetState = selectedPhase,
@@ -70,10 +69,7 @@ fun LanerRoot(
             ) { phase ->
                 when (phase) {
                     MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
-                        CompetitionStructurePanel(
-                            service = competitionStructureService,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        CompetitionStructurePanel(service = competitionStructureService, modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(12.dp))
                         PreMatchScreen(
                             scheduleService = scheduleService,
@@ -87,7 +83,11 @@ fun LanerRoot(
                         liveTimelineService = liveTimelineService,
                         modifier = Modifier.fillMaxSize(),
                     )
-                    MatchPhase.POST_MATCH -> PhaseEmptyState(phase)
+                    MatchPhase.POST_MATCH -> PostMatchScreen(
+                        scheduleService = scheduleService,
+                        postMatchService = postMatchService,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
         }
@@ -97,90 +97,32 @@ fun LanerRoot(
 @Composable
 private fun LanerHeader() {
     Column {
-        Text(
-            text = "LANER",
-            fontSize = 25.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = "GLOBAL ESPORTS COMPANION",
-            fontSize = 11.sp,
-            letterSpacing = 1.2.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Text("LANER", fontSize = 25.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp, color = MaterialTheme.colorScheme.onBackground)
+        Text("GLOBAL ESPORTS COMPANION", fontSize = 11.sp, letterSpacing = 1.2.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-private fun PhaseSwitcher(
-    selected: MatchPhase,
-    onSelect: (MatchPhase) -> Unit,
-) {
+private fun PhaseSwitcher(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(4.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         MatchPhase.entries.forEach { phase ->
             val active = phase == selected
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(11.dp))
-                    .background(
-                        if (active) MaterialTheme.colorScheme.surfaceVariant
-                        else MaterialTheme.colorScheme.surface,
-                    )
-                    .clickable { onSelect(phase) }
-                    .padding(vertical = 12.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
+                    .background(if (active) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface)
+                    .clickable { onSelect(phase) }.padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = phase.label,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
-                    color = if (active) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun PhaseEmptyState(phase: MatchPhase) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(20.dp),
-    ) {
-        Text(
-            text = phase.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = phase.headline,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = phase.migrationMessage,
-            fontSize = 13.sp,
-            lineHeight = 20.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
@@ -189,18 +131,4 @@ private val MatchPhase.label: String
         MatchPhase.PRE_MATCH -> "赛前"
         MatchPhase.LIVE_MATCH -> "赛中"
         MatchPhase.POST_MATCH -> "赛后"
-    }
-
-private val MatchPhase.headline: String
-    get() = when (this) {
-        MatchPhase.PRE_MATCH -> "准备看懂这场比赛"
-        MatchPhase.LIVE_MATCH -> "比赛发生什么，为什么"
-        MatchPhase.POST_MATCH -> "把结果还原成过程"
-    }
-
-private val MatchPhase.migrationMessage: String
-    get() = when (this) {
-        MatchPhase.PRE_MATCH -> "全球赛事、赛程、届次、Standings、首发证据、名单池、Staff、近期状态与 H2H 正按真实数据逐项接入。"
-        MatchPhase.LIVE_MATCH -> "赛中页面已接 Application truth、本地权威状态与本地 Timeline；没有已验证实时源时会明确降级，不制造假比赛数据。"
-        MatchPhase.POST_MATCH -> "正在迁移终局数据、历史小局、Timeline、回放与复盘。当前骨架不会把未迁移能力伪装成可用。"
     }
