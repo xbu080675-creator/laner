@@ -7,127 +7,120 @@
 - Status: `TESTING`
 
 ## Request / Goal
-在今晚 LPL 官方/俱乐部再次发布首发阵容图片前，交付可安装测试版，使用户能够明确区分：
-
-1. 没发现匹配官宣；
-2. 已发现官宣但无可 OCR 图片；
-3. 图片下载/OCR 失败；
-4. OCR 部分识别；
-5. OCR 已形成完整五位置候选但仍未验证；
-6. normalized 正式证据已经到达，可进入既有 `PreMatchContextService` 权威校验。
-
-速度要求不得降低工程质量。OCR/AI 不得自行升级为赛事事实。
+在今晚 LPL 官方/俱乐部再次发布图片型首发阵容前交付可安装测试版，并使设备能明确区分：没有官宣、发现官宣、图片/OCR 失败、OCR 部分、OCR 完整但未验证、normalized 正式证据已到。速度要求不得降低工程质量；OCR/AI 永远不能自行升级为赛事事实。
 
 ## Constitution Preflight
-`PASS`。
+`PASS`。读取工程宪法、main/branch、Development Plan、Implementation Status、Feature Baseline、PRE Starting Roster Ports/Service/UI 与旧 RiftLab `StartingRosterCenter / RosterVisionPipeline / RosterDeviceOcrResolver`。
 
-读取：工程宪法、当前 main/branch、Development Plan、Implementation Status、Feature Baseline、现有 PRE Starting Roster Ports/Service/UI、旧 RiftLab `StartingRosterCenter / RosterVisionPipeline / RosterDeviceOcrResolver`。
+ML Kit bundled Latin/Chinese/Japanese/Korean `16.0.1` 已按官方依赖面核对；选择 bundled model 避免今晚首次运行临时下载 OCR model。
 
-官方依赖资料已核对：Android ML Kit bundled text recognition，Latin/Chinese/Japanese/Korean `16.0.1`；Laner minSdk 28 满足要求。选择 bundled model，避免今晚首次运行依赖 Play Services 临时下载 OCR 模型。
+## Scope / Non-goals
+In scope：normalized announcements、Application assist stage/Port/orchestration、bundled multilingual OCR、双栏 geometry extraction、60s PRE polling + manual recheck、stable diagnostics、可见 UI、`2.0.0-dev.4 / versionCode 4` APK。
 
-## Scope
-### In scope
-- normalized feed `announcements` transport；
-- Application roster-assist stage model / Port / orchestration；
-- Android bundled multilingual OCR；
-- spatial two-column roster candidate extraction；
-- low-frequency 60s PRE polling + manual recheck；
-- stable PRE diagnostic codes；
-- UI stage visibility；
-- test APK `2.0.0-dev.4 / versionCode 4`。
-
-### Non-goals
-- OCR candidate直接成为 `OfficialStartingRoster`；
-- AICore/Gemini Nano/local vision model；
-- direct Weibo scraping inside Laner；
-- LIVE Insight / HUD / OTA；
-- replacing normalized collector.
+Non-goals：OCR 直接确认首发、Local AI runtime、direct Weibo scraping in Laner、LIVE Insight/HUD/OTA、替换现有 normalized collector。
 
 ## Architecture
-
 ```text
-Legacy normalized collector / official social discovery
-                ↓
+normalized collector / official social discovery
+        ↓
 NormalizedStartingRosterSource
-  ├─ verified evidence ───────────────→ existing PreMatchContextService
-  └─ raw announcements
-                ↓
-      StartingRosterAssistService
-                ↓
-       StartingRosterVisionPort
-                ↓
-   MlKitStartingRosterVisionSource
-                ↓
-    RosterVisionInspection (DERIVED)
-                ↓
-  PRE diagnostic panel / no fact promotion
+ ├─ verified evidence → PreMatchContextService → official validation
+ └─ raw announcement → StartingRosterAssistService
+                       → StartingRosterVisionPort
+                       → MlKitStartingRosterVisionSource
+                       → RosterVisionInspection (DERIVED)
+                       → PRE diagnostic panel
 ```
 
-Domain/Application remain free of Android/ML Kit/OkHttp. OCR Adapter returns candidate/diagnostic data only.
+Core/Application 无 Android/ML Kit/OkHttp。UI 不直接读 Provider。OCR 只输出 candidate/diagnostic。
 
 ## Implemented
-- `ProviderStartingRosterAnnouncement` added as discovery metadata, explicitly non-authoritative.
-- `ProviderStartingRosterSnapshot` preserves announcements/diagnostics.
-- `StartingRosterVisionPort`, `RosterVisionInspection`, `RosterAssistStage`, `StartingRosterAssistService`.
-- normalized source now parses schema-v3 `announcements / imageUrls / parseStatus / candidateTeams / candidateScore` instead of dropping them.
-- bundled ML Kit Latin always runs; LPL/LCP/PCS adds Chinese, LCK adds Korean, LJL adds Japanese.
-- spatial role-anchor parser separates two-column posters by x/y geometry.
-- player IDs constrained to Latin-like esports handles; role/league/noise tokens rejected.
-- device OCR success cache 6h, failure retry 10m; max 2 images per matched announcement per pass.
-- PRE panel polls every 60s only while PRE composition exists and supports manual `立即重查`.
-- UI displays target, normalized evidence count, official announcement account/score/parse status, OCR engines/layout/role coverage, and stable diagnostic code.
+- `ProviderStartingRosterAnnouncement`：官方发布 discovery metadata，明确非首发事实；
+- `ProviderStartingRosterSnapshot` 保留 announcements/diagnostics；
+- `StartingRosterVisionPort / RosterVisionInspection / RosterAssistStage / StartingRosterAssistService`；
+- normalized schema-v3 `announcements / imageUrls / parseStatus / candidateTeams / candidateScore`；
+- Latin 常驻，LPL/LCP/PCS + 中文、LCK + 韩文、LJL + 日文；
+- role-anchor + x/y geometry 双栏分队；
+- esports handle whitelist-style shape + role/league/noise rejection；
+- OCR success cache 6h、failure retry 10m、单轮最多 2 张图；
+- PRE 60s refresh + `立即重查`；
+- UI 显示 target、正式 evidence 数、announcement account/score/status、OCR engines/layout/roles/text preview、stable failure code。
 
 ## Stable diagnostics
-- `LNR-SRC-PRE-010`: matching official announcement discovered but OCR adapter unavailable.
-- `LNR-SRC-PRE-011`: no OCR-capable image or OCR incomplete/ambiguous.
-- `LNR-SRC-PRE-012`: five-role OCR candidate exists but remains unverified pending normalized matchup/date evidence.
-- `LNR-SRC-PRE-013`: image download/OCR engine failure.
+- `LNR-SRC-PRE-010`: matching official announcement / OCR adapter unavailable；
+- `LNR-SRC-PRE-011`: no OCR-capable image or partial/ambiguous OCR；
+- `LNR-SRC-PRE-012`: complete five-role OCR candidate but still unverified；
+- `LNR-SRC-PRE-013`: image download/OCR engine failure。
 
-## Safety / Truth Rules
-- `candidateScore` is discovery confidence, not lineup truth. A low-score official image announcement may be inspected but cannot be auto-confirmed.
-- OCR authority is `DERIVED`.
-- Existing `PreMatchContextService` remains the only path that can create confirmed official starting roster state from structured evidence.
-- No direct social login/token is added to Laner.
-- image URLs require HTTPS; malformed schemes are dropped by transport parser.
+## Truth / Security Rules
+- `candidateScore` 是 discovery confidence，不是 lineup truth；低分官方图片可检查但不能自动确认；
+- OCR authority = `DERIVED`；
+- confirmed official lineup 仍只能走 `PreMatchContextService` structured evidence validation；
+- 不新增 social login/token；
+- image URL 仅 HTTPS；
+- bundled OCR 不依赖首次运行下载模型。
 
-## Tests Added
-### Application
-- candidateScore=35 official image is still inspectable, but never auto-confirmed;
-- complete OCR stays `OCR_COMPLETE_UNVERIFIED` with `LNR-SRC-PRE-012`;
-- normalized evidence short-circuits OCR and is surfaced as formal evidence available;
-- unrelated/old announcement does not bind to current target.
+## Tests
+Application：低分官方图片可 inspect 但不确认；完整 OCR 仍 unverified；正式 evidence 短路 assist；过旧/无关 announcement 不绑定。
 
-### Android adapter/parser
-- schema-v3 unparsed announcement survives transport parsing;
-- non-HTTPS image URL is discarded;
-- two-column poster geometry separates both teams across TOP/JUG/MID/BOT/SUP;
-- role/league noise tokens are not player IDs.
+Android Adapter：UNPARSED announcement transport；bad scheme drop；5×2 双栏 geometry；role/league noise rejection。
 
 ## Failure History
-### Run `34700136865`
-- Architecture boundary: PASS
-- Domain/Application: PASS
-- Android Adapter tests/compile phase: FAIL
-- APK: skipped
+### `34700136865`
+Architecture/Core `PASS`，App phase `FAIL`，APK skipped。
 
-Root causes at old head:
-1. ML Kit Latin `TextRecognizerOptions` imported from wrong package; must use `com.google.mlkit.vision.text.latin.TextRecognizerOptions`.
-2. Compose attempted smart cast of public cross-module nullable `inspection.error`; must copy to local value first.
+根因：
+1. ML Kit Latin `TextRecognizerOptions` package 错；
+2. Compose 对跨模块 public nullable `inspection.error` smart cast。
 
-Fixes:
-- `ad23d8cf493c773b5ff3d6dd6b07b3333a380171` corrects ML Kit package.
-- `a711dce3947b80405af741d69a8c342b191c121c` uses local nullable error value.
+Fix：`ad23d8cf493c773b5ff3d6dd6b07b3333a380171` + `a711dce3947b80405af741d69a8c342b191c121c`。
 
-Latest exact-head verification: pending.
+### `34700236839`
+Architecture/Core `PASS`，生产 App compile 已越过上述错误；Android unit test compile `FAIL`。
 
-## Dependency / APK Impact
-Adds bundled ML Kit OCR models. APK size will increase intentionally in exchange for deterministic offline-ready text-recognition availability during device tests. No OCR model network download is required for first recognition.
+根因：两个新 `:app` tests 使用 `kotlin.test`，但项目只声明 JUnit4。
+
+Fix：`5d763c34301858293ceef6b5257077dc9b866ce3` + `3879249053832c606f30a6122c31269db9327812`，统一 `org.junit.Test / Assert`，不添加冗余 test dependency。
+
+### Code head verification
+`3879249053832c606f30a6122c31269db9327812` / run `34700457400`：
+- Architecture `PASS`；
+- Domain/Application `PASS`；
+- Android Adapter unit tests `PASS`；
+- Android debug build `PASS`；
+- APK upload `PASS`。
+
+Artifact：
+- id `10300252185`；
+- name `laner-debug-3879249053832c606f30a6122c31269db9327812`；
+- ZIP size `33,640,087` bytes；
+- digest `sha256:91bc80ef7988ee7687b2a0bb5e024317fd702679b5daaa00af41b9edb580f241`；
+- expires 2026-09-15。
+
+## Docs / Status Sync
+已同步：`DEVELOPMENT_PLAN / IMPLEMENTATION_STATUS / FEATURE_BASELINE / TESTING / TROUBLESHOOTING / CHANGELOG / app README / core application README`。
+
+`core/domain/README.md`: `N/A`，本任务未改变 Domain model 或 Domain invariant；Roster Assist 位于 Application + Android Adapter。
+
+## Performance / APK Impact
+bundled OCR 使 APK 体积明显增加，换取今晚设备测试的确定性。轮询仅 PRE composition 存活时每 60s；OCR 有成功/失败缓存；每轮图像数有上限，不做高频暴力下载/OCR。
 
 ## Rollback
-Before merge, delete feature branch. After merge, revert LNR-017 commits; no persistent schema migration is introduced.
+未合并前删除 feature branch；合并后回滚 LNR-017 commits。无 persistent schema migration。
 
 ## External Test
-Tonight's actual official lineup publication and Android device behavior remain `WAITING EXTERNAL TEST` until user tests the APK. Fixture/CI PASS cannot replace that evidence.
+今晚真实官方发布、真实图片下载、Android ML Kit OCR、stage transition、最终 normalized evidence → official lineup validation 仍为 `WAITING EXTERNAL TEST`。CI/fixture PASS 不冒充真实首发抓取 PASS。
 
-## Compliance
-Preflight PASS. Post-change review pending exact-head CI, docs/status sync, PR Gate and merge.
+## Compliance Review
+- Core platform boundary：PASS；
+- UI→Provider：不存在；
+- OCR authority：DERIVED only；
+- low-confidence auto-confirm：禁止并有 regression；
+- external URLs：HTTPS filter；
+- secrets：无新增；
+- performance：60s PRE-only + bounded images/cache；
+- failures：已留档并有永久回归；
+- code head Gate：PASS；
+- final docs exact-head / PR Gate / merge：pending。
+
+当前结论：`TESTING`。final exact-head + PR Gate 通过并 merge 后进入 `WAITING EXTERNAL TEST`。
