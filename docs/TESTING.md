@@ -134,3 +134,82 @@ GitHub Actions run `34688715420` 修复后：
 - Android 实机比赛点选、首发/冲突、名单池、Staff、Form/H2H 展示：`WAITING EXTERNAL TEST`。
 
 CI 不持有真实 Provider credential，也不是 Android 实机；自动化 PASS 不得冒充上述外部验收 PASS。
+
+## LNR-015 — Global POST
+
+### Domain / Application 自动回归
+
+已覆盖：
+
+- FINAL Series winner/score consistency；
+- PARTIAL Series 不得提前声明 winner；
+- stat unknown 使用 null，不与真实 0 混淆；
+- DERIVED authority 不得发布 MVP/POG；
+- canonical GameId 仅由 `(MatchId, gameNumber)` 生成；
+- Provider raw game ID 不进入 canonical identity；
+- Result / Game / Award / Replay 独立成功/失败；
+- 同 Award slot 冲突显式化；
+- Replay 多 Provider 可并存；
+- archive 仅填外部缺失，不参与和新事实的投票；
+- conflict 不覆盖 last-known-good archive；
+- `PostSourceCapability` 决定来源适用性，Application 无赛区业务分支；
+- Historical POST frame 必须匹配 canonical MatchId/GameId/gameNumber；
+- 错 identity historical frame 被拒绝，不能污染 repository；
+- LIVE + POST 真实帧可以合并到同一个 canonical GameTimeline；
+- Timeline 允许 LIVE/POST source，拒绝 PRE/AI source。
+
+### Android Adapter / Fixture tests
+
+已覆盖：
+
+- `JsonPostMatchArchiveRepository` round-trip / corruption / schema；
+- `JsonProviderMatchIdentityRepository` round-trip / newest-observation-wins / schema；
+- POST target 只允许 COMPLETED schedule；
+- Awards mirror canonical teams + date matching；
+- Awards gameNumber 不制造 provider-derived GameId；
+- LCK + Worlds 使用同一 Riot global Result parser；
+- LCK + Worlds 使用同一 Riot global Replay identity resolver；
+- LCK + Worlds 使用同一 Riot historical team mapping；
+- EventDetails VOD → canonical ReplayAsset；
+- LiveStats frame fixture → canonical POST HistoricalTimelineFrame；
+- gold/kills/objectives/player champion 等真实帧字段进入标准模型。
+
+### CI 历史
+
+run `34693494001`：
+- Architecture：`PASS`；
+- Domain/Application：`FAIL`；
+- 根因：测试 fixture 使用非法 `LNR-SRC-POST-TEST` 错误码格式；
+- fix `ca805e77f89bdb65311c24e5c12e3ed056d7e83a`；
+- run `34693630753`：四道 Gate 全 `PASS`。
+
+run `34694930111`：
+- global POST capability routing：四道 Gate 全 `PASS`。
+
+run `34695412163`：
+- global Riot Result/Replay/Identity baseline：四道 Gate 全 `PASS`。
+
+run `34695777894`：
+- Architecture：`PASS`；
+- Domain/Application：`FAIL`；
+- 根因：Application 允许 POST historical frame，但 Domain `TimelineSnapshotPoint` 仍只允许 LIVE source；
+- fix `f60f87be12e676e3623bac73d586a144f84b3f17`；
+- regression commit `7451c302f106fa1f4d636a8ac77f1580b8dd672c` / run `34695924994`：四道 Gate 全 `PASS`。
+
+current code/UI head `0681c3b20f2e6cad4cd6fb52bf90a4912e299608` / run `34696081645`：
+- Architecture boundary gate：`PASS`；
+- Domain/Application tests：`PASS`；
+- Android Adapter unit tests：`PASS`；
+- Android debug compile：`PASS`。
+
+### 未执行 / 外部验收
+
+以下不能被 fixture/CI PASS 冒充：
+
+- 真实 `LOL_ESPORTS_API_KEY` 下的 Riot global schedule Result fetch：`WAITING EXTERNAL TEST`；
+- Riot `getEventDetails` 真实 VOD payload：`WAITING EXTERNAL TEST`；
+- Riot LiveStats 历史 window 保留策略与真实历史回放：`WAITING EXTERNAL TEST`；
+- Android 实机 POST Result/Replay/Historical Timeline UI：`WAITING EXTERNAL TEST`；
+- Global per-game winner evidence / CompletedGame 完整恢复：`IN PROGRESS`。
+
+因此 LNR-015 自动测试收口后最多进入 `WAITING EXTERNAL TEST`，不得标记 `DONE`。

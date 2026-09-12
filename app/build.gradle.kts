@@ -9,6 +9,12 @@ val lolEsportsApiKey = providers.environmentVariable("LOL_ESPORTS_API_KEY")
 val escapedLolEsportsApiKey = lolEsportsApiKey
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
+val lplTjstatsAuth = providers.environmentVariable("LPL_TJSTATS_AUTH")
+    .orElse(providers.gradleProperty("lplTjstatsAuth"))
+    .getOrElse("")
+val escapedLplTjstatsAuth = lplTjstatsAuth
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
 
 android {
     namespace = "com.laner.app"
@@ -21,6 +27,7 @@ android {
         versionCode = 2
         versionName = "2.0.0-dev.2"
         buildConfigField("String", "LOL_ESPORTS_API_KEY", "\"$escapedLolEsportsApiKey\"")
+        buildConfigField("String", "LPL_TJSTATS_AUTH", "\"$escapedLplTjstatsAuth\"")
     }
 
     buildFeatures {

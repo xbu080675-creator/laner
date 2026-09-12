@@ -8,7 +8,10 @@ data class TimelineSnapshotPoint(
 ) {
     init {
         require(gameTimeSeconds >= 0)
-        require(provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE)
+        require(
+            provenance.sourceClass == SourceClass.LIVE_MATCH_SOURCE ||
+                provenance.sourceClass == SourceClass.POST_MATCH_SOURCE
+        ) { "Timeline snapshots require LIVE_MATCH_SOURCE or POST_MATCH_SOURCE" }
     }
 }
 

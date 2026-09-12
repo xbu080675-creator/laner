@@ -88,20 +88,50 @@ Cito 决策（2026-09-12）：
 - WSS entitlement 不作假定；
 - Cito 暂缓不阻塞后续迁移。
 
-### LNR-015 — POST Result / Game Archive / Stats / Timeline Archive / Replay Domain
+### LNR-015 — Global POST Result / Archive / Historical Timeline / Replay
+状态：`TESTING`
+
+本轮已经形成全球 POST 主链，不按 LPL/LCK/LEC/LCP 复制业务系统：
+- 强类型拆分 `SeriesResult / CompletedGameRecord / Player Stats / Awards / Replay / Historical Timeline`；
+- `PostMatchService` 按 `PostSourceCapability` 选择来源，Application 不写赛区 if/else；
+- `GameIdentity.canonical(matchId, gameNumber)` 冻结 canonical GameId，Provider raw IDs 只存在 mapping/Adapter；
+- `ProviderMatchIdentityRepository` 保存 canonical MatchId ↔ provider event/match ID 映射；
+- `PostMatchArchiveRepository` 保存已经验证的 Result/Game facts，archive 仅在外部事实缺失时补位；
+- Riot global schedule 提供跨赛区/国际赛事 Series Result baseline；
+- Riot `getEventDetails` 提供跨赛区/国际赛事 Replay metadata baseline；
+- Riot LiveStats history 提供按需真实历史过程帧，不插值、上游无历史即留缺口；
+- LIVE/POST 真实帧复用同一个 canonical `GameTimeline`，PRE/AI 不得进入 Timeline；
+- POST 页面通过 Application 展示 Series Result / Replay / Awards，并只在用户选择 Gx 时触发历史 Timeline 恢复；
+- LPL TJStats 历史链仅为区域 supplement，不是 POST 主架构，且 credential 外部注入、旧硬编码值未迁移。
+
+自动验证证据：
+- global capability routing commit `e3de01052602d7633368acd003c1ab0fd0f14401` / run `34694930111`：全 PASS；
+- global Riot Result/Replay baseline commit `ea9b6e576fe22f4459c0c55c89f805a3d556285e` / run `34695412163`：全 PASS；
+- Timeline source-class 根因修复 head `7451c302f106fa1f4d636a8ac77f1580b8dd672c` / run `34695924994`：全 PASS；
+- current code/UI head `0681c3b20f2e6cad4cd6fb52bf90a4912e299608` / run `34696081645`：Architecture / Domain+Application / Android Adapter tests / Android debug compile 全 PASS。
+
+尚未认证/尚未完成：
+- Riot credentialed online Result / EventDetails / LiveStats fetch 尚未形成本轮真实在线证据，因此对应全球 Provider 能力最终只能进入 `WAITING EXTERNAL TEST`，不能写 DONE；
+- global per-game `CompletedGameRecord` 仍要求明确 winner evidence；没有显式赢家字段时不得用经济/击杀推断；
+- Bilibili replay supplement、每局 BP/终局装备、Timeline 事件筛选/团战聚合仍未完成；
+- Media3/WebView 属后续 Android Adapter，不进入本轮 Core。
+
+### 后续轮次
+
+#### LNR-016 — Android RiftScreen / Watch / Player / OTA
 状态：`TODO`
 
-目标：
-- 强类型拆分 Series Result、Completed Game Archive、Player Stats、Objective Result、Awards、Replay；
-- 建立 `POST_MATCH_SOURCE` Ports 与 Application aggregation；
-- 复用 canonical MatchId/GameId，不允许 Provider raw ID 成为 Domain 主键；
-- 复用标准 `GameTimeline` 作为赛后归档/查询输入，不复制旧 `MatchTimelineStore`；
-- 历史补全来源必须带 provenance / authority / freshness；
-- Replay 先建立 provider-neutral Domain/Port；
-- Media3/WebView 继续属于 Android Adapter，不进入 Core；
-- POST 页面只消费 Application state。
+目标：迁移 Watch Hub、平台跳转、RiftScreen/HUD、播放器与更新能力；保持赛事数据面与直播入口解耦。
 
-旧版主要行为证据：`CompletedGameArchive`、`MatchDetailRepository`、`LplHistoricalPostMatchResolver`、`RiotLiveStatsHistoryResolver`、`OpggHistoricalFrameResolver`、`GlobalVerifiedAwardsProvider`、`BilibiliVodRepository`、`RiotVodRepository`、`MatchTimelineStore` 以及对应 MatchDetail/Timeline/Replay UI。
+#### LNR-017 — Local AI / OCR / Roster Assist
+状态：`TODO`
+
+目标：迁移本地 AI、OCR、首发图片识别、Insight 与 AI diagnostics；AI 永远不升级为赛事事实权威。
+
+#### LNR-018 — Compatibility Import / Full Regression / Migration Audit
+状态：`TODO`
+
+目标：兼容导入、全功能基线销账、真实设备/Provider 回归、迁移审计与发布闭环。
 
 ## 第一批真实迁移顺序
 
@@ -110,10 +140,10 @@ Cito 决策（2026-09-12）：
 3. Standings / Qualification / Tournament Edition —— `LNR-012 WAITING EXTERNAL TEST`；
 4. LIVE Core —— `LNR-013 DONE`；
 5. LIVE Persistence / Wiring / Degraded UI —— `LNR-014 WAITING EXTERNAL TEST`；
-6. POST Result / Stats / Replay / Archive —— `LNR-015 TODO`；
-7. Android RiftScreen / Watch / Player / OTA；
-8. Local AI / OCR / Roster Assist；
-9. Compatibility Import / Full Regression / Migration Audit。
+6. Global POST Result / Replay / Historical Timeline / Archive —— `LNR-015 TESTING`；
+7. Android RiftScreen / Watch / Player / OTA —— `LNR-016 TODO`；
+8. Local AI / OCR / Roster Assist —— `LNR-017 TODO`；
+9. Compatibility Import / Full Regression / Migration Audit —— `LNR-018 TODO`。
 
 Cito 在线验收作为 LNR-014 外部补证项独立回填，不阻塞第 6 项及以后迁移。
 
