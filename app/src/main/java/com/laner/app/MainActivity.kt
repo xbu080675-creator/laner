@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
-import com.laner.app.data.settings.RuntimeCredentialStore
 import com.laner.app.ui.LanerRoot
 import com.laner.app.ui.LanerTheme
 
@@ -16,10 +15,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
-        val credentialStore = RuntimeCredentialStore(filesDir)
 
         setContent {
-            var runtimeKey by remember { mutableStateOf(credentialStore.read().orEmpty()) }
+            var runtimeKey by remember { mutableStateOf("") }
             val effectiveKey = runtimeKey.ifBlank { BuildConfig.LOL_ESPORTS_API_KEY }
             val appGraph = remember(effectiveKey) { LanerAppGraph(filesDir, riotApiKey = effectiveKey) }
 
@@ -34,14 +32,8 @@ class MainActivity : ComponentActivity() {
                     postTimelineService = appGraph.postTimelineService,
                     riotCredentialConfigured = effectiveKey.isNotBlank(),
                     runtimeCredentialActive = runtimeKey.isNotBlank(),
-                    onSaveRuntimeCredential = { value ->
-                        credentialStore.write(value)
-                        runtimeKey = value.trim()
-                    },
-                    onClearRuntimeCredential = {
-                        credentialStore.write("")
-                        runtimeKey = ""
-                    },
+                    onSaveRuntimeCredential = { value -> runtimeKey = value.trim().take(512) },
+                    onClearRuntimeCredential = { runtimeKey = "" },
                 )
             }
         }
