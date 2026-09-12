@@ -17,7 +17,12 @@ Android 用户界面与平台副作用。
 - `LanerAppGraph`
 - `LanerRoot`
 - `PreMatchScreen`
-- `RiotGlobalPreMatchSource`（Adapter，实现 Core Port，不向 UI 暴露 Provider payload）
+- `RiotGlobalPreMatchSource`
+- `RiotTeamRosterSource`
+- `NormalizedStartingRosterSource`
+- `NormalizedTeamStaffSource`
+
+所有 Adapter 只实现 Core Port，不向 UI 暴露 Provider payload。
 
 ## PRE 数据链
 
@@ -28,16 +33,26 @@ Riot LoL Esports
   → GlobalScheduleService
   → GlobalScheduleSnapshot
   → PreMatchScreen
+
+selected ScheduledSeries
+  → PreMatchContextService
+      ├─ TeamRosterSourcePort → RiotTeamRosterSource
+      ├─ StartingRosterSourcePort → NormalizedStartingRosterSource
+      └─ TeamStaffSourcePort → NormalizedTeamStaffSource
+  → MatchPreContextSnapshot
+  → PreMatchScreen
 ```
 
 UI 不允许直接调用 Riot/Cito/微博/OCR/AI。
+
+PRE 页面按“赛前”一级阶段组织：赛事筛选、比赛焦点、官方首发证据、名单池、Staff、Recent Form、H2H 与全球赛程都属于同一个阶段页面，不拆成赛区孤岛。
 
 ## Credential
 LoL Esports credential 不进入 Git，只允许：
 - 环境变量 `LOL_ESPORTS_API_KEY`；
 - Gradle Property `lolEsportsApiKey`。
 
-缺失时是合法降级状态 `LNR-SRC-PRE-001`，不得硬编码 fallback key。
+缺失时是合法降级状态，不得硬编码 fallback key。
 
 ## 日志
 - App：`[Laner:APP]`
@@ -46,17 +61,23 @@ LoL Esports credential 不进入 Git，只允许：
 - Overlay/Update/AI 后续各自使用独立模块前缀。
 
 ## 失败
-平台/Provider 能力不可用时必须明确降级，不得制造赛事事实。PRE 首批错误码：
+平台/Provider 能力不可用时必须明确降级，不得制造赛事事实。PRE 当前错误码：
 - `LNR-SRC-PRE-001` credential 未配置；
 - `LNR-SRC-PRE-002` global schedule 中心请求失败；
 - `LNR-SRC-PRE-003` competition catalogue 降级；
-- `LNR-SRC-PRE-004` schedule pagination 降级。
+- `LNR-SRC-PRE-004` schedule pagination 降级；
+- `LNR-SRC-PRE-006` Riot Team roster credential 未配置；
+- `LNR-SRC-PRE-007` Riot Team roster 请求/映射失败；
+- `LNR-SRC-PRE-008` normalized official starting-roster feed 不可用；
+- `LNR-SRC-PRE-009` normalized global staff feed 不可用；
+- `LNR-UI-PRE-001` PRE context Compose state wiring 编译回归记录。
 
 ## 测试
 - Core：`:core:domain:test :core:application:test`
 - 编译：`:app:assembleDebug`
 - LNR-010 自动化证据：GitHub Actions run `34687580424` PASS。
-- LNR-010 真实在线拉取 + Android 实机展示：`WAITING EXTERNAL TEST`。
+- LNR-011 首次 UI 编译：run `34688581238` FAIL，原因已留档；修复后 run `34688715420` PASS。
+- 真实在线数据 + Android 实机展示：`WAITING EXTERNAL TEST`。
 
 ## 故障定位
-启动/UI 问题先查 `MainActivity` → `LanerRoot` → `PreMatchScreen` → Application Query；Provider/网络问题查 `RiotGlobalPreMatchSource` 和 `[Laner:SRC]`。数据错误不得先在 UI 内补丁修正。
+启动/UI 问题先查 `MainActivity` → `LanerRoot` → `PreMatchScreen` → Application Service；Provider/网络问题从 `GlobalScheduleService` / `PreMatchContextService` 对应 Port 下钻到具体 Adapter。数据错误不得先在 UI 内补丁修正。
