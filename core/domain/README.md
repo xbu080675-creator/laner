@@ -1,7 +1,7 @@
 # `:core:domain`
 
 ## 职责
-纯 Kotlin 赛事领域核心。定义全局赛事身份、比赛生命周期、三阶段、来源证据、标准事件与业务不变量。
+纯 Kotlin 赛事领域核心。定义全局赛事身份、比赛生命周期、三阶段、来源证据、赛程事实、标准事件与业务不变量。
 
 ## 输入
 仅接受领域值对象与标准化事实；不得接收 Android、Compose、HTTP、数据库或 Provider SDK 类型。
@@ -16,9 +16,19 @@
 - `MatchPhase`
 - `MatchLifecycleState`
 - 全局 ID Value Objects
+- `CompetitionRef` / `TeamRef` / `PlayerRef`
 - `SourceProvenance` / `FactCandidate`
+- `CompetitionKind` / `ScheduleState`
+- `CompetitionCatalogEntry` / `ScheduledSeries` / `ScheduledTeam`
 - `MatchState` / `LiveGameSnapshot`
 - `MatchEvent`
+
+## 关键不变量
+- Region 只是赛事维度，不是业务模块边界。
+- Schedule `EVENT_LIVE` 不等于 Match `IN_GAME`。
+- `ScheduledSeries` 必须恰好包含两个不同 Team。
+- Schedule facts 必须来自 `PRE_MATCH_SOURCE`。
+- Domain 不接受 Provider raw ID 作为跨源业务语义；稳定身份由内部 ID 表达。
 
 ## 日志
 N/A：Domain 无平台日志实现。诊断由 Application/Adapter 在边界记录。
@@ -30,4 +40,4 @@ N/A：Domain 无平台日志实现。诊断由 Application/Adapter 在边界记�
 `gradle :core:domain:test`
 
 ## 故障定位
-领域状态或数据不变量异常，先查本模块对应模型和 Unit Test，再查进入 Domain 前的 Adapter 标准化。
+领域状态或数据不变量异常，先查本模块对应模型和 Unit Test，再查进入 Domain 前的 Application 标准化与 Adapter 翻译。
