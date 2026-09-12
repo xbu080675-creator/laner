@@ -71,10 +71,11 @@ Laner 的视觉与交互统一以：
 
 ## 当前阶段
 
-- 阶段：`M0 / Project Foundation`
-- 当前下一任务：`LNR-001 / 旧工程功能基线提取`
-- 业务代码：尚未开始
-- 旧工程功能基线：待提取
+- 阶段：`M1 / Feature Migration`
+- 当前门禁：先完成 `LNR-020 / INC-LNR-020-001` 合规整改，再进入第 2 块 Tactical HUD
+- 业务代码：已进入 PRE / LIVE / POST 功能迁移与 Android 平台实现阶段
+- 旧工程功能基线：`docs/FEATURE_BASELINE.md = DONE`；逐项迁移状态继续按该文件验收
+- 当前真实任务状态：以 `docs/IMPLEMENTATION_STATUS.md` 为准
 
 ## 本轮允许改变的内容
 
@@ -91,7 +92,7 @@ Laner 的视觉与交互统一以：
 
 ## 本轮默认禁止改变的内容
 
-在形成 `FEATURE_BASELINE.md` 并逐项迁移前，默认禁止因“重构方便”而删除、缩水或静默改变：
+在 `FEATURE_BASELINE.md` 逐项迁移完成并通过对应验收前，默认禁止因“重构方便”而删除、缩水或静默改变：
 
 - 现有用户可见功能；
 - **赛前 / 赛中 / 赛后三阶段一级产品结构；**
@@ -128,22 +129,24 @@ Laner 的视觉与交互统一以：
 
 ## 正式业务开发前置条件
 
-在开始首个业务功能迁移前必须完成：
+以下前置条件已经在 M0 完成，并继续作为后续开发的硬约束：
 
 - `docs/ENGINEERING_CONSTITUTION.md`；
 - `docs/FEATURE_BASELINE.md`，且所有业务功能标注 Phase；
 - `docs/ARCHITECTURE.md` 的目标架构冻结；
-- `docs/DEVELOPMENT_PLAN.md` 的首批任务拆分；
+- `docs/DEVELOPMENT_PLAN.md` 的任务拆分；
 - `docs/UX_PRINCIPLES.md`；
-- 全球 Competition / Identity 边界进入 LNR-003 架构冻结验收；
+- 全球 Competition / Identity 边界；
 - 测试策略、日志规范、错误码基本规则；
-- 当前旧工程真实状态读取与基线记录。
+- 旧工程真实状态与行为基线记录。
 
-## N/A 项
+任何 M1 任务不得因为这些条件“曾经完成”就跳过本任务自己的 Constitution Preflight、测试、留档和状态同步。
 
-当前 M0 只建立工程治理和架构基线，因此下列项目暂为 `N/A`：
+## 当前阶段适用说明
 
-- 运行时性能预算：待技术栈与旧工程基线读取后确定；
-- 数据库 Migration：尚未创建数据模型；
-- 实机测试矩阵：业务代码尚未开始；
-- Release 签名：尚未进入可交付构建阶段。
+M0 时的下列 `N/A` 已不能继续作为 M1 的默认状态：
+
+- 运行时性能预算：按具体高频/实时模块建立并在相关开发任务中验证；
+- 数据库 / 文件 Schema Migration：凡持久化 Schema 发生变化必须先定义 migration/recovery；本次 LNR-020 整改未改变 Draft HUD layout schema；
+- 实机测试矩阵：Android overlay、真实 Provider 等不能由 CI 证明的项目使用 `WAITING EXTERNAL TEST`，不得写成 N/A 或 DONE；
+- Release 签名：仍未进入正式 release closure，最终由第 8 块 Migration Audit / release closure 统一验收。
