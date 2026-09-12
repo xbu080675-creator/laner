@@ -1,143 +1,81 @@
 # `:app`
 
 ## 职责
-Android 平台适配与 Composition Root。承载 Compose UI、Activity/Service、Overlay、Media、OTA、权限、具体 Source Adapter 与本地持久化 Adapter 组装。
+Android 平台适配与 Composition Root。承载 Compose UI、Activity/Service、Overlay、Media、OTA、权限、具体 Source Adapter、本地持久化 Adapter 与设备 OCR。Core 禁止反向依赖本模块。
 
-## 输入
-只消费 `:core:application` 公开 Query/Use Case/Port 契约与 `:core:domain` 展示所需只读模型。
-
-## 输出
-Android 用户界面与平台副作用。
-
-## 依赖
-允许依赖 `:core:application`、`:core:domain` 与 Android/Compose/网络/文件系统等平台库。Core 禁止反向依赖本模块。
+## 输入 / 输出
+输入仅为 `:core:application` Port/Use Case 与 `:core:domain` 只读模型；输出为 Android UI 与平台副作用。Provider payload 不得直接暴露给 UI。
 
 ## Public API / Composition Root
-- `MainActivity`
-- `LanerAppGraph`
-- `LanerRoot`
-- `PreMatchScreen`
-- `LiveMatchScreen`
-- `RiotGlobalPreMatchSource`
-- `RiotTeamRosterSource`
-- `NormalizedStartingRosterSource`
-- `NormalizedTeamStaffSource`
-- `JsonLiveMatchStateRepository`
-- `JsonLiveTimelineRepository`
+- `MainActivity / LanerAppGraph / LanerRoot`
+- `PreMatchScreen / StartingRosterAssistPanel`
+- `LiveMatchScreen / PostMatchScreen`
+- `RiotGlobalPreMatchSource / RiotGlobalLiveStateSource`
+- `RiotTeamRosterSource / NormalizedStartingRosterSource / NormalizedTeamStaffSource`
+- `MlKitStartingRosterVisionSource / RosterVisionPipeline`
+- LIVE/POST/identity JSON repositories
 
-所有 Adapter 只实现 Core Port，不向 UI 暴露 Provider payload。
-
-## PRE 数据链
+## PRE / Starting Roster 数据链
 
 ```text
-Riot LoL Esports
-  → RiotGlobalPreMatchSource
-  → GlobalPreMatchSourcePort
-  → GlobalScheduleService
-  → GlobalScheduleSnapshot
-  → PreMatchScreen
-
-selected ScheduledSeries
-  → PreMatchContextService
-      ├─ TeamRosterSourcePort → RiotTeamRosterSource
-      ├─ StartingRosterSourcePort → NormalizedStartingRosterSource
-      └─ TeamStaffSourcePort → NormalizedTeamStaffSource
-  → MatchPreContextSnapshot
-  → PreMatchScreen
+normalized collector
+  ├─ verified evidence → NormalizedStartingRosterSource → PreMatchContextService → official validation
+  └─ announcements    → NormalizedStartingRosterSource
+                        → StartingRosterAssistService
+                        → StartingRosterVisionPort
+                        → MlKitStartingRosterVisionSource
+                        → RosterVisionInspection (DERIVED)
+                        → StartingRosterAssistPanel
 ```
 
-PRE 页面按“赛前”一级阶段组织：赛事筛选、比赛焦点、官方首发证据、名单池、Staff、Recent Form、H2H 与全球赛程都属于同一个阶段页面，不拆成赛区孤岛。
+关键规则：
+- announcement 只是“发现了官方发布”的元数据，不是首发事实；
+- OCR 结果永远是 `DERIVED / UNVERIFIED`；
+- 完整五位置 OCR 也不得绕过 `PreMatchContextService` 的日期、对阵、赛事和五位置正式 evidence validation；
+- `candidateScore` 只影响发现质量理解，不得变成 lineup truth；
+- 图片 URL 只接受 HTTPS；
+- PRE 面板每 60 秒低频重查，仅在 PRE composition 存活时运行，并提供手动“立即重查”。
 
-## LIVE 数据链
+## Device OCR
+bundled ML Kit dependencies：Latin / Chinese / Japanese / Korean `16.0.1`。Latin 始终运行；LPL/LCP/PCS 加中文，LCK 加韩文，LJL 加日文。bundled 方案避免首次识别临时下载 Play Services OCR model。
 
-当前基础链：
+`RosterCandidateExtractor` 使用 role anchor + x/y geometry 支持双栏首发图，并过滤 TOP/JUG/MID/BOT/SUP、联赛名、通用赛事词等噪声。成功 OCR 缓存 6h，失败缓存 10m 后允许重试；单轮最多处理匹配公告的前 2 张图。
 
-```text
-GlobalScheduleService
-  → ScheduledSeries / canonical match target
-  → LiveMatchSourceQuery
-  → LiveMatchStateService
-      → LiveStateSourcePort[]
-      → LiveMatchStateRepository
-  → LiveStateResolution
-  → LiveMatchScreen
+## LIVE
+`RiotGlobalLiveStateSource` 已作为第一条 global LIVE baseline 接入，不再是空 source list。目标通过 canonical teams + scheduled time 定位 provider event identity，raw IDs 只进入 identity mapping。LIVE UI 通过 Application 获得权威状态并显示 `LNR-SRC-LIVE-002~005` 诊断。
 
-LiveGameSnapshot / MatchEvent
-  → LiveTimelineService
-  → JsonLiveTimelineRepository
-```
-
-当前 `LanerAppGraph` 已接真实本地 `JsonLiveMatchStateRepository` 与 `JsonLiveTimelineRepository`。
-
-Cito 在线验证暂缓，因此当前真实 LIVE source list 可以为空。该状态是合法降级：
-- `LiveMatchStateService` 返回 `UNAVAILABLE`；
-- 若存在 last-known state，则保留本地权威状态；
-- 若不存在，则保持 `UNKNOWN`；
-- UI 必须明确显示 `NO VERIFIED SOURCE`，不得猜测 IN_GAME/POST_GAME。
-
-LIVE 页面只能通过 Application Service 获得状态，禁止 UI 直接调用 Riot/Cito/微博/OCR/AI。
-
-## LIVE local persistence
-
-- State schema：`schema_version=1`；
-- Timeline schema：`schema_version=1`；
-- canonical ID 经 SHA-256 生成稳定文件名；
-- JSON 内保留完整 canonical ID 并在读入时复核；
-- 写入使用 sibling temp file + atomic replace；
-- corrupt JSON / unsupported schema 必须显式失败，禁止静默返回空对象；
-- Timeline 只保存标准化 Snapshot/Event，不保存 Provider raw payload/free text。
+## Persistence
+LIVE State/Timeline、POST Archive、Provider Identity 使用独立 schema-versioned JSON storage；canonical ID 生成稳定文件名；写入使用 sibling temp + atomic replace；corrupt/unsupported schema 显式失败，不静默清空。
 
 ## Credential
-LoL Esports credential 不进入 Git，只允许：
-- 环境变量 `LOL_ESPORTS_API_KEY`；
-- Gradle Property `lolEsportsApiKey`。
+Riot credential 只允许环境变量/Gradle Property，或 LNR-016 测试版进程内 runtime key。runtime key 不落盘、不进日志/Git，进程退出即消失。TJStats/Cito 等不得硬编码 secret。
 
-缺失时是合法降级状态，不得硬编码 fallback key。
+## 日志 / 错误码
+模块日志前缀：`[Laner:APP] / [Laner:SRC] / [Laner:PRE] / [Laner:LIVE]`。
 
-Cito credential 当前未接入 Laner 正式配置；在线验收状态为 `WAITING EXTERNAL TEST / DEFERRED`。不得把 fixture/contract test 描述成真实在线支持。
+Starting Roster Assist：
+- `LNR-SRC-PRE-010` announcement found / OCR adapter unavailable；
+- `LNR-SRC-PRE-011` no OCR image or partial/ambiguous OCR；
+- `LNR-SRC-PRE-012` complete five-role OCR candidate but still unverified；
+- `LNR-SRC-PRE-013` image download/OCR engine failure。
 
-## 日志
-- App：`[Laner:APP]`
-- Source：`[Laner:SRC]`
-- PRE：`[Laner:PRE]`
-- LIVE：`[Laner:LIVE]`
-- Overlay/Update/AI 后续各自使用独立模块前缀。
-
-## 失败
-平台/Provider 能力不可用时必须明确降级，不得制造赛事事实。
-
-PRE 当前错误码：
-- `LNR-SRC-PRE-001` credential 未配置；
-- `LNR-SRC-PRE-002` global schedule 中心请求失败；
-- `LNR-SRC-PRE-003` competition catalogue 降级；
-- `LNR-SRC-PRE-004` schedule pagination 降级；
-- `LNR-SRC-PRE-006` Riot Team roster credential 未配置；
-- `LNR-SRC-PRE-007` Riot Team roster 请求/映射失败；
-- `LNR-SRC-PRE-008` normalized official starting-roster feed 不可用；
-- `LNR-SRC-PRE-009` normalized global staff feed 不可用；
-- `LNR-UI-PRE-001` PRE context Compose state wiring 编译回归记录。
-
-LIVE 当前原则：
-- Provider 缺失 → `UNAVAILABLE`；
-- Provider 冲突 → `CONFLICT`；
-- 部分失败 → `DEGRADED`；
-- local persistence corrupt/unsupported schema → 显式异常并进入故障处理，禁止静默清空；
-- Cito 未在线验证时不得标记 `READY/SUPPORTED`。
+LIVE：`LNR-SRC-LIVE-002~005`。详细历史故障见 `docs/TROUBLESHOOTING.md`。
 
 ## 测试
 - Core：`:core:domain:test :core:application:test`
-- Android Adapter/Persistence：`:app:testDebugUnitTest`
+- Android Adapter：`:app:testDebugUnitTest`
 - Android build：`:app:assembleDebug`
-- CI 顺序：Architecture Gate → Core Tests → App Unit Tests → Android Build。
-- LNR-010 自动化证据：run `34687580424` PASS。
-- LNR-011 UI 修复后：run `34688715420` PASS。
-- LNR-014 Android unit-test Gate 首次 run `34692037250` FAIL，JUnit4 test signature 问题已留档；修复后 `afa4bf7f...` 对应 run `34692350405` 全 PASS。
-- Cito 真实在线 + Android 实机：`WAITING EXTERNAL TEST / DEFERRED`。
+- CI：Architecture → Core → App unit → Android build → APK upload。
+
+LNR-017 code head `3879249053832c606f30a6122c31269db9327812` / run `34700457400`：Architecture / Core / App unit / Android build / APK upload 全 PASS；artifact `10300252185`。
+
+真实官方首发发布、图片下载和 Android OCR 仍为 `WAITING EXTERNAL TEST`，不得以 fixture/CI 冒充实机 PASS。
 
 ## 故障定位
+PRE roster：`StartingRosterAssistPanel → StartingRosterAssistService → NormalizedStartingRosterSource / StartingRosterVisionPort → MlKitStartingRosterVisionSource`。
 
-PRE：`MainActivity → LanerRoot → PreMatchScreen → GlobalScheduleService/PreMatchContextService → Port → Adapter`。
+正式首发：`PreMatchScreen → PreMatchContextService → StartingRosterSourcePort`。
 
-LIVE：`MainActivity → LanerRoot → LiveMatchScreen → LiveMatchStateService/LiveTimelineService → Port → Repository/Source Adapter`。
+LIVE：`LiveMatchScreen → LiveMatchStateService/LiveTimelineService → Port → Repository/Adapter`。
 
-数据错误不得先在 UI 内补丁修正；Provider payload 解析错误必须回到 Adapter，lifecycle/仲裁错误必须回到 Application/Domain。
+数据错误不得先在 UI 补丁修正；transport/parser 回 Adapter，事实校验/仲裁回 Application/Domain。
