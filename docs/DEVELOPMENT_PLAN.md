@@ -83,9 +83,9 @@ PR #8 已合并 main。已交付第一条 Global Riot LIVE lifecycle baseline、
 自动 Gate 与 PR 已通过并合并；真实赛事 online/device 证据仍需补齐，因此保持 `WAITING EXTERNAL TEST`。
 
 ### LNR-020 — RiftScreen / Draft HUD Android Overlay
-状态：`WAITING EXTERNAL TEST (functional) / COMPLIANCE REMEDIATION IN PROGRESS`
+状态：`WAITING EXTERNAL TEST (functional) / COMPLIANCE PASS`
 
-原第 1 块平台迁移已通过 PR #10 合入 `main@967e112d…`，post-merge run `34706047380` 自动 Gate PASS。功能状态不作废，但 `INC-LNR-020-001` 后续确认了 7 项工程合规偏离，因此工程认证暂停，正在 PR #12 中整改。
+原第 1 块平台迁移通过 PR #10 合入 `main@967e112d…`；随后 `INC-LNR-020-001` 确认 7 项工程合规偏离。整改没有作废功能实现，也没有改写历史失败，而是独立重新执行 Preflight、修复并验证。
 
 功能基线保持：
 - RiftScreen `MINI / COMPACT / EXPANDED`、拖动、关闭、前台自动隐藏 / 后台显示；
@@ -97,27 +97,27 @@ PR #8 已合并 main。已交付第一条 Global Riot LIVE lifecycle baseline、
 - Lock 使用 `FLAG_NOT_TOUCHABLE`，边缘 Dock 继续可操作；
 - `LIVE-024~029` 保持 `WAITING EXTERNAL TEST`；`LIVE-012` 真实 Draft Provider 仍为 TODO。
 
-合规整改目标固定为：
-- `LiveMatchContextService` 唯一编排 `Schedule → Target → Lifecycle → Snapshot → GameId → Timeline`，Presentation 不再复制 Use Case；
+合规整改已完成：
+- `LiveMatchContextService` 成为唯一 Current LIVE 编排入口；
 - `OverlayWindowHost` 统一 WindowManager add/update/remove/bounds 与 `[Laner:OVERLAY]` diagnostics；
 - `RiftScreenWindowController / DraftHudWindowController` 拆出平台窗口职责，收薄 Foreground Service；
-- LNR-020 Failure A/B 进入 `TROUBLESHOOTING.md`；
-- 独立整改记录填写 §15 固定 17 项交付单；
-- 状态文档同步真实 merge/CI 事实；
-- Post-change Compliance Review 与 exact-head Gate 完成后才能关闭事故。
-
-整改中 PR #11 已把分支截至 `6720f660…` 的前半段合入 `main@d4e4f70…`；changed-files 已复核均属于本事故/整改范围。剩余闭环由 Draft PR #12 承载。该中途主线变化已写入整改记录，不掩盖、不反向改写历史。
+- LNR-020 Failure A/B 已进入 `TROUBLESHOOTING.md`；
+- 独立整改记录与 closeout 记录按 §15 留档；
+- root README / ARCHITECTURE / PROJECT_SCOPE / module/status docs 已从过期 M0/整改中状态同步到当前事实；
+- PR #12 final head `249c42208ab6105ad26b78215b47fbd754d889e9`，run `34708127194` 全 Gate PASS；
+- PR #12 merge `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`；
+- post-merge main run `34708285172` 全 Gate PASS；
+- `INC-LNR-020-001` 最终 `CLOSED`。
 
 ## 当前推进顺序
-1. **先完成 LNR-020 / INC-LNR-020-001 合规整改**：PR #12 exact-head Gate → 文档/状态落账 → Post-change Compliance Review → merge → main Gate；
+1. **第 2 块：Tactical HUD + 赛中事件层**。开始前必须重新执行该任务自己的 Constitution Preflight；
 2. LNR-020 Android 真机补证继续独立回填，但不得被 CI 冒充 PASS；
-3. 第 2 块：Tactical HUD + 赛中事件层；
-4. 第 3 块：Watch Hub + 播放器；
-5. 第 4 块：赛前/赛后剩余功能；
-6. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
-7. 第 6 块：Local AI / OCR；
-8. 第 7 块：全量回归；
-9. 第 8 块：Migration Audit / release closure。
+3. 第 3 块：Watch Hub + 播放器；
+4. 第 4 块：赛前/赛后剩余功能；
+5. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
+6. 第 6 块：Local AI / OCR；
+7. 第 7 块：全量回归；
+8. 第 8 块：Migration Audit / release closure。
 
 用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
 
