@@ -64,14 +64,35 @@ data class ProviderLiveObservation(
     }
 }
 
+/** Basic source contract for providers that already know how to resolve a canonical MatchId. */
 interface LiveStateSourcePort {
     val providerId: String
     val authority: DataAuthority
 
     suspend fun readLiveState(
+        matchId: MatchId,
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderLiveObservation>
+}
+
+/**
+ * Optional richer source contract for providers that need normalized schedule hints to discover
+ * their external match identity. Application supplies canonical teams/time; the Adapter still owns
+ * provider-specific lookup and never exports raw provider ids as Domain identity.
+ */
+interface TargetAwareLiveStateSourcePort : LiveStateSourcePort {
+    suspend fun readLiveState(
         query: LiveMatchSourceQuery,
         context: SourceRequestContext,
     ): ProviderRead<ProviderLiveObservation>
+
+    override suspend fun readLiveState(
+        matchId: MatchId,
+        context: SourceRequestContext,
+    ): ProviderRead<ProviderLiveObservation> = readLiveState(
+        query = LiveMatchSourceQuery(matchId = matchId),
+        context = context,
+    )
 }
 
 interface LiveMatchStateRepository {
