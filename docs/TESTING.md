@@ -95,4 +95,42 @@ GitHub Actions run `34687580424`：
 - 带真实 LoL Esports credential 的 `getLeagues/getSchedule` 在线集成：`WAITING EXTERNAL TEST`；
 - Android 实机全球赛事目录/本地时区赛程展示：`WAITING EXTERNAL TEST`。
 
-CI 不持有真实 Provider credential，因此上述未执行状态是设计结果，不得写成 PASS。
+## LNR-011
+
+### Core / Contract 自动测试
+
+`PreMatchContextServiceTest` 已覆盖：
+
+- 五人 roster pool 没有官方证据时，Starting Roster 必须保持 `Unknown`；
+- 官方证据只有日期、对阵、赛事、五位置完整校验通过后才可 `Confirmed`；
+- 错日期 / 错对手 evidence 被拒绝；
+- 重复位置/不完整五位置 evidence 被拒绝；
+- 同阵容多条官方 evidence 可标 `crossConfirmed`；
+- 同 Authority 不同阵容不得静默覆盖，必须 `Conflict`；
+- Recent Form 只读 `COMPLETED` Series 且排除当前比赛；
+- H2H 必须双方同时存在并明确左队视角。
+
+### CI 历史
+
+GitHub Actions run `34688581238`：
+
+- Architecture boundary gate：`PASS`；
+- Domain/Application tests：`PASS`；
+- Android debug compile：`FAIL`。
+
+根因：Compose `produceState` 使用 4 个命名 key，与项目当前 Compose API 重载不兼容。修复仅改变 UI 状态加载 key 写法，不改变比赛业务语义。
+
+GitHub Actions run `34688715420` 修复后：
+
+- Architecture boundary gate：`PASS`；
+- Domain/Application tests：`PASS`；
+- Android debug compile：`PASS`。
+
+### 未执行 / 外部验收
+
+- 带真实 LoL Esports credential 的 Riot Team roster pool：`WAITING EXTERNAL TEST`；
+- normalized official starting-roster feed 网络配送：`WAITING EXTERNAL TEST`；
+- normalized global staff feed 网络配送：`WAITING EXTERNAL TEST`；
+- Android 实机比赛点选、首发/冲突、名单池、Staff、Form/H2H 展示：`WAITING EXTERNAL TEST`。
+
+CI 不持有真实 Provider credential，也不是 Android 实机；自动化 PASS 不得冒充上述外部验收 PASS。
