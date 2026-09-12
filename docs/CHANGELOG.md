@@ -7,12 +7,14 @@ All notable project changes must be recorded here at release or milestone level.
 ### Project Foundation
 - Established mandatory engineering constitution.
 - Defined the project as a function-preserving, bottom-up architectural rewrite of the existing esports viewing assistant.
-- Defined `PRE_MATCH / LIVE_MATCH / POST_MATCH` (赛前 / 赛中 / 赛后) as the mandatory first-level product and architecture classification axis for all business pages, primary routes, HUDs, match queries and user-facing match information.
-- Defined `Feature = Persona × Match Phase × User Question` as the mandatory feature derivation model, currently covering `SPECTATOR` and `COACH_ANALYST` personas.
-- Defined a shared-domain / dual-presentation model so spectator and coach/analyst views do not fork core business logic.
-- Added `docs/PRODUCT_PERSPECTIVE_MATRIX.md` with pre-match, live-match and post-match user questions and derived capabilities.
+- Defined `PRE_MATCH / LIVE_MATCH / POST_MATCH` as the mandatory first-level product and architecture classification axis.
+- Defined `Feature = Persona × Match Phase × User Question` as the feature derivation model for `SPECTATOR` and `COACH_ANALYST`.
+- Defined shared-domain / dual-presentation behavior for spectator and coach/analyst views.
 - Defined `Minimalist + Esports-Cool` as Laner's UX north stars, with clarity, speed and non-interference taking precedence over decorative effects.
-- Added `docs/UX_PRINCIPLES.md`, including phase-specific visual rhythm, information priority and animation constraints.
+- Defined four source classes: `PRE_MATCH_SOURCE`, `LIVE_MATCH_SOURCE`, `POST_MATCH_SOURCE`, `GLOBAL_AI_ASSIST`.
+- Established the rule that the first three source classes provide/verify esports facts while `GLOBAL_AI_ASSIST` is non-authoritative and may only explain, summarize, infer or assist.
+- Added source provenance, authority/freshness separation, provisional publishing and revision requirements.
+- Added `docs/PRODUCT_PERSPECTIVE_MATRIX.md`, `docs/UX_PRINCIPLES.md`, and `docs/SOURCE_ARCHITECTURE.md`.
 - Defined target architecture boundaries for UI, application, domain, ports, adapters, sources and persistence.
 - Added development planning, implementation status, testing, compatibility and troubleshooting policies.
 - Established immutable per-task development records and mandatory delivery forms.
