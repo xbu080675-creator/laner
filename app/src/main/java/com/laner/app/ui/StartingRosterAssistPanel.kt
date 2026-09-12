@@ -1,7 +1,6 @@
 package com.laner.app.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -101,7 +100,7 @@ fun StartingRosterAssistPanel(
 private fun RosterAssistDetails(snapshot: StartingRosterAssistSnapshot) {
     val match = snapshot.match
     val target = match?.teams?.let { teams ->
-        if (teams.size >= 2) "${teamLabel(teams[0].team.code, teams[0].team.name)} vs ${teamLabel(teams[1].team.code, teams[1].team.name)}" else match.matchId.value
+        if (teams.size >= 2) "${rosterTeamLabel(teams[0].team.code, teams[0].team.name)} vs ${rosterTeamLabel(teams[1].team.code, teams[1].team.name)}" else match.matchId.value
     } ?: "暂无目标比赛"
     Text(target, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     Text(stageText(snapshot.stage), fontSize = 12.sp, color = stageColor(snapshot.stage))
@@ -162,3 +161,5 @@ private fun stageText(stage: RosterAssistStage): String = when (stage) {
     RosterAssistStage.OCR_COMPLETE_UNVERIFIED -> "OCR 已得到完整五位置候选 · 等待正式证据校验"
     RosterAssistStage.NORMALIZED_EVIDENCE_AVAILABLE -> "正式 normalized 首发证据已到 · 可进入 Application 校验"
 }
+
+private fun rosterTeamLabel(code: String, name: String): String = code.trim().ifBlank { name.trim().ifBlank { "TBD" } }
