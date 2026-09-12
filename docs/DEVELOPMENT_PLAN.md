@@ -21,7 +21,7 @@
 ### LNR-002 — 旧工程架构与技术债审计
 状态：`TODO`
 
-目标：只分析，不复制。输出旧数据流、模块耦合、状态管理、网络、缓存、后台任务和故障模式，并识别旧来源应归属的 Source Class。
+目标：只分析，不复制。输出旧数据流、模块耦合、状态管理、网络、缓存、后台任务和故障模式，并识别旧来源应归属的 Source Class，以及旧代码中按赛区复制的业务实现。
 
 ### LNR-003 — 新架构冻结
 状态：`TODO`
@@ -35,9 +35,13 @@
 - UI 不自行判断阶段；
 - 观众/教练共享领域事实；
 - UX 满足极简 + 酷炫约束；
-- 所有外部 Provider 声明 `PRE_MATCH_SOURCE / LIVE_MATCH_SOURCE / POST_MATCH_SOURCE / GLOBAL_AI_ASSIST`；
+- 所有外部 Provider 声明四类 Source Class；
 - AI 与事实权威层严格分离；
-- Source Orchestration 具备 provenance、authority、freshness、revision、fallback 设计。
+- Source Orchestration 具备 provenance、authority、freshness、revision、fallback 设计；
+- 建立统一 `Competition / Region / Season / Team / Player / Match / Game` 领域模型；
+- 建立全局 Identity Resolution；
+- 赛区差异只能通过 Ruleset / Capability / Adapter / Metadata 表达；
+- 禁止按赛区复制 Domain/Application 业务逻辑。
 
 ### LNR-004 — 工程骨架与 CI Gate
 状态：`TODO`
@@ -56,12 +60,17 @@
 ### LNR-008 — 四类数据/API 源架构
 状态：`DONE`
 
-目标：将 Laner 外部来源固定分为赛前源、赛中源、赛后源、全局 AI 辅助源，并明确事实源与 AI 辅助源的权威边界。
+### LNR-009 — 全球赛事统一管理架构
+状态：`DONE`
 
-产物：
-- `docs/SOURCE_ARCHITECTURE.md`
-- `docs/ARCHITECTURE.md` Source Orchestration 更新
-- 本任务开发留档
+目标：废弃“一个赛区一套业务系统”的架构思路，将赛区降级为领域属性/筛选维度，由 Laner 的 Global Competition Layer 统一管理全部赛事。
+
+核心约束：
+- Region 不是业务模块边界；
+- Provider 可以赛区专属，但必须进入统一数据管线；
+- Team / Player / Match 等使用全局内部身份；
+- 国际赛事和跨赛区转会复用同一领域模型；
+- 全局架构不等于虚报当前全部赛区已支持，支持状态仍以测试证据为准。
 
 ## M1 — Core Migration
 
