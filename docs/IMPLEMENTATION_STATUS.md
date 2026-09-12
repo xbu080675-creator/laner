@@ -3,7 +3,7 @@
 ## Current Baseline
 
 - Repository: `xbu080675-creator/laner`
-- Working branch: `feature/lnr-012-standings-qualification`
+- Working branch: `feature/lnr-013-live-state-timeline`
 - Project phase: `M1 / Feature Migration`
 - Business implementation: `STARTED`
 - Functional migration: `IN PROGRESS`
@@ -27,15 +27,17 @@
 | LNR-010 | 全球赛事目录与赛程中心 | WAITING EXTERNAL TEST |
 | LNR-011 | PRE Roster / Staff / Form / H2H | WAITING EXTERNAL TEST |
 | LNR-012 | Standings / Qualification / Tournament Edition | WAITING EXTERNAL TEST |
-| LNR-013 | LIVE Match State / Provider Arbitration / Unified Event / Timeline | TODO |
+| LNR-013 | LIVE Match State / Provider Arbitration / Unified Event / Timeline | DONE |
+| LNR-014 | LIVE Source Adapters / Local Persistence / Composition Wiring | TODO |
 
 ## Current Truth
 
-Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前形成三条连续数据链：
+Laner 已进入 M1 真实功能迁移。当前形成四层连续基础：
 
 1. 全球赛事目录 / 全球赛程；
-2. 以某一场比赛为上下文的 Roster / Starting Roster Evidence / Staff / Recent Form / H2H；
-3. Tournament Edition / Standings / Championship Points boundary / Qualification mechanism。
+2. 单场 PRE Roster / Starting Roster Evidence / Staff / Recent Form / H2H；
+3. Tournament Edition / Standings / Championship Points boundary / Qualification mechanism；
+4. LIVE Core/Application 真相层：权威 lifecycle、Provider Arbitration、标准事件与 provider-neutral Timeline contract。
 
 当前已验证存在：
 
@@ -43,27 +45,32 @@ Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前形成三条连续数据
 - `:core:application` 纯 Kotlin Application/Port；
 - `:app` Android/Compose Composition Root；
 - PRE/LIVE/POST 三阶段 Android 壳；
-- Match Lifecycle；
-- Global Competition / Team / Player / Edition IDs；
+- Global Competition / Team / Player / Edition / Match / Game IDs；
 - Source Class / Provenance / Authority / Freshness / Revision；
 - AI 与事实路径硬隔离；
-- `GlobalScheduleService`；
-- Riot LoL Esports PRE Schedule Adapter；
-- `TeamRosterPool` 与 `OfficialStartingRoster` 分离；
-- `StartingRosterResolution.Unknown / Confirmed / Conflict`；
-- `PreMatchContextService`；
-- Riot Team Roster Adapter；
-- normalized official Starting Roster Adapter；
-- normalized global Staff Adapter；
-- completed-Series-only Form / H2H；
-- PRE 页面比赛点选与同页上下文展示；
-- Standings / Championship Points / Qualification / Tournament Edition 四类事实强类型分离；
-- `CompetitionStructureService`；
-- Riot Tournament Edition / Standings Adapter；
-- `schema_version=1` Tournament Edition device archive 与原子替换写入；
-- Riot 2026 Handbook qualification mechanism Source；
+- PRE `GlobalScheduleService / PreMatchContextService / CompetitionStructureService`；
+- Riot PRE Schedule / Roster / Tournament / Standings Adapters；
+- normalized Starting Roster / Staff Adapters；
+- Tournament Edition device archive；
 - PRE Competition Structure Panel；
+- `LiveMatchStateReducer`；
+- `LiveMatchStateService`；
+- LIVE Source/State Repository Ports；
+- standardized `MatchStateChanged` + typed `DraftActionType`；
+- `GameTimeline / TimelineSnapshotPoint / semanticKey()`；
+- `LiveTimelineRepository / LiveTimelineService`；
+- duplicate/reconnect semantic dedupe；
+- out-of-order Timeline replay；
+- same-second snapshot provenance arbitration；
 - GitHub Actions Architecture Gate + Core Tests + Android Debug Compile。
+
+尚未完成且不得误报：
+
+- 真实 LIVE Provider Adapter 尚未接入 Laner 新架构；
+- Android device-local Live State / Timeline persistence 尚未实现；
+- LIVE Service 尚未接入 Composition Root / LIVE UI；
+- RiftScreen / HUD 尚未迁移；
+- 实时经济/击杀/塔/龙/男爵/Player state Provider normalization 尚未迁移。
 
 ## Verification Evidence
 
@@ -75,81 +82,69 @@ Laner 已进入 M1 真实功能迁移。PRE_MATCH 目前形成三条连续数据
 ### LNR-010
 
 GitHub Actions run `34687580424`：PASS。
-
-未执行：
-- 带真实 LoL Esports credential 的在线 `getLeagues/getSchedule`；
-- Android 实机真实赛事目录/赛程展示。
-
-状态：`WAITING EXTERNAL TEST`。
+状态：`WAITING EXTERNAL TEST`，仍需真实 credential online fetch / Android 实机。
 
 ### LNR-011
 
-首个完整 Core 规则 CI 已通过。UI 接线后 run `34688581238`：
-
-- Architecture boundary gate：PASS；
-- Domain/Application tests：PASS；
-- Android debug compile：FAIL。
-
-失败根因：`PreMatchScreen` 的 Context `produceState` 使用 4 个命名 key，当前 Compose API 对应重载不接受该调用方式。未修改业务语义，改为 3 个稳定 key。
-
-修复后 GitHub Actions run `34688715420`：PASS。
-
-自动化已证明：
-- 五人名单池不会自动变成官方首发；
-- 错日期/错对手首发证据被拒绝；
-- 重复位置首发证据被拒绝；
-- 两条相同官方阵容可交叉确认；
-- 同 Authority 冲突阵容必须返回 Conflict；
-- Form/H2H 只使用已验证结束 Series；
-- H2H 的 W/L 视角明确。
-
-未执行 / 外部验收：
-- 真实 Riot credential roster pool 在线读取；
-- normalized starting-roster/staff 网络配送；
-- Android 实机 PRE 上下文展示。
-
-因此 LNR-011 总状态为 `WAITING EXTERNAL TEST`，其中 PRE-007 可凭纯业务不变量与自动化直接标 `DONE`。
+run `34688581238`：Core PASS / Android compile FAIL，根因是 Compose `produceState` 4-key overload；失败保留。
+修复后 run `34688715420`：Architecture/Core/Android 全 PASS。
+状态：`WAITING EXTERNAL TEST`。
 
 ### LNR-012
 
-Core 语义验证 run `34689400211`：PASS。
-Riot Tournament/Standings Adapter 验证 run `34689473333`：PASS。
+- run `34689400211`：Core semantics PASS；
+- run `34689473333`：Riot structure Adapter PASS；
+- run `34690235942`：Architecture/Core PASS，Android compile FAIL；根因是 `Files.move()` 返回 `Path` 导致 Repository `save(): Unit` 类型推断错误；
+- branch final run `34690520095`：全 PASS；
+- PR #4 run `34690577554`：全 PASS；
+- merge commit `07d2b4a3d5094b81a72316bc8f0eba6486d4adb0`。
 
-run `34690235942`：
-- Architecture boundary gate：PASS；
-- Domain/Application tests：PASS；
-- Android debug compile：FAIL。
+状态：`WAITING EXTERNAL TEST`；team-level Qualification 仍 `IN PROGRESS`。
 
-失败根因：Tournament Edition archive 的 `Files.move(...)` 返回 `Path`，导致 Kotlin 将 `save()` block 推断为 `Path`，不满足 Repository `Unit` 契约。修复仅在 block 末尾显式返回 `Unit`，未改变原子写入或赛事语义。
+### LNR-013
 
-最终 exact-head CI：文档收口后重新验证并回填。
+自动化已经证明：
 
-自动化已证明：
-- Standings points 不会自动成为 Championship Points；
-- Standings 第一名不会自动成为 Qualification LOCKED；
-- participant set 不能反推 Championship Points / Seed / Qualification Origin；
-- tied ordinal 合法；
-- Tournament Edition archive merge 不因当前 API 缺页删除历史届次；
-- Qualification 无可信规则时返回 `UNKNOWN / PENDING`。
+- `EVENT_LIVE_PRE_GAME != IN_GAME`；
+- verified gameplay frame 可以确认真实开局；
+- `IN_GAME → POST_GAME → BETWEEN_GAMES → next Game` 边界；
+- G2 缺 gameId 不继承 G1 gameId；
+- old-game delayed signal 不能回滚新局；
+- current-game 活跃时 future-game signal 为 Conflict；
+- duplicate heartbeat 只刷新 freshness，不制造 lifecycle transition；
+- 同一局 observation 时间早于当前权威 freshness 时，即便 lifecycle rank 更高也不能推进状态；
+- `SERIES_COMPLETE` 是终态；
+- 新鲜 verified frame 可压过陈旧 event-live 文本；
+- 同 REALTIME 窗口 evidence strength 优先；
+- 较弱 series-end 不能覆盖 stronger verified live frame；
+- Provider failure + valid fallback = DEGRADED 且保留有效状态；
+- 全源失败 = UNAVAILABLE 且保留 last-known state；
+- wrong-match observation 在 arbitration 前拒绝；
+- lifecycle transition 输出标准 `MatchStateChanged` evidence；
+- Timeline reconnect semantic dedupe / out-of-order replay / same-second provenance arbitration / invalid cross-game rejection。
 
-当前产品行为：
-- Riot 提供 Tournament Edition / Standings；
-- Riot 2026 Handbook Seed 只提供已核实 qualification mechanism；
-- Championship Points 当前没有接入 2026-09-12 新鲜可信总分源，UI 明确显示缺失；
-- 旧 RiftLab `2026-09-08 赛后` 静态积分未迁移为当前值；
-- LEC 2026 官方资格表述冲突，保持 PENDING。
+CI：
 
-未执行 / 外部验收：
-- credentialed Riot Tournament/Standings 在线读取；
-- Android 实机 archive 写入/重启恢复；
-- Android 实机 Competition Structure Panel；
-- 新鲜 Championship Points 总分 Source；
-- 完整 team-level qualification state 外部证据。
+- run `34690850479`：Architecture/Core/Android 全 PASS；
+- run `34691124746`：Architecture/Core/Android 全 PASS；
+- run `34691364933`：Architecture PASS，Domain test FAIL，暴露“新鲜 IN_GAME heartbeat 后旧 POST_GAME 仍可推进”的 stale-order bug；Android 因测试失败跳过；
+- fix commit `22668b37d22be5969ec59c99ac687f57c52a1ad3`；
+- run `34691458209`：Architecture/Core/Android 全 PASS。
 
-因此 LNR-012 总状态为 `WAITING EXTERNAL TEST`；PRE-019 team-level state 保持 `IN PROGRESS`，不因任务总状态被误报为 DONE。
+失败已写入 `docs/TROUBLESHOOTING.md`，永久回归：`LiveMatchStateReducerTest.delayedPostGameAfterNewerInGameHeartbeatIsIgnored`。
 
-旧 RiftLab 现场实测确认的场间/新局开局识别证据仍保留于 `docs/audits/2026-09-12_legacy_live_intermission_verification.md`，迁移 LIVE-001/LIVE-002 时必须永久回归。
+LNR-013 作为 Core/Application 基础层任务为 `DONE`。对应真实产品能力在 `FEATURE_BASELINE.md` 中仍是 `IN PROGRESS`，直到 LNR-014 接上真实 Provider、持久化与 Composition wiring。
 
 ## Next
 
-进入 `LNR-013`：LIVE Match State / Provider Arbitration / Unified Event / Timeline。LNR-010~012 的外部验收在具备真实 credential / Android 实机环境时补证，不阻塞正交迁移。
+进入 `LNR-014 — LIVE Source Adapters / Local Persistence / Composition Wiring`。
+
+LNR-014 优先顺序：
+
+1. 审计旧 RiftLab 真实 LIVE Providers 与当前可用性；
+2. 选择至少一条可核验真实 LIVE Source 接 `LiveStateSourcePort` / 标准 Snapshot/Event；
+3. 实现 Android local `LiveMatchStateRepository / LiveTimelineRepository`；
+4. schema version / atomic write / corruption handling；
+5. Composition Root wiring；
+6. LIVE 页面消费 Application truth；
+7. 场间/开局/新 Game/断线重连外部或实机验收。
