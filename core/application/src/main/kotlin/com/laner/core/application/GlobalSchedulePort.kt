@@ -58,6 +58,7 @@ data class ProviderPreMatchSnapshot(
     val sourceTimestampEpochMillis: Long? = null,
     val revision: Long = 0,
     val sourceUri: String? = null,
+    val warnings: List<DiagnosticFailure> = emptyList(),
 ) {
     init {
         require(observedAtEpochMillis >= 0)
