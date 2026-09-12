@@ -3,6 +3,7 @@ package com.laner.core.application
 import com.laner.core.domain.DataAuthority
 import com.laner.core.domain.DiagnosticFailure
 import com.laner.core.domain.ErrorCode
+import com.laner.core.domain.EventEvidence
 import com.laner.core.domain.GameId
 import com.laner.core.domain.LiveMatchState
 import com.laner.core.domain.MatchId
@@ -49,6 +50,8 @@ class LiveMatchStateServiceTest {
         assertEquals("verified-frame", result.selectedProviderId)
         assertEquals(MatchLifecycleState.IN_GAME, result.state.lifecycle)
         assertEquals(1, result.state.currentGameNumber)
+        assertEquals(1, result.stateEvents.size)
+        assertEquals(EventEvidence.VERIFIED_FRAME, result.stateEvents.single().evidence)
     }
 
     @Test
@@ -119,6 +122,7 @@ class LiveMatchStateServiceTest {
         assertEquals("verified-frame", result.selectedProviderId)
         assertEquals(MatchLifecycleState.IN_GAME, result.state.lifecycle)
         assertTrue(result.appliedTransitions.isEmpty())
+        assertTrue(result.stateEvents.isEmpty())
     }
 
     @Test
@@ -153,6 +157,11 @@ class LiveMatchStateServiceTest {
             ),
             result.appliedTransitions,
         )
+        assertEquals(2, result.stateEvents.size)
+        assertEquals(EventEvidence.DERIVED_WINDOW, result.stateEvents[0].evidence)
+        assertEquals(EventEvidence.PROVIDER_EXPLICIT, result.stateEvents[1].evidence)
+        assertEquals(MatchLifecycleState.POST_GAME, result.stateEvents[0].current)
+        assertEquals(MatchLifecycleState.BETWEEN_GAMES, result.stateEvents[1].current)
     }
 
     @Test
