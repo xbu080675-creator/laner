@@ -1,103 +1,72 @@
 # `:core:application`
 
 ## 职责
-纯 Kotlin 应用层。定义 Ports、来源注册/仲裁、Use Case、Query 与观众/教练两种展示契约。
+纯 Kotlin应用层。定义 Ports、全球来源注册/仲裁、Use Case、Query 与明确的降级/冲突语义。赛区只能出现在 Query/Capability 数据中，不得成为业务模块分支。
 
 ## 输入
 Domain 类型和由 Adapter 实现的 Port。
 
 ## 输出
-经过统一业务规则处理的 Domain Fact、Application Query 与明确的冲突/失败/降级状态。
+经过统一业务规则处理的 Domain Fact、Application Query 与明确的 `READY / DEGRADED / CONFLICT / UNAVAILABLE` 状态。
 
 ## 依赖
 只依赖 `:core:domain`。禁止依赖 Android、Compose、具体 Provider、数据库实现。
 
 ## Public API
-- `FactSourcePort`
-- `FactRepository`
-- `FactArbiter`
-- `GlobalPreMatchSourcePort`
-- `GlobalScheduleService`
-- `GlobalScheduleSnapshot`
-- `ScheduleLoadStatus`
-- `TeamRosterSourcePort`
-- `StartingRosterSourcePort`
-- `TeamStaffSourcePort`
-- `PreMatchContextService`
-- `MatchPreContextSnapshot`
-- `PreMatchContextStatus`
-- `CompetitionStructureService`
-- `LiveStateSourcePort`
-- `LiveMatchStateRepository`
-- `LiveMatchStateService`
-- `LiveStateResolution`
-- `LiveTimelineRepository`
-- `LiveTimelineService`
-- `TimelineIngestResult`
-- `PhaseQuery`
-- `PhaseViewState`
+- PRE: `GlobalPreMatchSourcePort` / `GlobalScheduleService` / context/structure services
+- LIVE: `LiveStateSourcePort` / `LiveMatchStateService` / `LiveTimelineRepository` / `LiveTimelineService`
+- POST: `PostMatchQuery`
+- `PostSourceCapability`
+- `PostResultSourcePort`
+- `CompletedGameSourcePort`
+- `PostAwardSourcePort`
+- `ReplaySourcePort`
+- `PostMatchArchiveRepository`
+- `ProviderMatchIdentityRepository`
+- `PostMatchService`
+- `PostTimelineSourcePort` / `HistoricalTimelineFrame`
+- `PostTimelineService`
 - `DiagnosticsPort`
 
 ## 关键规则
 - Provider 只翻译 raw payload，不决定全局事实优先级。
-- Global Schedule 的 ID、赛事分类、完成状态校验、跨源去重与降级均由 Application 统一处理。
-- Schedule `EVENT_LIVE` 不能升级为 Match `IN_GAME`；该权限属于 LIVE Match State Engine。
-- LIVE Provider Arbitration 由 `LiveMatchStateService` 统一执行，Adapter 不得自行决定权威 lifecycle。
-- REALTIME 窗口内，verified gameplay frame 可以压过仅文本/事件状态；明显更晚的可信观察可覆盖陈旧高 Authority 状态。
-- 低质量/冲突状态不得直接结束正在由更强 verified frame 证明仍在进行的比赛。
-- `BETWEEN_GAMES` / `SERIES_COMPLETE` 可证明上一局已结束时，Application 可以补 `POST_GAME`，但补出的状态事件必须标记为 derived evidence。
-- 所有实际 lifecycle 变化必须输出标准 `MatchStateChanged`；普通同状态心跳只刷新 freshness，不制造伪 transition event。
-- Timeline ingestion 只接受标准 Domain Snapshot/Event；Provider raw payload/free text 不进入 Timeline Repository。
-- Timeline 通过 semantic identity 去重重连事件，允许乱序事件回填；同秒快照按 provenance/evidence 仲裁。
-- 子来源失败允许显式 `DEGRADED`，已经拿到的真实事实不得被无故丢弃。
-- `PreMatchContextService` 是单场赛前上下文的统一入口；UI 不自行拼 Roster/Staff/Starting evidence。
-- Roster Pool 即使恰好五人也不得成为 Starting Roster。
-- Starting evidence 必须重新验证日期、对阵、赛事、五位置；冲突同级 evidence 返回 `Conflict`。
-- Recent Form/H2H 只从已验证 `COMPLETED` Series 派生，且结果必须带 perspective。
+- Application 不写 `if LPL / if LCK / if LEC / if LCP`；来源通过 `PostSourceCapability.supports(query)` 声明覆盖能力。
+- Global Provider 提供跨赛区 baseline；区域 Provider 只能作为 supplement，与全球来源平级参与事实仲裁。
+- Series Result / Completed Game / Awards / Replay 独立读取、独立失败；单个来源失败不得清空其他已验证事实。
+- Archive 只填补外部来源缺失事实，不与新鲜 Provider 事实投票；Conflict 不覆盖 last-known-good archive。
+- Provider raw event/match/game ID 只进入 `ProviderMatchIdentityRepository` / provenance / Adapter metadata，不泄漏为 canonical Domain identity。
+- Replay 多 Provider 可以共存；同一事实 slot 的矛盾 Result/Award 必须显式 Conflict。
+- `PostTimelineService` 再次校验 canonical MatchId/GameId/gameNumber 后，才允许历史真实帧进入统一 `LiveTimelineService`；错误身份返回 `LNR-APP-POST-005`。
+- Historical Timeline 只保存 Provider 真帧，不插值、不根据终局数值反推过程。
+- LIVE lifecycle 与 Timeline 的既有 freshness/semantic dedupe 规则继续生效。
+- UI 不直接读取 Provider 或 Repository。
 
 ## 日志
-本模块定义诊断语义；具体日志 Sink 通过 `DiagnosticsPort` 实现。
-
-- PRE 使用 `[Laner:SRC]` / `[Laner:PRE]` 语义字段；
-- LIVE 使用 module=`LIVE` 的结构化诊断字段，至少包含 `match_id/provider/lifecycle/game/failures/conflicts`；
-- Source failure、Conflict、Unavailable 不得吞异常或静默降级。
+具体 Sink 通过 `DiagnosticsPort` 实现。PRE/LIVE/POST failure、Conflict、Unavailable 均不得吞异常。POST 诊断至少应可定位 `match_id / competition / provider / capability / game / failures / conflicts`。
 
 ## 失败
-来源失败必须显式返回稳定错误码；同级事实冲突必须返回 `Conflict`，禁止静默覆盖。
-
-当前 PRE 错误码：
-- `LNR-SRC-PRE-001~004`：Global Schedule；
-- `LNR-SRC-PRE-006~007`：Riot Team Roster；
-- `LNR-SRC-PRE-008`：normalized Starting Roster；
-- `LNR-SRC-PRE-009`：normalized Staff。
-
-当前 LIVE Application 错误码：
-- `LNR-APP-LIVE-001`：Provider 返回错误 Match identity；
-- 具体 LIVE Adapter 错误码在真实 Provider 接入任务中继续分配，Core 不伪造 Provider 失败分类。
+- PRE：`LNR-SRC-PRE-*`
+- LIVE：`LNR-APP-LIVE-001` 等
+- POST：来源错误使用 `LNR-SRC-POST-*`；历史 Timeline canonical identity mismatch 使用 `LNR-APP-POST-005`。
 
 ## 测试
 `gradle :core:application:test`
 
-LNR-010 覆盖：提前 completed 防误判、真实完成、EVENT_LIVE/IN_GAME 隔离、高 Authority 去重、目录 fallback、全源失败不造数据。
-
-LNR-011 覆盖：名单池/首发隔离、官方首发证据校验、重复角色拒绝、交叉确认、冲突保留、completed-only Form/H2H、H2H perspective。
-
-LNR-013 覆盖：
-- 新鲜 verified frame 压过陈旧 event-live；
-- REALTIME 窗口内 evidence strength 优先；
-- 低质量 series-end 不得覆盖强 verified live frame；
-- provider failure + valid fallback = DEGRADED 但保留有效状态；
-- 全源失败保持 last-known state；
-- wrong-match observation 在仲裁前拒绝；
-- lifecycle transition 输出标准 `MatchStateChanged` evidence；
-- Timeline reconnect semantic dedupe；
-- out-of-order event replay；
-- same-second snapshot provenance arbitration；
-- invalid cross-game event rejection。
+POST 回归重点：
+- Award failure 不擦除有效 Result；
+- conflicting Award/Result 可见；
+- wrong-match fact 在仲裁前拒绝；
+- fresh final 可压过 stale partial；
+- 多 Replay Provider 共存；
+- unsupported regional source 不被调用；
+- archive fallback-only；Conflict 不覆盖 last-good；
+- POST 历史帧可进入 canonical Timeline；错误 GameId/MatchId 不得污染 Timeline；
+- Global-first routing 不依赖赛区业务分支。
 
 ## 故障定位
-- Schedule/目录：先查 `GlobalScheduleService` → Source Port → Adapter；
-- 单场赛前上下文：先查 `PreMatchContextService` → 对应 Port → Adapter；
-- LIVE lifecycle：先查 `LiveMatchStateService` 的 selected provider / failure / conflict，再查 `LiveMatchStateReducer`；
-- Timeline：先查 `LiveTimelineService` 的 ingest result（duplicate/invalid/replaced），再查 Repository Adapter；
+- Schedule/PRE：`GlobalScheduleService` → Port → Adapter；
+- LIVE lifecycle：`LiveMatchStateService` → Reducer；
+- Timeline：`PostTimelineService` / `LiveTimelineService` → Repository；
+- POST aggregate：`PostMatchService` → capability routing → 对应 Result/Game/Award/Replay Port；
+- Provider identity：`ProviderMatchIdentityRepository` → Adapter 定位；
 - 数据错误不得先在 UI 内补丁修正。
