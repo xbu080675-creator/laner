@@ -94,31 +94,64 @@
 - 首发证据冲突显式展示，不静默覆盖；
 - `LNR-SRC-PRE-006~009` 错误码。
 
-自动验证：GitHub Actions run `34688715420` 全部 PASS：
-- Architecture boundary gate：PASS；
-- Domain/Application tests：PASS；
-- Android debug compile：PASS。
+自动验证：GitHub Actions run `34688715420` 全部 PASS。
 
 已保留失败历史：run `34688581238` 中 Core PASS、Android compile FAIL，根因为 Compose `produceState` 使用 4 个命名 key 与当前版本重载不兼容；修为 3-key 后回归通过。
 
-仍需外部验收：
-- 带真实 Riot credential 的 roster pool 在线数据；
-- normalized starting-roster/staff 网络配送；
-- Android 实机比赛点选与赛前上下文展示。
+仍需外部验收：真实 Riot roster pool、normalized roster/staff 配送与 Android 实机 PRE 展示。
 
 `PRE-007` 已凭 Domain 不变量与自动化测试标记 `DONE`；其余真实数据展示能力在外部证据前不冒充 DONE。
 
 ### LNR-012 — Standings / Qualification / Tournament Edition
+状态：`WAITING EXTERNAL TEST`
+
+已实现：
+- Standings / Championship Points / Qualification / Tournament Edition 四套事实强类型分离；
+- tied standings ordinal 合法，同一 section team identity 唯一；
+- `CompetitionStructureService` 与四类独立 Source Port；
+- Riot `getTournamentsForLeague/getStandings` Adapter；
+- Provider raw tournament id 不进入 canonical Domain identity；
+- Riot standings 胜场不再伪装成 points，只有显式 provider points 才映射 `STAGE_POINTS`；
+- Tournament Edition additive archive；
+- `schema_version=1` + `ATOMIC_MOVE/REPLACE_EXISTING` 写入；
+- Riot 2026 Handbook qualification mechanism Source；
+- Qualification 无可信证据时 `UNKNOWN/PENDING`；
+- PRE `CompetitionStructurePanel` 展示届次、Standings、年度积分状态与晋级机制；
+- 旧 RiftLab `2026-09-08` 年度积分快照因已过时，没有迁移为当前值。
+
+自动验证：
+- run `34689400211`：Core semantics PASS；
+- run `34689473333`：Riot structure Adapter PASS；
+- run `34690235942`：Architecture/Core PASS，Android compile FAIL，根因为 `Files.move()` 返回 `Path` 导致 Repository `save(): Unit` 返回类型推断错误；已仅补显式 `Unit`，业务/原子写入语义不变；
+- final exact-head CI 在文档收口后重新验证。
+
+仍需外部验收 / 数据补全：
+- credentialed Riot Tournament/Standings 在线读取；
+- Android 实机 archive 与 Panel；
+- 2026-09-12 新鲜可信 Championship Points 总分 Source；
+- 完整 team-level qualification status 证据。
+
+其中“Championship Points 与 Standings 严格分离”和 Qualification Evidence Model 可由 Domain/自动化直接认证；team-level qualification status 仍保持 `IN PROGRESS`。
+
+### LNR-013 — LIVE Match State / Provider Arbitration / Unified Event / Timeline
 状态：`TODO`
 
-目标：迁移全球 Standings、积分/Championship Points、晋级路径、资格证据等级和 Tournament Edition 年度档案，并保持联赛排名与世界赛资格逻辑分离。
+目标：
+- 建立 LIVE 权威 Match State；
+- 保证 `赛事开始 != 游戏进入`；
+- 统一 Provider Arbitration；
+- 统一事实事件模型；
+- 处理 duplicate / out-of-order / reconnect 幂等；
+- 建立 Timeline append/replay contract；
+- 将旧 RiftLab 已实机通过的“场间未开局 vs 新局真实开局”固化成永久回归；
+- 本轮先做 Core/Application，不抢跑 RiftScreen/HUD。
 
 ## 第一批真实迁移顺序
 
 1. Global Competition Catalog / Schedule —— `LNR-010 WAITING EXTERNAL TEST`；
 2. PRE Roster / Staff / Form / H2H —— `LNR-011 WAITING EXTERNAL TEST`；
-3. Standings / Qualification / Tournament Edition —— `LNR-012 TODO`；
-4. LIVE Match State / Provider Arbitration / Unified Event / Timeline；
+3. Standings / Qualification / Tournament Edition —— `LNR-012 WAITING EXTERNAL TEST`；
+4. LIVE Match State / Provider Arbitration / Unified Event / Timeline —— `LNR-013 TODO`；
 5. POST Result / Stats / Replay / Archive；
 6. Android RiftScreen / Watch / Player / OTA；
 7. Local AI / OCR / Roster Assist；
