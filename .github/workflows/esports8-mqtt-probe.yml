@@ -1,0 +1,32 @@
+name: Esports8 MQTT Research Probe
+
+on:
+  push:
+    branches:
+      - research/esports8-api-probe
+    paths:
+      - '.github/workflows/esports8-mqtt-probe.yml'
+      - 'tools/esports8_mqtt_probe.mjs'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install MQTT client
+        run: npm install --no-save mqtt@5.14.1
+      - name: Capture raw LPL live and event topics
+        run: node tools/esports8_mqtt_probe.mjs er5s6s3t2r559f6 35000
+      - name: Upload raw MQTT evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: esports8-mqtt-probe
+          path: probe-mqtt/**
+          if-no-files-found: warn
+          retention-days: 3
