@@ -1,0 +1,10 @@
+name: Smoke G3 Branch
+on:
+  push:
+    branches:
+      - fix/riot-g3-handoff
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
