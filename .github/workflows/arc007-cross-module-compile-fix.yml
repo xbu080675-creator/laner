@@ -1,0 +1,126 @@
+name: ARC007 Cross Module Compile Fix
+
+on:
+  push:
+    branches:
+      - refactor/riftlab-architecture
+    paths:
+      - '.github/workflows/arc007-cross-module-compile-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply exact cross-module repairs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path_str: str, old: str, new: str) -> None:
+              path = Path(path_str)
+              text = path.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, got {count}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+
+          replace_exact(
+              'core/src/main/kotlin/com/riftlab/app/data/OfficialHandbookGovernance2026.kt',
+              'internal object OfficialHandbookGovernance2026 {',
+              'object OfficialHandbookGovernance2026 {'
+          )
+
+          old_selection = '''        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)
+          val selectedId = when {
+              manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->
+                  manualSelectedTournamentId
+              targetEdition != null -> targetEdition.id
+              standingsState.selectedTournament != null && ordered.any { it.tournamentId == standingsState.selectedTournament.id } ->
+                  standingsState.selectedTournament.id
+              else -> ordered.lastOrNull()?.tournamentId.orEmpty()
+          }
+          '''
+          new_selection = '''        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)
+          val selectedTournament = standingsState.selectedTournament
+          val selectedId = when {
+              manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->
+                  manualSelectedTournamentId
+              targetEdition != null -> targetEdition.id
+              selectedTournament != null && ordered.any { it.tournamentId == selectedTournament.id } ->
+                  selectedTournament.id
+              else -> ordered.lastOrNull()?.tournamentId.orEmpty()
+          }
+          '''
+          replace_exact(
+              'app/src/main/java/com/riftlab/app/data/TournamentEditionArchive.kt',
+              old_selection,
+              new_selection
+          )
+
+          audit = Path('docs/development/2026/2026-09-13_LNR-ARC-007_riftclaw-policy-core.md')
+          text = audit.read_text(encoding='utf-8')
+          marker = '- 状态：BUILD TESTING'
+          if text.count(marker) != 1:
+              raise SystemExit(f'{audit}: expected BUILD TESTING marker exactly once')
+          text = text.replace(marker, '- 状态：PASS', 1)
+          text += '''
+
+## Compile Diagnostics 修复记录
+
+首次正式 `Compile Diagnostics`（run `34742260873`）已通过 Core boundary 与 Laner repository links 门禁，但 Gradle 返回非 0。诊断日志只暴露两类迁移后跨模块编译问题：
+
+- `OfficialHandbookGovernance2026` 已迁入 Core，但顶层对象仍为 `internal`；改为模块外可见的 `object`，规则逻辑不变。
+- `TournamentEditionArchive` 对 Core 公共 API `StandingsCenterState.selectedTournament` 使用跨模块 smart cast；改为先读取到局部 `val selectedTournament` 再判空，选择逻辑不变。
+
+本一次性修复 workflow 会在提交前重新执行 Core boundary、repository links、`:core:test` 与 `:app:assembleDebug`；只有全部通过才允许提交修复。
+'''
+          audit.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          git diff -- core/src/main/kotlin/com/riftlab/app/data/OfficialHandbookGovernance2026.kt \
+            app/src/main/java/com/riftlab/app/data/TournamentEditionArchive.kt \
+            docs/development/2026/2026-09-13_LNR-ARC-007_riftclaw-policy-core.md
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK 36
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Enforce architecture gates
+        run: |
+          python3 tools/check_core_boundary.py
+          python3 tools/check_repository_links.py
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Verify full build
+        run: gradle :core:test :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Commit verified repair
+        shell: bash
+        run: |
+          git config user.name 'PocketSpace'
+          git config user.email 'xbu080675@gmail.com'
+          git add \
+            core/src/main/kotlin/com/riftlab/app/data/OfficialHandbookGovernance2026.kt \
+            app/src/main/java/com/riftlab/app/data/TournamentEditionArchive.kt \
+            docs/development/2026/2026-09-13_LNR-ARC-007_riftclaw-policy-core.md
+          git diff --cached --quiet && { echo 'No repair changes to commit'; exit 1; }
+          git commit -m 'LNR-ARC-007: fix cross-module Kotlin compilation'
+          git push origin HEAD:refactor/riftlab-architecture
