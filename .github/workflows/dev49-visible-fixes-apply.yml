@@ -1,0 +1,105 @@
+name: Apply RiftLab dev49 visible fixes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/dev49-visible-fixes-apply.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Finish dev49 visible fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('app/src/main/java/com/riftlab/app/ui/ScheduleCenterUi.kt')
+          s = p.read_text()
+          if 'leftCode = teamCode(left),' in s:
+              s = s.replace('            leftCode = teamCode(left),', '            leftCode = matchTeamLabel(match, left),', 1)
+          if 'rightCode = teamCode(right),' in s:
+              s = s.replace('            rightCode = teamCode(right),', '            rightCode = matchTeamLabel(match, right),', 1)
+          target = '            logoSize = 44.dp,\n            centerFontSize = 18.sp\n        )'
+          if target in s:
+              s = s.replace(target, '            logoSize = 44.dp,\n            centerFontSize = 18.sp,\n            teamNameFontSize = 8.sp\n        )', 1)
+          tail = ('private fun matchFullLabel(match: ScheduledEsportsMatch): String =\n'
+                  '    match.teams.take(2).joinToString(" vs ") { team -> team.name.ifBlank { teamCode(team) } }\n\n'
+                  'private fun matchLabel(match: ScheduledEsportsMatch): String =\n'
+                  '    match.teams.take(2).joinToString(" vs ") { teamCode(it) }\n\n'
+                  'private fun teamCode(team: EsportsTeamRef?): String =\n'
+                  '    team?.code?.ifBlank { team.name }?.ifBlank { "—" } ?: "—"')
+          replacement = ('private fun matchFullLabel(match: ScheduledEsportsMatch): String =\n'
+                         '    match.teams.take(2).joinToString(" vs ") { matchTeamLabel(match, it) }\n\n'
+                         'private fun matchLabel(match: ScheduledEsportsMatch): String =\n'
+                         '    match.teams.take(2).joinToString(" vs ") { matchTeamLabel(match, it) }\n\n'
+                         'private fun teamCode(team: EsportsTeamRef?): String =\n'
+                         '    team?.code?.ifBlank { team.name }?.ifBlank { "—" } ?: "—"\n\n'
+                         'private fun matchTeamLabel(match: ScheduledEsportsMatch, team: EsportsTeamRef?): String {\n'
+                         '    val code = teamCode(team)\n'
+                         '    if (!isDevelopmentLeague(match)) return code\n'
+                         '    val name = team?.name?.trim().orEmpty()\n'
+                         '    return when {\n'
+                         '        code.equals("T1A", ignoreCase = true) -> "T1 Academy"\n'
+                         '        name.contains("Esports Academy", ignoreCase = true) -> name.replace(Regex("(?i)Esports\\\\s+Academy"), "Academy")\n'
+                         '        name.contains("Challengers", ignoreCase = true) -> name\n'
+                         '        name.contains("Academy", ignoreCase = true) -> name\n'
+                         '        name.contains("Youth", ignoreCase = true) -> name\n'
+                         '        name.isNotBlank() -> name\n'
+                         '        else -> code\n'
+                         '    }\n'
+                         '}\n\n'
+                         'private fun isDevelopmentLeague(match: ScheduledEsportsMatch): Boolean {\n'
+                         '    val identity = "${match.leagueSlug} ${match.league}".lowercase()\n'
+                         '    return identity.contains("challenger") || identity.contains("academy") || identity.contains("development") || identity.contains("youth") || identity.contains("lck-cl")\n'
+                         '}')
+          if tail not in s:
+              raise SystemExit('schedule label tail not found')
+          p.write_text(s.replace(tail, replacement, 1))
+
+          p = Path('app/src/main/java/com/riftlab/app/data/RiotVodRepository.kt')
+          s = p.read_text()
+          s = s.replace('https://www.youtube.com/embed/$it?playsinline=1&rel=0&enablejsapi=1&origin=https%3A%2F%2Flolesports.com',
+                        'https://www.youtube-nocookie.com/embed/$it?playsinline=1&rel=0&fs=1&enablejsapi=1&origin=https%3A%2F%2Flolesports.com')
+          p.write_text(s)
+
+          p = Path('app/src/main/java/com/riftlab/app/ui/GlobalReplayContent.kt')
+          s = p.read_text()
+          start = s.index('    LaunchedEffect(url, youtubeEmbed, webView) {')
+          end = s.index('\n\n    AndroidView(', start)
+          block = '\n'.join([
+              '    LaunchedEffect(url, youtubeEmbed, webView) {',
+              '        webView.stopLoading()',
+              '        if (youtubeEmbed) {',
+              '            webView.loadUrl(',
+              '                url,',
+              '                mapOf(',
+              '                    "Referer" to "https://lolesports.com/",',
+              '                    "Origin" to "https://lolesports.com"',
+              '                )',
+              '            )',
+              '        } else {',
+              '            webView.loadUrl(url)',
+              '        }',
+              '    }'
+          ])
+          s = s[:start] + block + s[end:]
+          if 'settings.useWideViewPort = true' not in s:
+              s = s.replace('            settings.domStorageEnabled = true\n',
+                            '            settings.domStorageEnabled = true\n            settings.useWideViewPort = true\n            settings.loadWithOverviewMode = true\n', 1)
+          p.write_text(s)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/java/com/riftlab/app/ui/ScheduleCenterUi.kt app/src/main/java/com/riftlab/app/ui/GlobalReplayContent.kt app/src/main/java/com/riftlab/app/data/RiotVodRepository.kt
+          git commit -m "fix: finish dev49 academy labels and embed player"
+          git pull --rebase origin main
+          git push origin HEAD:main
