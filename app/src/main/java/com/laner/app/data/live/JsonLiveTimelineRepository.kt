@@ -43,7 +43,7 @@ import java.security.MessageDigest
  * Provider payloads are deliberately absent from this schema. Only Laner Domain snapshots/events
  * are persisted. One file per GameId limits write blast radius and allows independent recovery.
  * Schema v2 adds conservative tactical event windows while retaining read compatibility with v1.
- * The first v1 -> v2 write preserves the exact v1 payload as a verified sibling recovery copy.
+ * The first v1 -> v2 write preserves the exact validated v1 payload as a sibling recovery copy.
  */
 class JsonLiveTimelineRepository(
     private val directory: File,
@@ -63,7 +63,7 @@ class JsonLiveTimelineRepository(
             "Could not create LIVE timeline directory: ${directory.absolutePath}"
         }
         val target = fileFor(timeline.gameId)
-        ensureV1RecoveryPoint(target)
+        ensureV1RecoveryPoint(target, timeline.gameId)
         atomicWrite(target, encodeTimeline(timeline).toString())
     }
 
@@ -71,17 +71,27 @@ class JsonLiveTimelineRepository(
 
     private fun recoveryFileFor(target: File): File = File(target.parentFile, "${target.name}.schema-v1.bak")
 
-    private fun ensureV1RecoveryPoint(target: File) {
+    private fun ensureV1RecoveryPoint(target: File, expectedGameId: GameId) {
         if (!target.exists()) return
         val existingContent = target.readText(StandardCharsets.UTF_8)
         if (schemaVersionFromRaw(existingContent) != 1) return
+
+        val existingTimeline = decodeTimeline(JSONObject(existingContent))
+        check(existingTimeline.gameId == expectedGameId) {
+            "LIVE timeline v1 identity mismatch before migration: expected=${expectedGameId.value}, stored=${existingTimeline.gameId.value}"
+        }
 
         val recovery = recoveryFileFor(target)
         if (!recovery.exists()) {
             atomicWrite(recovery, existingContent)
         }
-        check(recovery.readText(StandardCharsets.UTF_8) == existingContent) {
+        val recoveryContent = recovery.readText(StandardCharsets.UTF_8)
+        check(recoveryContent == existingContent) {
             "LIVE timeline v1 recovery copy verification failed: ${recovery.absolutePath}"
+        }
+        val recoveredTimeline = decodeTimeline(JSONObject(recoveryContent))
+        check(recoveredTimeline.gameId == expectedGameId) {
+            "LIVE timeline v1 recovery identity mismatch: expected=${expectedGameId.value}, stored=${recoveredTimeline.gameId.value}"
         }
     }
 
