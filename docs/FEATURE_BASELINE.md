@@ -90,10 +90,10 @@
 | LIVE-028 | 横竖屏独立 HUD Profile | BOTH | PLATFORM | dev.63 | HUD Layout Persistence | WAITING EXTERNAL TEST |
 | LIVE-029 | LOCK 后触摸穿透 | SPECTATOR | PLATFORM | dev.63 | Android Overlay Adapter | WAITING EXTERNAL TEST |
 | LIVE-030 | Tactical HUD / 战术副屏 | COACH_ANALYST | PLATFORM | TacticalHudOverlay | HUD Presentation | WAITING EXTERNAL TEST |
-| LIVE-031 | Bilibili 观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
-| LIVE-032 | 虎牙观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | TODO |
-| LIVE-033 | LoL Esports / YouTube / Twitch / X 观赛入口 | SPECTATOR | PLATFORM | dev.60 | Watch Hub | TODO |
-| LIVE-034 | 直播入口与赛事数据完全解耦 | SYSTEM | PLATFORM | RiftLabApp | Watch Port | TODO |
+| LIVE-031 | Bilibili 观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | WAITING EXTERNAL TEST |
+| LIVE-032 | 虎牙观赛入口 | SPECTATOR | PLATFORM | StreamLauncher | Watch Hub | WAITING EXTERNAL TEST |
+| LIVE-033 | LoL Esports / YouTube / Twitch / X 观赛入口 | SPECTATOR | PLATFORM | dev.60 | Watch Hub | WAITING EXTERNAL TEST |
+| LIVE-034 | 直播入口与赛事数据完全解耦 | SYSTEM | PLATFORM | RiftLabApp | Watch Port | WAITING EXTERNAL TEST |
 
 ## LIVE 验收原则
 - 导播已明确展示且 Laner 无额外解释价值的信息，不应抢占 HUD 高优先级区域。
@@ -109,6 +109,7 @@
 - `LIVE-009` 当前覆盖 Baron count/delta；Herald/Atakhan 未统一，因此保持 `IN PROGRESS`。
 - LNR-020 已完成 LIVE-024~029 的新架构实现与自动 Gate；系统悬浮窗权限、后台显示、拖动、横竖屏 Profile 与 Lock 触摸穿透必须真机补证，因此保持 `WAITING EXTERNAL TEST`。
 - LNR-020 的本地 Draft HUD Preview 与 LNR-021 Tactical Preview 都明确为 `LOCAL PREVIEW · NOT FACT`，不得写入 Core / Repository / Timeline；真实 Draft Provider 未迁移，所以 LIVE-012 仍为 `TODO`。
+- LNR-022 已实现 LIVE-031~034 的统一 Watch Port、六平台 Catalog、悬浮窗权限续接与 Web/App fallback；Android 真机外部 App 跳转和权限往返仍需补证，因此保持 `WAITING EXTERNAL TEST`。
 
 ---
 
