@@ -1,0 +1,17 @@
+name: DEV OTA Release
+
+on:
+  workflow_dispatch:
+
+# OTA publishing now happens inside Android Build after a successful signed build.
+# Keeping this workflow as a manual placeholder avoids a second publisher racing
+# with Android Build and deleting dev-latest before recreating it.
+
+permissions:
+  contents: read
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "DEV OTA is published by .github/workflows/android-build.yml"
