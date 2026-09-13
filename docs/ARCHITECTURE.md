@@ -4,7 +4,7 @@
 
 - 文档状态：`ACTIVE / M1`
 - 架构状态：`FROZEN BASELINE / 按工程宪法增量演进`
-- 当前实现：LNR-010~020 已进入功能迁移与外部验证阶段；具体完成度以 `docs/IMPLEMENTATION_STATUS.md` 和 `docs/FEATURE_BASELINE.md` 为准
+- 当前实现：LNR-010~021 已进入功能迁移、自动验证与外部验证阶段；LNR-021 正处于 `INC-LNR-021-001` 合规整改，具体完成度以 `docs/IMPLEMENTATION_STATUS.md` 和 `docs/FEATURE_BASELINE.md` 为准
 
 ## 核心目标
 
@@ -190,6 +190,23 @@ PRE_MATCH / LIVE_MATCH / POST_MATCH
 
 赛中能力包括实时赛事状态、BP、事件流、导播未展示或未及时展示的信息、等级/技能/装备/经济/资源/节奏衍生观察、HUD、沙盘和关键节点提示。
 
+### 当前 LNR-021 LIVE Event / Tactical 路径
+
+```text
+Verified LiveGameSnapshot
+→ LiveTimelineService ingest
+→ canonical GameTimeline snapshots
+→ LiveEventDerivationService
+→ LiveTimelineService.reconcileGeneratedEvents
+→ canonical MatchEvent
+→ LiveMatchContextService
+→ TacticalHudPresentationMapper
+→ TacticalHudWindowController
+→ OverlayWindowHost
+```
+
+派生事件必须保守：nullable metric 保持 unknown；`TeamFightWindowEvent` 只有在双方 kill delta 都可比较且短窗口累计达到阈值时生成，任何一侧 unknown 都不得补成 0。Provider explicit / Draft / lifecycle 事件不受本地 generator reconcile 删除。
+
 ## POST_MATCH / 赛后
 
 面向小局或系列赛已经结束后的结果沉淀与复盘，包括比赛结果、数据面板、关键事件时间线、统计与对比、复盘与 AI 总结、积分排名晋级变化、历史归档、可回放事件与状态快照。
@@ -239,7 +256,7 @@ External Sources / Platform APIs / Storage
 必须把“快”与“权威”分开：首个可信源可以先 provisional 发布，后续高权威源可以确认/修正，但所有修订必须留 provenance/revision。
 
 ### Persistence
-负责缓存、历史数据、Schema、Migration 和恢复；存储格式不得污染领域模型。
+负责缓存、历史数据、Schema、Migration 和恢复；存储格式不得污染领域模型。当前 LIVE Timeline schema 为 v2，可读取 v1；首次 `v1 → v2` 覆盖写前必须保存并校验 v1 recovery copy，禁止无恢复点升级。
 
 ### Analysis
 负责统计、规则分析、AI 辅助能力。AI 必须是可选能力，不能成为基础赛事展示的单点依赖，也不能成为事实权威层。
