@@ -43,12 +43,12 @@ internal class DynamicTeamDataProvider(
     companion object {
         private const val CACHE_TTL_MS = 30L * 60L * 1000L
         private val ENDPOINTS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/lpl/team_profiles.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/lpl/team_profiles.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/lpl/team_profiles.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/lpl/team_profiles.json"
         )
         private val PEOPLE_ENDPOINTS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/lpl/people.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/lpl/people.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/lpl/people.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/lpl/people.json"
         )
 
         private data class CachedDirectory(val fetchedAt: Long, val root: JSONObject)

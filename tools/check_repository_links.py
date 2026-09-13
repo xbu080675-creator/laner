@@ -21,6 +21,8 @@ for base in SCAN_ROOTS:
     if not base.exists():
         continue
     for path in sorted(p for p in base.rglob("*") if p.is_file()):
+        if path.resolve() == Path(__file__).resolve():
+            continue
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
         except UnicodeDecodeError:

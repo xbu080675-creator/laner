@@ -12,7 +12,7 @@ STATUS_FILE="$STATE_DIR/status.json"
 SECRETS_FILE="$STATE_DIR/secrets.env"
 BRIDGE_FILE="$STATE_DIR/riftclaw-bridge.mjs"
 INSTALL_TIMEOUT_SECONDS="${RIFTCLAW_INSTALL_TIMEOUT_SECONDS:-90}"
-RAW_BASE="https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main"
+RAW_BASE="https://raw.githubusercontent.com/xbu080675-creator/laner/main"
 OC=(openclaw --profile "$PROFILE")
 
 say() { printf '\n[RiftClaw] %s\n' "$*"; }

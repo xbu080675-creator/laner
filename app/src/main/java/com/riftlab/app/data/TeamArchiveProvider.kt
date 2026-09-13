@@ -94,12 +94,12 @@ internal class TeamArchiveProvider {
     companion object {
         private const val CACHE_TTL_MS = 30L * 60L * 1000L
         private val GRAPH_ENDPOINTS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/esports/esports_graph.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/esports/esports_graph.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/esports/esports_graph.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/esports/esports_graph.json"
         )
         private val LEGACY_ENDPOINTS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/lpl/team_archive.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/lpl/team_archive.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/lpl/team_archive.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/lpl/team_archive.json"
         )
         private data class Cached(val at: Long, val root: JSONObject)
         private val cache = AtomicReference<Cached?>(null)

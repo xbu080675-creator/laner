@@ -19,8 +19,8 @@ internal class GlobalVerifiedAwardsProvider {
     companion object {
         private const val CACHE_TTL_MS = 30L * 60L * 1000L
         private val ENDPOINTS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/global/match_awards.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/match_awards.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/global/match_awards.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/global/match_awards.json"
         )
 
         private data class Cached(val fetchedAt: Long, val root: JSONObject)

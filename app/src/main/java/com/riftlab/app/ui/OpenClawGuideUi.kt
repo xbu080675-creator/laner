@@ -50,7 +50,7 @@ import com.riftlab.app.data.RiftClawProbe
 import kotlinx.coroutines.launch
 
 private const val BOOTSTRAP =
-    "curl -fL https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/scripts/riftclaw-bootstrap.sh -o ~/riftclaw-bootstrap.sh && chmod 700 ~/riftclaw-bootstrap.sh && ~/riftclaw-bootstrap.sh"
+    "curl -fL https://raw.githubusercontent.com/xbu080675-creator/laner/main/scripts/riftclaw-bootstrap.sh -o ~/riftclaw-bootstrap.sh && chmod 700 ~/riftclaw-bootstrap.sh && ~/riftclaw-bootstrap.sh"
 private const val START_RIFTCLAW = "~/.local/share/riftclaw/start.sh"
 private const val VERIFY_PLUGIN = "openclaw --profile riftclaw plugins list | grep -i weibo"
 private const val VERIFY_SKILL = "openclaw --profile riftclaw skills list | grep -i weibo-search"

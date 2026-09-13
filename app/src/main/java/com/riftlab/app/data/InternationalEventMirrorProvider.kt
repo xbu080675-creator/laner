@@ -21,8 +21,8 @@ import java.net.URL
  */
 internal object InternationalEventMirrorProvider {
     private val endpoints = listOf(
-        "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/global/international_events.json",
-        "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/international_events.json"
+        "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/global/international_events.json",
+        "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/global/international_events.json"
     )
     private const val BUNDLED_ASSET = "data/international_events.json"
     private const val TTL_MS = 15L * 60L * 1000L

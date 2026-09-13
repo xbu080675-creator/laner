@@ -35,8 +35,8 @@ internal class GlobalTeamStaffProvider {
         private const val NEGATIVE_TTL_MS = 15L * 60L * 1000L
         private const val CARGO_API = "https://lol.fandom.com/api.php"
         private val MIRRORS = listOf(
-            "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/global/team_staff.json",
-            "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/team_staff.json"
+            "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/global/team_staff.json",
+            "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/global/team_staff.json"
         )
 
         private data class Cached(val fetchedAt: Long, val value: GlobalTeamStaffSnapshot)

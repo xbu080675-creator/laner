@@ -13,7 +13,7 @@ OUT = ROOT / "data" / "lpl" / "riot_persisted_mirror.json"
 BASE = "https://esports-api.lolesports.com/persisted/gw"
 API_KEY = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"
 LPL = "98767991314006698"
-UA = "RiftLab-RiotMirror/1.0 (+https://github.com/xbu080675-creator/Rlftlab)"
+UA = "RiftLab-RiotMirror/1.0 (+https://github.com/xbu080675-creator/laner)"
 
 
 def now_iso() -> str:
