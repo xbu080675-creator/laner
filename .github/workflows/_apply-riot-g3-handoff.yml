@@ -1,0 +1,200 @@
+name: Apply Riot G3 Handoff Fix
+
+on:
+  push:
+    branches:
+      - fix/riot-g3-handoff
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[g3-handoff-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/riot-g3-handoff
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Apply expected-game Riot handoff fix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/src/main/java/com/riftlab/app/data/LolEsportsDataSources.kt')
+          text = path.read_text()
+
+          old = '''                val event = currentEvent ?: continue
+                if (knownGames.isEmpty()) knownGames = fetchEventGames(event)
+
+                val stateGame = knownGames.firstOrNull { isInProgress(it.state) }
+                val newerWindowGame = currentGame?.let { active ->
+                    knownGames
+                        .filter { it.gameNumber > active.gameNumber }
+                        .minByOrNull { it.gameNumber }
+                        ?.takeIf { hasAnyLiveFrames(event, it) }
+                }
+
+                val discovered = stateGame
+                    ?: newerWindowGame
+                    ?: currentGame
+                    ?: findHighestStartedGame(event, knownGames)
+'''
+          new = '''                val event = currentEvent ?: continue
+                if (knownGames.isEmpty()) knownGames = fetchEventGames(event)
+
+                // During a between-games handoff Riot EventDetails already exposes every BO game id,
+                // even while the next game state is still `unstarted`.  The series score is a stronger
+                // signal for the expected game number than replaying the previous game's historical
+                // LiveStats window.  Bind that exact game id first, then wait for its first frame.
+                val expectedGameNumber = expectedGameNumber(LiveMatchTargetRegistry.snapshot(), knownGames)
+                val expectedGame = expectedGameNumber
+                    ?.let { expected -> knownGames.firstOrNull { it.gameNumber == expected } }
+                val stateGame = knownGames
+                    .filter { isInProgress(it.state) }
+                    .maxByOrNull { it.gameNumber }
+                val newerWindowGame = currentGame?.let { active ->
+                    knownGames
+                        .filter { it.gameNumber > active.gameNumber }
+                        .minByOrNull { it.gameNumber }
+                        ?.takeIf { hasAnyLiveFrames(event, it) }
+                }
+
+                val discovered = stateGame
+                    ?: expectedGame
+                    ?: newerWindowGame
+                    ?: currentGame
+                    ?: findHighestStartedGame(event, knownGames)
+'''
+          if old not in text:
+              raise SystemExit('selection anchor missing')
+          text = text.replace(old, new, 1)
+
+          old = '''    private suspend fun findHighestStartedGame(event: LiveEventRef, games: List<LiveGameRef>): LiveGameRef? {
+        for (game in games.sortedByDescending { it.gameNumber }) {
+            if (hasAnyLiveFrames(event, game)) return game
+        }
+        return null
+    }
+
+    /**
+'''
+          new = '''    private fun expectedGameNumber(
+        target: ScheduledEsportsMatch?,
+        games: List<LiveGameRef>
+    ): Int? {
+        if (target == null || games.isEmpty()) return null
+        val completedWins = target.teams.take(2).sumOf { it.gameWins.coerceAtLeast(0) }
+        val candidate = completedWins + 1
+        return candidate.takeIf { expected -> games.any { it.gameNumber == expected } }
+    }
+
+    private suspend fun findHighestStartedGame(event: LiveEventRef, games: List<LiveGameRef>): LiveGameRef? {
+        for (game in games.sortedByDescending { it.gameNumber }) {
+            if (isCompletedGameState(game.state) || isUnneededGameState(game.state)) continue
+            if (hasAnyLiveFrames(event, game)) return game
+        }
+        return null
+    }
+
+    private fun isCompletedGameState(value: String): Boolean {
+        val normalized = value.lowercase().replace("_", "").replace("-", "").replace(" ", "")
+        return normalized.contains("complete") || normalized == "finished"
+    }
+
+    private fun isUnneededGameState(value: String): Boolean {
+        val normalized = value.lowercase().replace("_", "").replace("-", "").replace(" ", "")
+        return normalized.contains("unneeded") || normalized.contains("cancel")
+    }
+
+    /**
+'''
+          if old not in text:
+              raise SystemExit('helper anchor missing')
+          text = text.replace(old, new, 1)
+
+          old = '''                        "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"
+'''
+          new = '''                        "Riot LiveStats · 已锁定下一小局 gameId，当前 10 秒窗口尚无有效帧；保持绑定并自适应回退"
+'''
+          if old not in text:
+              raise SystemExit('diagnostic anchor missing')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text)
+
+          doc = Path('docs/development/2026/2026-09-13-riot-next-game-handoff-fix.md')
+          doc.write_text('''# Riot next-game handoff fix — 2026-09-13
+
+## Task
+- ID: RIOT-LIVE-G3-HANDOFF
+- Executor: OpenAI / ChatGPT
+- Baseline: `main@9d97dacb7a838df8afdbef87fe8ec13cdbb73a92`
+
+## User-visible failure
+During AL vs BLG, Riot public Event `117155436343202202` had Game 3 in progress while Laner remained `BETWEEN GAMES · COMM · waiting G3`. The app had the correct series/event identity but did not hand off to the Riot G3 LiveStats game id quickly enough.
+
+## Root cause
+Laner preferred state-driven discovery and historical-window probing. Between games, EventDetails already contains all BO game ids, but the next game may still be marked `unstarted` while the previous game remains readable forever as historical LiveStats. This allowed the previous game binding to survive and made the handoff depend on probing the next game's first frame.
+
+## Fix
+- Derive the expected next game number from the authoritative current series score: `sum(gameWins) + 1`.
+- Bind the corresponding Riot EventDetails game id before historical-window fallback, even if its state is still `unstarted`.
+- Keep that game id through temporary empty windows; the existing aligned adaptive cursor waits for the first valid frame.
+- Prefer the highest `InProgress` game if Riot state has already advanced.
+- Exclude `completed`, `unneeded`, and cancelled games from historical current-game discovery so old frames cannot re-select a finished game.
+
+## Scope / boundaries
+Only the App/Adapter Riot live-source selector changes. Core, UI, provider priority, MatchIdentityPolicy, and external APIs are unchanged. No GPL source code was copied.
+
+## Validation gates
+- `python3 tools/check_core_boundary.py`
+- `python3 tools/check_repository_links.py`
+- `gradle :app:compileDebugKotlin`
+- `gradle :app:assembleDebug`
+
+Real-device acceptance remains required against a live between-games -> next-game transition.
+
+## Rollback
+Revert the final implementation commit produced from this branch.
+
+## Status
+Implementation workflow must pass all listed gates before merge. Real-device live transition remains external acceptance.
+''')
+
+          # remove one-shot workflow from the resulting implementation commit
+          Path('.github/workflows/_apply-riot-g3-handoff.yml').unlink()
+          PY
+
+      - name: Verify architecture gates
+        run: |
+          python3 tools/check_core_boundary.py
+          python3 tools/check_repository_links.py
+
+      - name: Compile and build
+        run: |
+          gradle :app:compileDebugKotlin
+          gradle :app:assembleDebug
+
+      - name: Commit audited implementation
+        shell: bash
+        run: |
+          git config user.name "PocketSpace"
+          git config user.email "xbu080675@gmail.com"
+          git add -A
+          git commit -m "fix(live): bind expected Riot game before window probe [g3-handoff-applied]"
+          git push origin HEAD:fix/riot-g3-handoff
