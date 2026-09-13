@@ -7,17 +7,40 @@ on:
     paths:
       - '.github/workflows/esports8-research-probe.yml'
       - 'tools/esports8_probe.sh'
+      - 'tools/esports8_network_probe.mjs'
   workflow_dispatch:
 
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Probe LPL live match
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser probe
         shell: bash
-        run: bash tools/esports8_probe.sh er5s6s3t2r559f6
-      - name: Probe LCK live sample
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Capture LPL live network
         shell: bash
-        run: bash tools/esports8_probe.sh l70s9sjtm011ytx
+        run: node tools/esports8_network_probe.mjs er5s6s3t2r559f6
+
+      - name: Capture LCK sample network
+        shell: bash
+        run: node tools/esports8_network_probe.mjs l70s9sjtm011ytx
+
+      - name: Upload network evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: esports8-network-probe
+          path: probe/**
+          if-no-files-found: warn
+          retention-days: 3
