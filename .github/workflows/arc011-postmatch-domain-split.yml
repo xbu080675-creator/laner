@@ -1,4 +1,4 @@
-# ARC011 verified migration runner
+# ARC011 verified migration runner v2
 name: ARC011 Post Match Domain Split
 
 on:
@@ -29,8 +29,7 @@ jobs:
           completed = Path('app/src/main/java/com/riftlab/app/data/CompletedGameArchive.kt')
           text = completed.read_text(encoding='utf-8')
           model_start = text.index('data class CompletedSeriesSnapshot(')
-          runtime_marker = '/**\n * Post-match archive.'
-          runtime_start = text.index(runtime_marker)
+          runtime_start = text.index('/**\n * Post-match archive.')
           prefix = text[:model_start].rstrip()
           model = text[model_start:runtime_start].rstrip()
           runtime = text[runtime_start:].rstrip()
@@ -41,10 +40,8 @@ jobs:
 
           detail = Path('app/src/main/java/com/riftlab/app/data/MatchDetailRepository.kt')
           text = detail.read_text(encoding='utf-8')
-          model_marker = '/** Stable identity shared by schedule, post-match and MVP/vote/BP providers. */'
-          runtime_marker = '/**\n * Match detail has its own selection state.'
-          model_start = text.index(model_marker)
-          runtime_start = text.index(runtime_marker)
+          model_start = text.index('/** Stable identity shared by schedule, post-match and MVP/vote/BP providers. */')
+          runtime_start = text.index('/**\n * Match detail has its own selection state.')
           prefix = text[:model_start].rstrip()
           models = text[model_start:runtime_start].rstrip()
           runtime = text[runtime_start:].rstrip()
@@ -68,6 +65,20 @@ jobs:
           if history_core.exists(): raise SystemExit(f'{history_core}: already exists')
           history_core.write_text(pkg + '\n\n' + model + '\n', encoding='utf-8')
           history.write_text(prefix + '\n\n' + provider + '\n', encoding='utf-8')
+
+          # Cross-module Kotlin repair exposed by the first ARC-011 build.
+          awards = Path('app/src/main/java/com/riftlab/app/data/LplOfficialAwardsProvider.kt')
+          awards_text = awards.read_text(encoding='utf-8')
+          old = '        val gameMvps = dedupMvps.filter { it.game != null && it.game > 0 }.sortedBy { it.game }\n'
+          new = (
+              '        val gameMvps = dedupMvps.filter { record ->\n'
+              '            val game = record.game\n'
+              '            game != null && game > 0\n'
+              '        }.sortedBy { it.game }\n'
+          )
+          if awards_text.count(old) != 1:
+              raise SystemExit(f'{awards}: expected exactly one cross-module smart-cast site')
+          awards.write_text(awards_text.replace(old, new, 1), encoding='utf-8')
 
           checks = {
               completed_core: ['data class CompletedSeriesSnapshot'],
@@ -101,7 +112,8 @@ jobs:
               '## 迁移\n\n'
               '- `CompletedSeriesSnapshot` 迁入 Core；`CompletedGameArchive` StateFlow 运行时留 App。\n'
               '- `MatchDetailKey`、MVP/投票/BP 记录、`MatchDetailState` 迁入 Core；`MatchDetailRepository` 及 Provider/Mutex/协程留 App。\n'
-              '- `TournamentEventHistorySnapshot` 迁入 Core 并仅解除顶层 `internal`；Riot Completed Events/LiveStats/JSON Provider 留 App。\n\n'
+              '- `TournamentEventHistorySnapshot` 迁入 Core并仅解除顶层 `internal`；Riot Completed Events/LiveStats/JSON Provider 留 App。\n\n'
+              '## 首次编译修复\n\n第一次 ARC-011 完整构建通过了两道架构门禁，但 `LplOfficialAwardsProvider` 对迁入 Core 的 `OfficialMvpRecord.game` 使用了跨模块 smart cast。修复仅把 `record.game` 读取到局部 `val game` 后再判空/比较；MVP 筛选条件、排序和业务语义不变。\n\n'
               '## 行为影响\n\n无功能、UI、数据源、排序、过滤或历史补全逻辑变化。\n\n'
               '## 验收\n\n- Core boundary PASS。\n- Laner repository links PASS。\n- `:core:test` PASS。\n- `:app:assembleDebug` PASS。\n',
               encoding='utf-8'
