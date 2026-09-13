@@ -9,20 +9,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import org.json.JSONArray
-import org.json.JSONObject
 import java.time.Instant
 
 /**
- * Riot live adapter driven by Riot EventDetails game state.
+ * Riot live adapter driven by Riot EventDetails + Riot LiveStats.
  *
  * Design intent:
- * 1) EventDetails is the sole authority for which BO game should be bound.
- * 2) A newly selected game is bootstrapped once with /window/{gameId} without startingTime.
- * 3) After bootstrap, aligned LiveStats windows are polled continuously.
- * 4) Historical LiveStats frames never choose the current game.
+ * 1) Direct Riot EventDetails state is authoritative for the active BO game.
+ * 2) Persisted-mirror EventDetails is identity-only: it may provide the BO game ids, but its state
+ *    is never trusted as real-time truth.
+ * 3) In mirror mode, a newer BO game is promoted only after its Riot LiveStats window is meaningful.
+ * 4) A newly selected game is bootstrapped once with /window/{gameId} without startingTime.
+ * 5) Historical LiveStats frames never move selection backwards.
  *
- * This deliberately mirrors the proven event -> game -> bootstrap -> live-loop architecture used by
- * public LoL Esports viewers, while keeping RiftLab's own models, identity gate and implementation.
+ * This keeps the proven event -> game -> bootstrap -> live-loop shape used by public LoL Esports
+ * viewers while accounting for Android networks where persisted Riot gateway traffic may fall back
+ * to RiftLab's GitHub mirror.
  */
 internal class RiotEventDrivenLiveDataSource(
     private val client: LolEsportsApiClient = LolEsportsApiClient()
@@ -36,6 +38,16 @@ internal class RiotEventDrivenLiveDataSource(
         LIVE,
         BETWEEN_GAMES
     }
+
+    private data class EventGamesPayload(
+        val games: List<LiveGameRef>,
+        val fromMirror: Boolean
+    )
+
+    private data class MirrorPromotion(
+        val game: LiveGameRef,
+        val snapshot: LiveSnapshot
+    )
 
     private val liveCursor = RiotLiveStatsCursor()
 
@@ -57,6 +69,8 @@ internal class RiotEventDrivenLiveDataSource(
         var lastEventRefreshEpochMs = 0L
         var lastEmissionKey = ""
         var consecutiveEventErrors = 0
+        var latestGames = emptyList<LiveGameRef>()
+        var eventDetailsFromMirror = false
 
         while (currentCoroutineContext().isActive) {
             val loopStarted = System.currentTimeMillis()
@@ -69,6 +83,8 @@ internal class RiotEventDrivenLiveDataSource(
                     selectedGame = null
                     selectedGameId = ""
                     previous = null
+                    latestGames = emptyList()
+                    eventDetailsFromMirror = false
                     lastEventRefreshEpochMs = 0L
                     lastEmissionKey = ""
                     consecutiveEventErrors = 0
@@ -110,26 +126,30 @@ internal class RiotEventDrivenLiveDataSource(
                 }
 
                 val activeEvent = event ?: continue
-
-                // Re-read EventDetails continuously. Stale game state was the root cause of sticking
-                // to a completed G2 while G3 had already begun.
                 val now = System.currentTimeMillis()
-                val games = if (now - lastEventRefreshEpochMs >= EVENT_DETAILS_POLL_MS || selectedGame == null) {
+                var refreshedThisLoop = false
+                if (now - lastEventRefreshEpochMs >= EVENT_DETAILS_POLL_MS || selectedGame == null) {
                     try {
                         val refreshed = fetchEventGames(activeEvent)
                         lastEventRefreshEpochMs = now
                         consecutiveEventErrors = 0
-                        refreshed
+                        if (refreshed.games.isNotEmpty()) {
+                            latestGames = refreshed.games
+                            eventDetailsFromMirror = refreshed.fromMirror
+                            refreshedThisLoop = true
+                        }
                     } catch (t: Throwable) {
                         consecutiveEventErrors++
                         if (selectedGame == null || consecutiveEventErrors >= MAX_EVENT_ERRORS_WITHOUT_GAME) throw t
-                        emptyList()
                     }
-                } else {
-                    emptyList()
                 }
 
-                val authoritativeGame = if (games.isNotEmpty()) selectAuthoritativeGame(games) else selectedGame
+                val authoritativeGame = when {
+                    latestGames.isEmpty() -> selectedGame
+                    eventDetailsFromMirror -> selectMirrorAnchorGame(latestGames, target, selectedGame)
+                    else -> selectAuthoritativeGame(latestGames)
+                }
+
                 if (authoritativeGame == null) {
                     stage = Stage.BETWEEN_GAMES
                     _status.value = LiveSourceStatus(
@@ -152,17 +172,57 @@ internal class RiotEventDrivenLiveDataSource(
 
                     _status.value = LiveSourceStatus(
                         phase = LiveSourcePhase.WAITING_FOR_MATCH,
-                        message = "Riot EventDriven Live · G${authoritativeGame.gameNumber} gameId 已绑定，开始 bootstrap",
+                        message = if (eventDetailsFromMirror) {
+                            "Riot EventDriven Live · MIRROR IDs · G${authoritativeGame.gameNumber} 已绑定，LiveStats 验证中"
+                        } else {
+                            "Riot EventDriven Live · DIRECT · G${authoritativeGame.gameNumber} gameId 已绑定，开始 bootstrap"
+                        },
                         eventId = activeEvent.eventId,
                         gameId = authoritativeGame.gameId,
                         lastUpdateEpochMs = System.currentTimeMillis()
                     )
-                } else if (games.isNotEmpty()) {
-                    // Keep state/side metadata fresh even when the gameId is unchanged.
+                } else if (refreshedThisLoop) {
                     selectedGame = authoritativeGame
                 }
 
-                val game = selectedGame ?: continue
+                var game = selectedGame ?: continue
+
+                // Mirror EventDetails can be minutes behind. Treat its state as stale and use the
+                // static BO game ids only. Probe only *newer* games; promotion requires a meaningful
+                // Riot LiveStats frame, so historical frames can never move us backwards.
+                if (eventDetailsFromMirror && latestGames.isNotEmpty()) {
+                    val promotion = findNewerMirrorLiveGame(activeEvent, game, latestGames)
+                    if (promotion != null && promotion.game.gameId != game.gameId) {
+                        selectedGame = promotion.game
+                        selectedGameId = promotion.game.gameId
+                        game = promotion.game
+                        previous = promotion.snapshot
+                        lastEmissionKey = ""
+                        liveCursor.reset()
+                        liveCursor.onSuccess()
+                        stage = Stage.LIVE
+
+                        val identifiedPromotion = promotion.snapshot.copy(targetKey = observedTargetKey)
+                        val currentTarget = LiveMatchTargetRegistry.snapshot()
+                        if (currentTarget != null && MatchIdentityPolicy.snapshotBelongsTo(identifiedPromotion, currentTarget)) {
+                            previous = identifiedPromotion
+                            val promotionKey = emissionKey(identifiedPromotion)
+                            _status.value = LiveSourceStatus(
+                                phase = LiveSourcePhase.LIVE,
+                                message = "Riot EventDriven Live · MIRROR IDs → LiveStats verified G${identifiedPromotion.game} · POLL 1s",
+                                eventId = activeEvent.eventId,
+                                gameId = identifiedPromotion.gameId,
+                                lastUpdateEpochMs = System.currentTimeMillis()
+                            )
+                            if (promotionKey != lastEmissionKey) {
+                                lastEmissionKey = promotionKey
+                                emit(identifiedPromotion)
+                            }
+                            delayRemaining(loopStarted, LIVE_POLL_MS)
+                            continue
+                        }
+                    }
+                }
 
                 val snapshot = if (stage == Stage.GAME_RESOLVED || stage == Stage.BOOTSTRAPPING) {
                     stage = Stage.BOOTSTRAPPING
@@ -175,7 +235,11 @@ internal class RiotEventDrivenLiveDataSource(
                     stage = Stage.BOOTSTRAPPING
                     _status.value = LiveSourceStatus(
                         phase = LiveSourcePhase.WAITING_FOR_MATCH,
-                        message = "Riot EventDriven Live · G${game.gameNumber} 已绑定，等待第一帧",
+                        message = if (eventDetailsFromMirror) {
+                            "Riot EventDriven Live · MIRROR IDs · G${game.gameNumber} 已绑定，等待 LiveStats 第一帧"
+                        } else {
+                            "Riot EventDriven Live · G${game.gameNumber} 已绑定，等待第一帧"
+                        },
                         eventId = activeEvent.eventId,
                         gameId = game.gameId,
                         lastUpdateEpochMs = System.currentTimeMillis()
@@ -203,7 +267,11 @@ internal class RiotEventDrivenLiveDataSource(
                 val emissionKey = emissionKey(identified)
                 _status.value = LiveSourceStatus(
                     phase = LiveSourcePhase.LIVE,
-                    message = "Riot EventDriven Live · G${identified.game} · POLL 1s",
+                    message = if (eventDetailsFromMirror) {
+                        "Riot EventDriven Live · MIRROR IDs + LiveStats · G${identified.game} · POLL 1s"
+                    } else {
+                        "Riot EventDriven Live · DIRECT · G${identified.game} · POLL 1s"
+                    },
                     eventId = activeEvent.eventId,
                     gameId = identified.gameId,
                     lastUpdateEpochMs = System.currentTimeMillis()
@@ -225,8 +293,6 @@ internal class RiotEventDrivenLiveDataSource(
                     lastUpdateEpochMs = System.currentTimeMillis()
                 )
 
-                // A transient network failure must not discard a valid event/game binding. Only
-                // re-resolve the event after repeated EventDetails failures with no usable game.
                 if (selectedGame == null && consecutiveEventErrors >= MAX_EVENT_ERRORS_WITHOUT_GAME) {
                     event = null
                     lastEventRefreshEpochMs = 0L
@@ -253,18 +319,19 @@ internal class RiotEventDrivenLiveDataSource(
         return client.findLiveEvent(preferredMatchId = matchId)
     }
 
-    private suspend fun fetchEventGames(event: LiveEventRef): List<LiveGameRef> {
+    private suspend fun fetchEventGames(event: LiveEventRef): EventGamesPayload {
         val root = RiotResilientHttp.getJson(
             "${LolEsportsConfig.PERSISTED_BASE}/getEventDetails?hl=en-US&id=${event.eventId}",
             connectTimeoutMs = 5_000,
             readTimeoutMs = 5_000
         )
+        val fromMirror = RiotResilientHttp.sourceLabel().startsWith("RiftLab Riot Mirror")
         val match = root.optJSONObject("data")
             ?.optJSONObject("event")
-            ?.optJSONObject("match") ?: return emptyList()
+            ?.optJSONObject("match") ?: return EventGamesPayload(emptyList(), fromMirror)
         val games = match.optJSONArray("games") ?: JSONArray()
 
-        return buildList {
+        val parsed = buildList {
             for (i in 0 until games.length()) {
                 val raw = games.optJSONObject(i) ?: continue
                 val gameId = raw.optString("id")
@@ -291,12 +358,11 @@ internal class RiotEventDrivenLiveDataSource(
                 )
             }
         }.sortedBy { it.gameNumber }
+
+        return EventGamesPayload(parsed, fromMirror)
     }
 
-    /**
-     * Same responsibility split as the reference viewer: EventDetails chooses the game.
-     * LiveStats never participates in game selection.
-     */
+    /** Direct EventDetails state is authoritative when the request actually came from Riot. */
     private fun selectAuthoritativeGame(games: List<LiveGameRef>): LiveGameRef? {
         if (games.isEmpty()) return null
 
@@ -312,6 +378,55 @@ internal class RiotEventDrivenLiveDataSource(
         return games
             .filter { stateIsCompleted(it.state) }
             .maxByOrNull { it.gameNumber }
+    }
+
+    /**
+     * Mirror state is not real-time truth. Prefer the current schedule score as a soft anchor when
+     * it has advanced, otherwise retain the current binding, otherwise fall back to mirror state.
+     * Any actual advancement beyond this anchor must be verified by Riot LiveStats.
+     */
+    private fun selectMirrorAnchorGame(
+        games: List<LiveGameRef>,
+        target: ScheduledEsportsMatch?,
+        selected: LiveGameRef?
+    ): LiveGameRef? {
+        if (games.isEmpty()) return selected
+
+        val scoreHint = target
+            ?.teams
+            ?.take(2)
+            ?.sumOf { it.gameWins }
+            ?.plus(1)
+            ?.coerceAtLeast(1)
+            ?: 1
+
+        val hinted = games.firstOrNull { it.gameNumber == scoreHint }
+        if (selected != null) {
+            if (hinted != null && hinted.gameNumber > selected.gameNumber) return hinted
+            return games.firstOrNull { it.gameId == selected.gameId } ?: selected
+        }
+        if (hinted != null && scoreHint > 1) return hinted
+        return selectAuthoritativeGame(games) ?: games.firstOrNull()
+    }
+
+    /**
+     * In mirror mode only, probe newer BO game ids from newest to oldest. A game is promoted only if
+     * Riot LiveStats returns a meaningful frame. This is what lets G4 take over even when a cached
+     * EventDetails payload still claims G3 is in progress.
+     */
+    private suspend fun findNewerMirrorLiveGame(
+        event: LiveEventRef,
+        current: LiveGameRef,
+        games: List<LiveGameRef>
+    ): MirrorPromotion? {
+        val newer = games
+            .filter { it.gameNumber > current.gameNumber }
+            .sortedByDescending { it.gameNumber }
+        for (candidate in newer) {
+            val snapshot = bootstrap(event, candidate, previous = null) ?: continue
+            return MirrorPromotion(candidate, snapshot)
+        }
+        return null
     }
 
     /**
@@ -355,7 +470,6 @@ internal class RiotEventDrivenLiveDataSource(
             }
         }
 
-        // Keep a no-cursor fallback, but never use it to select a different game.
         try {
             val fallback = client.fetchLiveWindow(event.copy(startTimeIso = ""), game, previous)
             if (isMeaningful(fallback)) {
@@ -406,8 +520,6 @@ internal class RiotEventDrivenLiveDataSource(
     }
 
     companion object {
-        // The public reference viewer polls every 500 ms. Riot LiveStats itself advances on a much
-        // coarser timeline, so RiftLab uses 1 s while live and 500 ms only during game handoff.
         private const val HANDOFF_POLL_MS = 500L
         private const val LIVE_POLL_MS = 1_000L
         private const val EVENT_DETAILS_POLL_MS = 1_000L
