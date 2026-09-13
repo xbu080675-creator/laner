@@ -7,7 +7,7 @@ package com.riftlab.app.data
  * remain null until RiftLab can reproduce them from complete split results or consume an explicit
  * official total. This separation prevents a stale/partial schedule window from becoming fake CP.
  */
-internal object OfficialLcpChampionshipPoints2026 {
+object OfficialLcpChampionshipPoints2026 {
     const val sourceLabel =
         "LoL Esports · LCP 2026 Season Primer · https://lolesports.com/en-SG/news/lcp-2026-season-primer · checked 2026-09-10"
 
