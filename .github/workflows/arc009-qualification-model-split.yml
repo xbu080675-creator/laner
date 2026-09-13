@@ -41,7 +41,7 @@ jobs:
 
           prefix = text[:model_start].rstrip()
           model_body = text[model_start:store_start].rstrip()
-          store_body = text[store_start + 1:].lstrip()
+          store_body = text[store_start + 1:].lstrip().rstrip()
 
           package_line = 'package com.riftlab.app.data'
           if not prefix.startswith(package_line):
@@ -151,6 +151,7 @@ jobs:
         run: |
           git config user.name 'PocketSpace'
           git config user.email 'xbu080675@gmail.com'
+          rm -f .github/workflows/arc009-qualification-model-split.yml
           git add -A
           git diff --cached --quiet && { echo 'No ARC009 changes to commit'; exit 1; }
           git commit -m 'LNR-ARC-009: split qualification domain from runtime store'
