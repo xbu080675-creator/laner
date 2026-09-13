@@ -13,7 +13,7 @@ data class WatchDestination(
     val displayName: String,
     val region: WatchRegion,
     /** Product capability metadata only; launch details remain in the platform Adapter. */
-    val nativeAppSupported: Boolean,
+    val nativeAppSupported: Boolean = false,
 ) {
     init {
         require(id.isNotBlank())
