@@ -249,7 +249,15 @@ internal class LolEsportsLiveDataSource(
                 val event = currentEvent ?: continue
                 if (knownGames.isEmpty()) knownGames = fetchEventGames(event)
 
-                val stateGame = knownGames.firstOrNull { isInProgress(it.state) }
+                // EventDetails exposes every BO game id before the next game is marked in-progress.
+                // Use the authoritative series score to bind the expected next Riot game id first,
+                // then wait on that game's first LiveStats frame instead of replaying the previous game.
+                val expectedGameNumber = expectedGameNumber(LiveMatchTargetRegistry.snapshot(), knownGames)
+                val expectedGame = expectedGameNumber
+                    ?.let { expected -> knownGames.firstOrNull { it.gameNumber == expected } }
+                val stateGame = knownGames
+                    .filter { isInProgress(it.state) }
+                    .maxByOrNull { it.gameNumber }
                 val newerWindowGame = currentGame?.let { active ->
                     knownGames
                         .filter { it.gameNumber > active.gameNumber }
@@ -258,6 +266,7 @@ internal class LolEsportsLiveDataSource(
                 }
 
                 val discovered = stateGame
+                    ?: expectedGame
                     ?: newerWindowGame
                     ?: currentGame
                     ?: findHighestStartedGame(event, knownGames)
@@ -321,7 +330,7 @@ internal class LolEsportsLiveDataSource(
                 _status.value = LiveSourceStatus(
                     phase = if (windowMiss) LiveSourcePhase.WAITING_FOR_MATCH else LiveSourcePhase.ERROR,
                     message = if (windowMiss) {
-                        "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"
+                        "Riot LiveStats · 已锁定下一小局 gameId，当前 10 秒窗口尚无有效帧；保持绑定并自适应回退"
                     } else {
                         "Riot LiveStats 暂时不可用：${t.message?.take(120) ?: t::class.java.simpleName}"
                     },
@@ -381,11 +390,32 @@ internal class LolEsportsLiveDataSource(
         }.sortedBy { it.gameNumber }
     }
 
+    private fun expectedGameNumber(
+        target: ScheduledEsportsMatch?,
+        games: List<LiveGameRef>
+    ): Int? {
+        if (target == null || games.isEmpty()) return null
+        val completedWins = target.teams.take(2).sumOf { it.gameWins.coerceAtLeast(0) }
+        val candidate = completedWins + 1
+        return candidate.takeIf { expected -> games.any { it.gameNumber == expected } }
+    }
+
     private suspend fun findHighestStartedGame(event: LiveEventRef, games: List<LiveGameRef>): LiveGameRef? {
         for (game in games.sortedByDescending { it.gameNumber }) {
+            if (isCompletedGameState(game.state) || isUnneededGameState(game.state)) continue
             if (hasAnyLiveFrames(event, game)) return game
         }
         return null
+    }
+
+    private fun isCompletedGameState(value: String): Boolean {
+        val normalized = value.lowercase().replace("_", "").replace("-", "").replace(" ", "")
+        return normalized.contains("complete") || normalized == "finished"
+    }
+
+    private fun isUnneededGameState(value: String): Boolean {
+        val normalized = value.lowercase().replace("_", "").replace("-", "").replace(" ", "")
+        return normalized.contains("unneeded") || normalized.contains("cancel")
     }
 
     /**
