@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import com.laner.app.overlay.RiftScreenController
 import com.laner.core.application.WatchDestination
 import com.laner.core.application.WatchLaunchResult
@@ -72,7 +73,10 @@ class AndroidWatchPort(
 
         if (!Settings.canDrawOverlays(context)) {
             savePending(destination.id)
-            requestOverlayPermission()
+            if (!requestOverlayPermission()) {
+                clearPending()
+                return unsupported(destination.id, "系统无法打开悬浮窗授权页面")
+            }
             return WatchLaunchResult(
                 status = WatchLaunchStatus.PERMISSION_REQUIRED,
                 destinationId = destination.id,
@@ -102,11 +106,18 @@ class AndroidWatchPort(
         if (destination == null || spec == null) return unsupported(destinationId, "待恢复观赛入口已失效")
 
         riftScreenController.start()
-        Handler(Looper.getMainLooper()).postDelayed({ open(spec) }, RESUME_DELAY_MS)
+        Handler(Looper.getMainLooper()).postDelayed(
+            {
+                if (!open(spec)) {
+                    Log.w(TAG, "$ERROR_RESUME_OPEN_FAILED destination=${destination.id}")
+                }
+            },
+            RESUME_DELAY_MS,
+        )
         return WatchLaunchResult(
-            status = WatchLaunchStatus.OPENED,
+            status = WatchLaunchStatus.RESUMING,
             destinationId = destination.id,
-            message = "悬浮窗权限已就绪，继续打开 ${destination.displayName}",
+            message = "悬浮窗权限已就绪，正在继续打开 ${destination.displayName}",
         )
     }
 
@@ -128,9 +139,11 @@ class AndroidWatchPort(
         return try {
             context.startActivity(intent)
             true
-        } catch (_: ActivityNotFoundException) {
+        } catch (error: ActivityNotFoundException) {
+            Log.d(TAG, "$ERROR_HANDLER_MISSING uri=${intent.data}", error)
             false
-        } catch (_: SecurityException) {
+        } catch (error: SecurityException) {
+            Log.w(TAG, "$ERROR_HANDLER_SECURITY uri=${intent.data}", error)
             false
         }
     }
@@ -147,13 +160,20 @@ class AndroidWatchPort(
         false
     }
 
-    private fun requestOverlayPermission() {
+    private fun requestOverlayPermission(): Boolean = try {
         context.startActivity(
             Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:${context.packageName}"),
             ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
+        true
+    } catch (error: ActivityNotFoundException) {
+        Log.w(TAG, ERROR_PERMISSION_ACTIVITY_MISSING, error)
+        false
+    } catch (error: SecurityException) {
+        Log.w(TAG, ERROR_PERMISSION_ACTIVITY_SECURITY, error)
+        false
     }
 
     private fun savePending(destinationId: String) {
@@ -173,6 +193,12 @@ class AndroidWatchPort(
     )
 
     private companion object {
+        const val TAG = "[Laner:Watch]"
+        const val ERROR_HANDLER_MISSING = "LNR-WATCH-LAUNCH-001"
+        const val ERROR_HANDLER_SECURITY = "LNR-WATCH-LAUNCH-002"
+        const val ERROR_PERMISSION_ACTIVITY_MISSING = "LNR-WATCH-PERMISSION-001"
+        const val ERROR_PERMISSION_ACTIVITY_SECURITY = "LNR-WATCH-PERMISSION-002"
+        const val ERROR_RESUME_OPEN_FAILED = "LNR-WATCH-RESUME-001"
         const val PREFS_NAME = "laner_watch_port"
         const val KEY_PENDING_DESTINATION = "pending_destination"
         const val RESUME_DELAY_MS = 180L

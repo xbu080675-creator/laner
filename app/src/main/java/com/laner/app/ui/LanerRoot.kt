@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.laner.app.BuildConfig
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
@@ -39,8 +41,12 @@ import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.SourceRequestContext
+import com.laner.core.application.WatchHubContextResult
+import com.laner.core.application.WatchHubContextService
 import com.laner.core.application.WatchPort
 import com.laner.core.domain.MatchPhase
+import kotlinx.coroutines.delay
 
 /** Product shell preserves the legacy RiftLab visual/interaction contract. */
 @Composable
@@ -49,6 +55,7 @@ fun LanerRoot(
     preMatchContextService: PreMatchContextService,
     competitionStructureService: CompetitionStructureService,
     liveMatchContextService: LiveMatchContextService,
+    watchHubContextService: WatchHubContextService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
     watchPort: WatchPort,
@@ -59,49 +66,83 @@ fun LanerRoot(
     onStopRiftScreen: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.LIVE_MATCH) }
+    val watchHubPresentation by produceState(
+        initialValue = WatchHubPresentation.Idle,
+        key1 = watchHubContextService,
+    ) {
+        while (true) {
+            val now = System.currentTimeMillis()
+            value = when (
+                val result = watchHubContextService.load(
+                    SourceRequestContext(
+                        nowEpochMillis = now,
+                        correlationId = "watch-hub-$now",
+                    )
+                )
+            ) {
+                is WatchHubContextResult.Ready -> WatchHubPresentationMapper.from(
+                    match = result.match,
+                    lifecycle = result.liveState.state.lifecycle,
+                )
+                is WatchHubContextResult.NoTarget,
+                is WatchHubContextResult.Failed -> WatchHubPresentation.Idle
+            }
+            delay(WATCH_HUB_REFRESH_MILLIS)
+        }
+    }
 
-    Scaffold(containerColor = RiftBg) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            LanerHeader()
-            PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
-            AnimatedContent(
-                targetState = selectedPhase,
-                modifier = Modifier.weight(1f),
-                transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
-                label = "laner-phase",
-            ) { phase ->
-                when (phase) {
-                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
-                        CompetitionStructurePanel(
-                            service = competitionStructureService,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(containerColor = RiftBg) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                LanerHeader()
+                PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
+                AnimatedContent(
+                    targetState = selectedPhase,
+                    modifier = Modifier.weight(1f),
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                    label = "laner-phase",
+                ) { phase ->
+                    when (phase) {
+                        MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                            CompetitionStructurePanel(
+                                service = competitionStructureService,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            PreMatchScreen(
+                                scheduleService = scheduleService,
+                                preMatchContextService = preMatchContextService,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        MatchPhase.LIVE_MATCH -> LiveMatchScreen(
+                            liveMatchContextService = liveMatchContextService,
+                            overlayPermissionGranted = overlayPermissionGranted,
+                            riftScreenRunning = riftScreenRunning,
+                            onRequestOverlayPermission = onRequestOverlayPermission,
+                            onStartRiftScreen = onStartRiftScreen,
+                            onStopRiftScreen = onStopRiftScreen,
+                            modifier = Modifier.fillMaxSize(),
                         )
-                        Spacer(Modifier.height(10.dp))
-                        PreMatchScreen(
+                        MatchPhase.POST_MATCH -> PostMatchScreen(
                             scheduleService = scheduleService,
-                            preMatchContextService = preMatchContextService,
-                            modifier = Modifier.weight(1f),
+                            postMatchService = postMatchService,
+                            postTimelineService = postTimelineService,
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
-                    MatchPhase.LIVE_MATCH -> LiveMatchScreen(
-                        liveMatchContextService = liveMatchContextService,
-                        watchPort = watchPort,
-                        overlayPermissionGranted = overlayPermissionGranted,
-                        riftScreenRunning = riftScreenRunning,
-                        onRequestOverlayPermission = onRequestOverlayPermission,
-                        onStartRiftScreen = onStartRiftScreen,
-                        onStopRiftScreen = onStopRiftScreen,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    MatchPhase.POST_MATCH -> PostMatchScreen(
-                        scheduleService = scheduleService,
-                        postMatchService = postMatchService,
-                        postTimelineService = postTimelineService,
-                        modifier = Modifier.fillMaxSize(),
-                    )
                 }
             }
         }
+
+        WatchHubSurface(
+            presentation = watchHubPresentation,
+            watchPort = watchPort,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 18.dp, bottom = 18.dp)
+                .zIndex(10f),
+        )
     }
 }
 
@@ -176,6 +217,8 @@ private val MatchPhase.label: String
         MatchPhase.LIVE_MATCH -> "赛中"
         MatchPhase.POST_MATCH -> "赛后"
     }
+
+private const val WATCH_HUB_REFRESH_MILLIS = 15_000L
 
 val RiftBg = Color(0xFF090B10)
 val RiftPanel = Color(0xFF11151D)

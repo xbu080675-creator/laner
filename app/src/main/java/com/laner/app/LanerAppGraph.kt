@@ -30,6 +30,7 @@ import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostResultSourcePort
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.WatchHubContextService
 import java.io.File
 
 /**
@@ -106,6 +107,12 @@ class LanerAppGraph(
     val liveMatchStateService = LiveMatchStateService(
         sources = if (riotEnabled) listOf(riotGlobalLiveStateSource) else emptyList(),
         repository = liveStateRepository,
+        diagnostics = diagnostics,
+    )
+
+    val watchHubContextService = WatchHubContextService(
+        scheduleService = globalScheduleService,
+        liveMatchStateService = liveMatchStateService,
         diagnostics = diagnostics,
     )
 
