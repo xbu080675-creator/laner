@@ -157,6 +157,8 @@ internal class LolEsportsLiveDataSource(
     private val client: LolEsportsApiClient = LolEsportsApiClient()
 ) : LiveMatchDataSource {
 
+    private val liveCursor = RiotLiveStatsCursor()
+
     private val _status = MutableStateFlow(
         LiveSourceStatus(
             phase = LiveSourcePhase.IDLE,
@@ -186,6 +188,7 @@ internal class LolEsportsLiveDataSource(
                     currentGameId = ""
                     previous = null
                     lockedFromSchedule = false
+                    liveCursor.reset()
                 }
                 if (registeredTarget != null && isExternalProviderTarget(registeredTarget)) {
                     currentEvent = null
@@ -194,6 +197,7 @@ internal class LolEsportsLiveDataSource(
                     currentGameId = ""
                     previous = null
                     lockedFromSchedule = false
+                    liveCursor.reset()
                     _status.value = LiveSourceStatus(
                         phase = LiveSourcePhase.WAITING_FOR_MATCH,
                         message = "Riot LiveStats · 当前赛事使用非 Riot Event ID，等待其它实时源",
@@ -234,6 +238,7 @@ internal class LolEsportsLiveDataSource(
                     currentGame = null
                     currentGameId = ""
                     previous = null
+                    liveCursor.reset()
 
                     if (currentEvent == null) {
                         delay(5_000)
@@ -260,7 +265,7 @@ internal class LolEsportsLiveDataSource(
                 if (discovered == null) {
                     _status.value = LiveSourceStatus(
                         phase = LiveSourcePhase.WAITING_FOR_MATCH,
-                        message = "赛事已锁定，正在用多游标探测 Riot LiveStats 游戏帧",
+                        message = "赛事已锁定，正在用 10 秒对齐游标探测 Riot LiveStats 游戏帧",
                         eventId = event.eventId,
                         gameId = "",
                         lastUpdateEpochMs = System.currentTimeMillis()
@@ -278,6 +283,7 @@ internal class LolEsportsLiveDataSource(
                     currentGame = discovered
                     currentGameId = discovered.gameId
                     previous = null
+                    liveCursor.reset()
                 }
 
                 val game = currentGame ?: continue
@@ -289,6 +295,7 @@ internal class LolEsportsLiveDataSource(
                     currentGameId = ""
                     previous = null
                     knownGames = emptyList()
+                    liveCursor.reset()
                     _status.value = LiveSourceStatus(
                         phase = LiveSourcePhase.WAITING_FOR_MATCH,
                         message = "Riot LiveStats · 帧身份与当前赛程不一致，已丢弃并重新解析 EventDetails",
@@ -310,20 +317,28 @@ internal class LolEsportsLiveDataSource(
                 emit(snapshot)
                 delay(3_000)
             } catch (t: Throwable) {
+                val windowMiss = t is RiotLiveWindowNotReadyException
                 _status.value = LiveSourceStatus(
-                    phase = LiveSourcePhase.ERROR,
-                    message = "Riot LiveStats 暂时不可用：${t.message?.take(120) ?: t::class.java.simpleName}",
+                    phase = if (windowMiss) LiveSourcePhase.WAITING_FOR_MATCH else LiveSourcePhase.ERROR,
+                    message = if (windowMiss) {
+                        "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"
+                    } else {
+                        "Riot LiveStats 暂时不可用：${t.message?.take(120) ?: t::class.java.simpleName}"
+                    },
                     eventId = currentEvent?.eventId.orEmpty(),
                     gameId = currentGameId,
                     lastUpdateEpochMs = System.currentTimeMillis()
                 )
                 delay(3_000)
-                currentEvent = null
-                knownGames = emptyList()
-                currentGame = null
-                currentGameId = ""
-                previous = null
-                lockedFromSchedule = false
+                if (!windowMiss) {
+                    currentEvent = null
+                    knownGames = emptyList()
+                    currentGame = null
+                    currentGameId = ""
+                    previous = null
+                    lockedFromSchedule = false
+                    liveCursor.reset()
+                }
             }
         }
     }
@@ -374,15 +389,12 @@ internal class LolEsportsLiveDataSource(
     }
 
     /**
-     * LiveStats window is cursor-sensitive. The old no-cursor discovery probe could report "no
-     * frames" while the exact same game became readable as soon as fetchLatestSnapshot supplied a
-     * startingTime. Discovery now uses the same wall-clock cursor ladder as the real reader.
+     * Riot LiveStats is cursor-sensitive and published on a 10-second time grid. Discovery uses
+     * the same aligned cursor ladder as the live reader so game selection and frame reads agree.
      */
     private suspend fun hasAnyLiveFrames(event: LiveEventRef, game: LiveGameRef): Boolean {
-        val now = Instant.now()
-        val lagsSeconds = longArrayOf(15, 30, 60, 120, 300, 600)
-        for (lag in lagsSeconds) {
-            val cursorEvent = event.copy(startTimeIso = now.minusSeconds(lag).toString())
+        for (startingTime in liveCursor.candidates(Instant.now())) {
+            val cursorEvent = event.copy(startTimeIso = startingTime)
             val snapshot = runCatching { client.fetchLiveWindow(cursorEvent, game, null) }.getOrNull()
             if (snapshot != null && isMeaningful(snapshot)) return true
         }
@@ -396,14 +408,15 @@ internal class LolEsportsLiveDataSource(
         previous: LiveSnapshot?
     ): LiveSnapshot {
         var lastError: Throwable? = null
-        val now = Instant.now()
-        val lagsSeconds = longArrayOf(15, 30, 60, 120, 300, 600)
 
-        for (lag in lagsSeconds) {
-            val cursorEvent = event.copy(startTimeIso = now.minusSeconds(lag).toString())
+        for (startingTime in liveCursor.candidates(Instant.now())) {
+            val cursorEvent = event.copy(startTimeIso = startingTime)
             try {
                 val snapshot = client.fetchLiveWindow(cursorEvent, game, previous)
-                if (isMeaningful(snapshot)) return snapshot
+                if (isMeaningful(snapshot)) {
+                    liveCursor.onSuccess()
+                    return snapshot
+                }
             } catch (t: Throwable) {
                 lastError = t
             }
@@ -411,12 +424,19 @@ internal class LolEsportsLiveDataSource(
 
         try {
             val fallback = client.fetchLiveWindow(event.copy(startTimeIso = ""), game, previous)
-            if (isMeaningful(fallback)) return fallback
+            if (isMeaningful(fallback)) {
+                liveCursor.onSuccess()
+                return fallback
+            }
         } catch (t: Throwable) {
             lastError = t
         }
 
-        throw IOException("LiveStats game ${game.gameNumber} exists but no current meaningful frame yet", lastError)
+        liveCursor.onMiss()
+        throw RiotLiveWindowNotReadyException(
+            "LiveStats game ${game.gameNumber} exists but no current meaningful frame yet",
+            lastError
+        )
     }
 
     private fun isMeaningful(snapshot: LiveSnapshot): Boolean =
