@@ -39,6 +39,7 @@
 - `LocalLiveInsightEngine` 的确定性本地解释实现。
 - `MatchIdentityPolicy` / `LiveMatchTargetRegistry` / `LiveFrameIdentityGate` 的比赛身份规则。
 - `OpenClawSecurityPolicy` / `RiftClawContract` / `RiftClawInjectionGuard` 的 localhost 协议与纯安全校验规则。
+- `LplChampionshipPoints2026` / `Worlds2026QualifiedTeams` 的已核实资格快照与领域状态。
 
 ## 日志
 
