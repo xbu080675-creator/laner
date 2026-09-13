@@ -5,45 +5,21 @@ import android.app.Application
 /**
  * Process-level Android composition root.
  *
- * Activity and foreground Services share the same Application services instead of recreating a
- * legacy global Store. Runtime Riot credentials remain memory-only and rebuilding the graph never
- * persists the secret.
+ * Activity and foreground Services share one graph. Provider availability is resolved inside the
+ * composition root from deployment configuration; the product UI never owns provider credentials.
  */
 class LanerApplication : Application() {
-    @Volatile
-    private var runtimeRiotApiKey: String = ""
-
     @Volatile
     private var appGraph: LanerAppGraph? = null
 
     override fun onCreate() {
         super.onCreate()
-        rebuildGraph()
+        appGraph = buildGraph()
     }
 
     fun graph(): LanerAppGraph = appGraph ?: synchronized(this) {
-        appGraph ?: rebuildGraph()
+        appGraph ?: buildGraph().also { appGraph = it }
     }
 
-    fun runtimeRiotCredential(): String = runtimeRiotApiKey
-
-    @Synchronized
-    fun setRuntimeRiotCredential(value: String) {
-        val normalized = value.trim().take(512)
-        if (normalized == runtimeRiotApiKey) return
-        runtimeRiotApiKey = normalized
-        rebuildGraph()
-    }
-
-    @Synchronized
-    fun clearRuntimeRiotCredential() {
-        if (runtimeRiotApiKey.isEmpty()) return
-        runtimeRiotApiKey = ""
-        rebuildGraph()
-    }
-
-    private fun rebuildGraph(): LanerAppGraph {
-        val effectiveKey = runtimeRiotApiKey.ifBlank { BuildConfig.LOL_ESPORTS_API_KEY }
-        return LanerAppGraph(filesDir = filesDir, riotApiKey = effectiveKey).also { appGraph = it }
-    }
+    private fun buildGraph(): LanerAppGraph = LanerAppGraph(filesDir = filesDir)
 }
