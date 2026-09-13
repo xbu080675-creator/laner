@@ -4,25 +4,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class CompletedSeriesSnapshot(
-    val matchKey: String,
-    val teamA: String,
-    val teamB: String,
-    val scoreA: Int,
-    val scoreB: Int,
-    val games: List<LiveSnapshot>,
-    val seriesFinished: Boolean,
-    val source: String,
-    val updatedAtEpochMs: Long = System.currentTimeMillis()
-) {
-    val winner: String
-        get() = when {
-            scoreA > scoreB -> teamA
-            scoreB > scoreA -> teamB
-            else -> "—"
-        }
-}
-
 /**
  * Post-match archive. It is intentionally separated from the live surface.
  *
