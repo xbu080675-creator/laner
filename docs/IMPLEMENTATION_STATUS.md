@@ -8,7 +8,7 @@
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
 - LNR-020 Block 1: engineering-frozen after `INC-LNR-020-001 / CLOSED`; compliance facts are prose, not task status tokens
 - LNR-021 Block 2: engineering-frozen after `INC-LNR-021-001 / CLOSED`; LNR-021 product status remains `WAITING EXTERNAL TEST`
-- LNR-022 Block 3: automated Watch Hub implementation is in delivery; Android external-app handoff remains `WAITING EXTERNAL TEST`
+- LNR-022 Block 3: Watch Hub product-parity remediation `INC-LNR-022-002` is `TESTING`; Android external-app handoff remains `WAITING EXTERNAL TEST`
 - Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”.
 
 ## Task Status
@@ -111,15 +111,26 @@ Current rules:
 - pure v2 files do not claim lossless downgrade.
 
 ## Block 3 / LNR-022 Watch Hub
-- fresh Constitution Preflight baseline: `main@2b9cf6ba39d3306ec89557451207aa30d29a7cc9`;
+- original fresh Constitution Preflight baseline: `main@2b9cf6ba39d3306ec89557451207aa30d29a7cc9`;
 - one platform-neutral `WatchPort` defines the boundary; Android package/deep-link/web details stay in `AndroidWatchPort`;
 - one global catalog contains Bilibili, Huya, LoL Esports, YouTube, Twitch and X; `MAINLAND/GLOBAL` is display metadata only and never selects a separate business flow;
 - opening a viewing destination starts/continues RiftScreen but never changes LIVE source arbitration or Provider selection;
 - overlay permission round-trip preserves the pending viewing destination and resumes it after permission is granted;
 - Android package visibility is scoped to the six known apps; `QUERY_ALL_PACKAGES` is not used;
 - inherited product-level Riot credential wording in `LiveAuthorityCard` was removed during Preflight remediation;
-- automated tests cover stable Watch destination identity and exact global catalog membership;
 - real device external-app handoff, browser fallback and overlay-permission return remain `WAITING EXTERNAL TEST`.
+
+### `INC-LNR-022-002` — product parity remediation
+Fresh review against legacy `LiveBroadcastHub.kt / StreamLauncher.kt` from `main@09ea83708461f64754f4dcd21b473babf94ff839` confirmed three defects:
+1. the global bottom-left lifecycle-driven Watch Hub had been redesigned into buttons inside the RiftScreen control card, changing the old product contract;
+2. permission resume returned `OPENED` before the delayed launch executed, allowing false success;
+3. Activity/security launch failures were silently swallowed without stable diagnostics.
+
+Remediation branch `fix/lnr-022-watch-hub-parity` restores `LIVE / ON AIR / 直播入口`, matchup, dedicated Mainland/Global dialog and six legacy destinations while consuming only canonical `ScheduledSeries + MatchLifecycleState`. It does not restore the old Store or expose raw Provider data. Resume semantics use `RESUMING`, and Android launch failures use `[Laner:Watch] / LNR-WATCH-*` diagnostics.
+
+`POST-013~018` remains the authority for old VOD/Media3/WebView playback assets. Those assets are preserved as migration requirements and are not redefined as LIVE Watch Hub behavior.
+
+`INC-LNR-022-002` is `TESTING` until exact-head Gate, independent PCR, merge and post-merge main Gate complete.
 
 ## LNR-021 Failure / Incident History
 ### Failure A — preserved
@@ -141,10 +152,11 @@ Current rules:
 - official multi-kill / killer-victim / dragon subtype require future explicit Provider evidence;
 - `LIVE-009` Herald/Atakhan remains `IN PROGRESS`;
 - `LIVE-012` real Draft Provider remains `TODO`;
+- `POST-013~018` VOD/Media3/WebView/replay resolver remains an explicit POST migration asset set and must not be dropped;
 - LNR-019 real online evidence remains external;
 - Cito remains externally unverified.
 
 ## Next
-After LNR-022 passes its implementation Gate and independent Constitution review, the next permitted engineering block is **Block 4 — remaining PRE/POST features**.
+Block 4 — remaining PRE/POST features — is blocked until `INC-LNR-022-002` closes with exact-head Gate + PCR + merge + post-merge main Gate. After closure, Block 4 must start from a fresh read of then-current `main`.
 
 External/device evidence continues independently and must never be represented as CI PASS.
