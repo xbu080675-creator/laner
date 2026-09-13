@@ -49,6 +49,10 @@ jobs:
             echo 'Product-surface violation: provider credential controls leaked into the normal user path.' >&2
             exit 1
           fi
+          if grep -n 'presentation\.source' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt; then
+            echo 'Product-surface violation: provider identity leaked into the spectator RiftScreen HUD.' >&2
+            exit 1
+          fi
           grep -q 'CutCornerShape' app/src/main/java/com/laner/app/ui/LanerRoot.kt
           grep -q 'setWidth(228)' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
           grep -q 'setWidth(308)' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
