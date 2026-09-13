@@ -10,7 +10,7 @@ import kotlin.math.abs
  * hard mismatch and must never fall through to "same two teams". Only records lacking comparable
  * strong IDs may use the guarded metadata fallback below.
  */
-internal object MatchIdentityPolicy {
+object MatchIdentityPolicy {
     private const val FALLBACK_TIME_WINDOW_MS = 6L * 60L * 60L * 1000L
 
     fun sameMatch(a: ScheduledEsportsMatch, b: ScheduledEsportsMatch): Boolean {
