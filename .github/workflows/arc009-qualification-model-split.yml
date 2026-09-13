@@ -1,0 +1,156 @@
+name: ARC009 Qualification Model Split
+
+on:
+  push:
+    branches:
+      - tmp/arc009
+    paths:
+      - '.github/workflows/arc009-qualification-model-split.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split qualification domain from runtime store
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          src = Path('app/src/main/java/com/riftlab/app/data/QualificationCenter.kt')
+          text = src.read_text(encoding='utf-8')
+          model_marker = '/**\n * dev.70 qualification model.'
+          store_marker = '\nobject QualificationCenterStore {'
+          if text.count(model_marker) != 1:
+              raise SystemExit(f'{src}: expected exactly one qualification model marker')
+          if text.count(store_marker) != 1:
+              raise SystemExit(f'{src}: expected exactly one QualificationCenterStore marker')
+
+          model_start = text.index(model_marker)
+          store_start = text.index(store_marker)
+          if model_start >= store_start:
+              raise SystemExit('qualification model/store order is invalid')
+
+          prefix = text[:model_start].rstrip()
+          model_body = text[model_start:store_start].rstrip()
+          store_body = text[store_start + 1:].lstrip()
+
+          package_line = 'package com.riftlab.app.data'
+          if not prefix.startswith(package_line):
+              raise SystemExit('unexpected QualificationCenter package')
+
+          core_path = Path('core/src/main/kotlin/com/riftlab/app/data/QualificationModels.kt')
+          if core_path.exists():
+              raise SystemExit(f'{core_path}: already exists')
+          core_path.write_text(package_line + '\n\n' + model_body + '\n', encoding='utf-8')
+          src.write_text(prefix + '\n\n' + store_body + '\n', encoding='utf-8')
+
+          core_text = core_path.read_text(encoding='utf-8')
+          for forbidden in ('kotlinx.coroutines', 'android.', 'androidx.', 'okhttp3.', 'org.json.'):
+              if forbidden in core_text:
+                  raise SystemExit(f'{core_path}: forbidden dependency leaked into Core: {forbidden}')
+          required = [
+              'enum class QualificationTeamState',
+              'enum class QualificationEvidence',
+              'data class QualificationRuleRecord',
+              'data class TeamQualificationRoute',
+              'data class QualificationTournamentSnapshot',
+              'data class QualificationCenterState',
+          ]
+          for token in required:
+              if core_text.count(token) != 1:
+                  raise SystemExit(f'{core_path}: expected one {token}')
+          if 'object QualificationCenterStore' in core_text:
+              raise SystemExit('runtime store leaked into Core')
+          if src.read_text(encoding='utf-8').count('object QualificationCenterStore') != 1:
+              raise SystemExit('app runtime store missing after split')
+
+          lcp_src = Path('app/src/main/java/com/riftlab/app/data/OfficialLcpChampionshipPoints2026.kt')
+          lcp_text = lcp_src.read_text(encoding='utf-8')
+          old = 'internal object OfficialLcpChampionshipPoints2026 {'
+          if lcp_text.count(old) != 1:
+              raise SystemExit(f'{lcp_src}: expected one internal object declaration')
+          lcp_core = Path('core/src/main/kotlin/com/riftlab/app/data/OfficialLcpChampionshipPoints2026.kt')
+          if lcp_core.exists():
+              raise SystemExit(f'{lcp_core}: already exists')
+          lcp_core.write_text(lcp_text.replace(old, 'object OfficialLcpChampionshipPoints2026 {', 1), encoding='utf-8')
+          lcp_src.unlink()
+
+          readme = Path('core/README.md')
+          readme_text = readme.read_text(encoding='utf-8')
+          anchor = '- `OpenClawSecurityPolicy` / `RiftClawContract` / `RiftClawInjectionGuard` 的 localhost 协议与纯安全校验规则。\n'
+          addition = '- `Qualification*` 资格领域模型、LPL/Worlds/LCP 官方资格静态快照与规则。\n'
+          if readme_text.count(anchor) != 1:
+              raise SystemExit('core README anchor missing')
+          if addition not in readme_text:
+              readme_text = readme_text.replace(anchor, anchor + addition, 1)
+          readme.write_text(readme_text, encoding='utf-8')
+
+          record = Path('docs/development/2026/2026-09-13_LNR-ARC-009_qualification-domain-split.md')
+          if record.exists():
+              raise SystemExit(f'{record}: already exists')
+          record.write_text(
+              '# LNR-ARC-009 / 资格领域模型与运行时 Store 物理拆分\n\n'
+              '- 日期：2026-09-13\n'
+              '- 执行者：OpenAI / ChatGPT\n'
+              '- 状态：PASS\n\n'
+              '## 目标\n\n'
+              '把 `QualificationCenter.kt` 中的纯资格领域模型从协程运行时 Store 中剥离到 Core；不改变资格规则、积分、队伍状态、UI 或数据源。\n\n'
+              '## 迁移\n\n'
+              '- 新增 `core/src/main/kotlin/com/riftlab/app/data/QualificationModels.kt`，承载 `QualificationTeamState`、`QualificationEvidence`、`QualificationRuleRecord`、`TeamQualificationRoute`、`QualificationTournamentSnapshot`、`QualificationCenterState` 等纯模型。\n'
+              '- `QualificationCenterStore` 以及 `CoroutineScope` / `StateFlow` / Store 编排继续留在 App 侧。\n'
+              '- `OfficialLcpChampionshipPoints2026.kt` 迁入 Core；只把顶层 `internal object` 改为跨模块可见的 `object`，规则正文与来源不变。\n\n'
+              '## 行为影响\n\n'
+              '无功能变化。此次仅建立 Gradle 物理边界：Core 描述“资格是什么”，App/Adapter 负责“资格中心如何运行与刷新”。\n\n'
+              '## 验收\n\n'
+              '- `tools/check_core_boundary.py` PASS。\n'
+              '- `tools/check_repository_links.py` PASS。\n'
+              '- `:core:test` PASS。\n'
+              '- `:app:assembleDebug` PASS。\n',
+              encoding='utf-8'
+          )
+          PY
+
+          git diff --check
+          test ! -e app/src/main/java/com/riftlab/app/data/OfficialLcpChampionshipPoints2026.kt
+          test -e core/src/main/kotlin/com/riftlab/app/data/QualificationModels.kt
+          test -e core/src/main/kotlin/com/riftlab/app/data/OfficialLcpChampionshipPoints2026.kt
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK 36
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Enforce architecture gates
+        run: |
+          python3 tools/check_core_boundary.py
+          python3 tools/check_repository_links.py
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Verify full build
+        run: gradle :core:test :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Commit verified migration
+        shell: bash
+        run: |
+          git config user.name 'PocketSpace'
+          git config user.email 'xbu080675@gmail.com'
+          git add -A
+          git diff --cached --quiet && { echo 'No ARC009 changes to commit'; exit 1; }
+          git commit -m 'LNR-ARC-009: split qualification domain from runtime store'
+          git push origin HEAD:tmp/arc009
