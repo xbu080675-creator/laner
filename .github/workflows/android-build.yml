@@ -2,7 +2,7 @@ name: Android Build
 
 on:
   push:
-    branches: [ main, "feature/**" ]
+    branches: [ main, "feature/**", "fix/**" ]
   pull_request:
     branches: [ main ]
 
@@ -37,6 +37,25 @@ jobs:
             echo 'Core boundary violation: app package referenced from Core.' >&2
             exit 1
           fi
+
+      - name: Product surface compatibility gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e app/src/main/java/com/laner/app/ui/RiotCredentialPanel.kt
+          if grep -n -E 'RiotCredentialPanel|onSaveRuntimeCredential|onClearRuntimeCredential|runtimeRiotCredential\(' \
+            app/src/main/java/com/laner/app/MainActivity.kt \
+            app/src/main/java/com/laner/app/ui/LanerRoot.kt; then
+            echo 'Product-surface violation: provider credential controls leaked into the normal user path.' >&2
+            exit 1
+          fi
+          grep -q 'CutCornerShape' app/src/main/java/com/laner/app/ui/LanerRoot.kt
+          grep -q 'setWidth(228)' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
+          grep -q 'setWidth(308)' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
+          grep -q 'setWidth(348)' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
+          grep -q 'Mode.MINI' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
+          grep -q 'Mode.COMPACT' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
+          grep -q 'Mode.EXPANDED' app/src/main/java/com/laner/app/overlay/RiftScreenOverlayView.kt
 
       - name: Domain and application tests
         run: gradle :core:domain:test :core:application:test --stacktrace
