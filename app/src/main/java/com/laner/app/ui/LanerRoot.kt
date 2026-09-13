@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.laner.app.BuildConfig
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchContextService
@@ -41,10 +41,7 @@ import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
 import com.laner.core.domain.MatchPhase
 
-/**
- * Product shell intentionally mirrors the established RiftLab interaction language.
- * Architecture and data ownership are new; product behavior is not redesigned during migration.
- */
+/** Product shell preserves the legacy RiftLab visual/interaction contract. */
 @Composable
 fun LanerRoot(
     scheduleService: GlobalScheduleService,
@@ -61,27 +58,23 @@ fun LanerRoot(
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.LIVE_MATCH) }
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+    Scaffold(containerColor = RiftBg) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             LanerHeader()
-            PhaseSwitcher(selected = selectedPhase, onSelect = { selectedPhase = it })
+            PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
             AnimatedContent(
                 targetState = selectedPhase,
                 modifier = Modifier.weight(1f),
-                transitionSpec = {
-                    fadeIn(tween(180)) togetherWith fadeOut(tween(120))
-                },
-                label = "phase",
+                transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                label = "laner-phase",
             ) { phase ->
                 when (phase) {
-                    MatchPhase.PRE_MATCH -> Column(
-                        Modifier.fillMaxSize().padding(horizontal = 18.dp),
-                    ) {
+                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
                         CompetitionStructurePanel(
                             service = competitionStructureService,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(10.dp))
                         PreMatchScreen(
                             scheduleService = scheduleService,
                             preMatchContextService = preMatchContextService,
@@ -95,13 +88,13 @@ fun LanerRoot(
                         onRequestOverlayPermission = onRequestOverlayPermission,
                         onStartRiftScreen = onStartRiftScreen,
                         onStopRiftScreen = onStopRiftScreen,
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
+                        modifier = Modifier.fillMaxSize(),
                     )
                     MatchPhase.POST_MATCH -> PostMatchScreen(
                         scheduleService = scheduleService,
                         postMatchService = postMatchService,
                         postTimelineService = postTimelineService,
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -116,45 +109,32 @@ private fun LanerHeader() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(34.dp)
-                .background(MaterialTheme.colorScheme.primary, CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp)),
+            Modifier.size(34.dp).background(RiftCyan, CutCornerShape(topStart = 8.dp, bottomEnd = 8.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "L",
-                color = MaterialTheme.colorScheme.background,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Black,
-            )
+            Text("L", color = RiftBg, fontSize = 17.sp, fontWeight = FontWeight.Black)
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(
-                "LANER",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                letterSpacing = 1.4.sp,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Text(
-                "GLOBAL ESPORTS COMPANION",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp,
-                letterSpacing = 1.1.sp,
-            )
+            Text("LANER", color = RiftText, fontWeight = FontWeight.Bold, fontSize = 20.sp, letterSpacing = 1.4.sp)
+            Text("LEAGUE ESPORTS COMPANION", color = RiftMuted, fontSize = 12.sp, letterSpacing = 1.1.sp)
         }
+        Text(
+            BuildConfig.VERSION_NAME.uppercase(),
+            color = RiftCyan,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+        )
     }
 }
 
 @Composable
-private fun PhaseSwitcher(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) {
+private fun PhaseTabs(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) {
     Row(
         Modifier.fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 2.dp)
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
-                CutCornerShape(topEnd = 16.dp, bottomStart = 10.dp),
-            )
+            .background(RiftPanelAlt.copy(alpha = 0.72f), CutCornerShape(topEnd = 16.dp, bottomStart = 10.dp))
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
@@ -164,7 +144,7 @@ private fun PhaseSwitcher(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) 
                 Modifier.weight(1f)
                     .clickable { onSelect(phase) }
                     .background(
-                        if (active) MaterialTheme.colorScheme.surface else Color.Transparent,
+                        if (active) RiftPanel else Color.Transparent,
                         CutCornerShape(topEnd = 11.dp, bottomStart = 7.dp),
                     )
                     .padding(vertical = 10.dp),
@@ -172,7 +152,7 @@ private fun PhaseSwitcher(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) 
             ) {
                 Text(
                     phase.label,
-                    color = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (active) RiftText else RiftMuted,
                     fontSize = 12.sp,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                 )
@@ -180,10 +160,7 @@ private fun PhaseSwitcher(selected: MatchPhase, onSelect: (MatchPhase) -> Unit) 
                 Box(
                     Modifier.width(if (active) 30.dp else 12.dp)
                         .height(if (active) 3.dp else 1.dp)
-                        .background(
-                            if (active) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                        ),
+                        .background(if (active) RiftCyan else RiftLine.copy(alpha = 0.55f)),
                 )
             }
         }
@@ -196,3 +173,12 @@ private val MatchPhase.label: String
         MatchPhase.LIVE_MATCH -> "赛中"
         MatchPhase.POST_MATCH -> "赛后"
     }
+
+val RiftBg = Color(0xFF090B10)
+val RiftPanel = Color(0xFF11151D)
+val RiftPanelAlt = Color(0xFF171D27)
+val RiftLine = Color(0xFF2A3545)
+val RiftCyan = Color(0xFF6CEBFF)
+val RiftRed = Color(0xFFFF6470)
+val RiftText = Color(0xFFF4F7FB)
+val RiftMuted = Color(0xFF94A0B2)
