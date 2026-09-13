@@ -3,7 +3,9 @@ package com.laner.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.laner.app.overlay.RiftScreenController
 import com.laner.app.ui.LanerRoot
