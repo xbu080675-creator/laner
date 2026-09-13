@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.laner.app.BuildConfig
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
@@ -109,7 +110,10 @@ fun LanerRoot(
         WatchHubSurface(
             presentation = watchHubPresentation,
             watchPort = watchPort,
-            modifier = Modifier.align(Alignment.BottomStart).padding(start = 18.dp, bottom = 18.dp),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 18.dp, bottom = 18.dp)
+                .zIndex(10f),
         )
     }
 }
