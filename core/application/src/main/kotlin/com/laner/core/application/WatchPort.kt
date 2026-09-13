@@ -12,6 +12,8 @@ data class WatchDestination(
     val id: String,
     val displayName: String,
     val region: WatchRegion,
+    /** Product capability metadata only; launch details remain in the platform Adapter. */
+    val nativeAppSupported: Boolean,
 ) {
     init {
         require(id.isNotBlank())
@@ -21,6 +23,8 @@ data class WatchDestination(
 
 enum class WatchLaunchStatus {
     OPENED,
+    /** Permission returned and the legacy delayed handoff has been scheduled, not yet proven open. */
+    RESUMING,
     PERMISSION_REQUIRED,
     UNSUPPORTED,
 }
