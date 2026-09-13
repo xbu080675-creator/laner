@@ -22,7 +22,7 @@ WATCH_PATH = DATA / "team_watch_state.json"
 
 BING_RSS = "https://www.bing.com/search?format=rss&q={}"
 LEAGUEPEDIA_CARGO = "https://lol.fandom.com/api.php"
-USER_AGENT = "RiftLab-TeamSync/1.0 (+https://github.com/xbu080675-creator/Rlftlab)"
+USER_AGENT = "RiftLab-TeamSync/1.0 (+https://github.com/xbu080675-creator/laner)"
 
 ROLE_MAP = {
     "主教练": "HEAD_COACH",

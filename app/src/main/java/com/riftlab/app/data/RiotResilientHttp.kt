@@ -86,11 +86,11 @@ internal object RiotResilientHttp {
 internal object RiotPersistedMirror {
     private const val CACHE_TTL_MS = 5 * 60 * 1000L
     private const val GITHUB_CONTENTS =
-        "https://api.github.com/repos/xbu080675-creator/Rlftlab/contents/data/lpl/riot_persisted_mirror.json?ref=main"
+        "https://api.github.com/repos/xbu080675-creator/laner/contents/data/lpl/riot_persisted_mirror.json?ref=main"
     private const val RAW =
-        "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/lpl/riot_persisted_mirror.json"
+        "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/lpl/riot_persisted_mirror.json"
     private const val JSDELIVR =
-        "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/lpl/riot_persisted_mirror.json"
+        "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/lpl/riot_persisted_mirror.json"
 
     @Volatile private var appContext: Context? = null
     @Volatile private var cachedAt = 0L

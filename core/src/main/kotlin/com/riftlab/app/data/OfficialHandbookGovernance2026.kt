@@ -10,7 +10,7 @@ package com.riftlab.app.data
  *
  * Snapshot checked: 2026-09-10.
  */
-internal object OfficialHandbookGovernance2026 {
+object OfficialHandbookGovernance2026 {
     private const val SEASON_ID = "115547545029543948"
     private const val SPLIT3_EVENT_ID = "115548016979679447"
     private const val FIRST_STAND_EVENT_ID = "115548016979679444"

@@ -74,9 +74,9 @@ private data class TransportProbe(
 
 internal object AppUpdateManager {
     private const val GITHUB_MANIFEST_URL =
-        "https://github.com/xbu080675-creator/Rlftlab/releases/download/dev-latest/latest.json"
+        "https://github.com/xbu080675-creator/laner/releases/download/dev-latest/latest.json"
     private const val GITHUB_RELEASE_PATH_PREFIX =
-        "/xbu080675-creator/Rlftlab/releases/download/dev-latest/"
+        "/xbu080675-creator/laner/releases/download/dev-latest/"
     private const val SOURCE_ACCELERATED_PREFIX = "GitHub 更新加速"
     private const val DEV_SIGNER_SHA256 =
         "769d9be3aa3af3fd4bb647bed8ffe4a8f7cfe2e7a9ad4489b260395b13575a24"

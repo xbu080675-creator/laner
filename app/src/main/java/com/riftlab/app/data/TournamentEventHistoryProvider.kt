@@ -18,15 +18,6 @@ import java.net.URLEncoder
  * Awards remain provenance-preserving: only rows already present in the verified awards mirror are
  * promoted. No KDA/damage based MVP guessing is performed here.
  */
-internal data class TournamentEventHistorySnapshot(
-    val completedSeries: List<ScheduledEsportsMatch> = emptyList(),
-    val patchVersions: List<String> = emptyList(),
-    val verifiedAwards: List<OfficialMvpRecord> = emptyList(),
-    val completedEventsSource: String = "",
-    val patchSource: String = "",
-    val awardsSource: String = "",
-    val diagnostics: List<String> = emptyList()
-)
 
 internal class TournamentEventHistoryProvider {
     private val globalAwardsProvider = GlobalVerifiedAwardsProvider()

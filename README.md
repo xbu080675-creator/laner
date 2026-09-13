@@ -1,4 +1,6 @@
-# RiftLab
+# Laner
+
+`Laner` 是 `Rlftlab` 完整迁移后的重构仓库。本轮迁移保持 Android 应用兼容身份与用户侧产品行为不变，因此应用内既有 `RiftLab` 名称、`com.riftlab.app` 包名、版本与 OTA 兼容链继续保留。
 
 英雄联盟赛事数据、观赛副屏与复盘工具。当前 DEV 基线：`1.0.0-dev.66`。
 

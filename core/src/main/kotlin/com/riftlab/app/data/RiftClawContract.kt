@@ -11,7 +11,7 @@ package com.riftlab.app.data
  * - The bridge privately talks to its isolated OpenClaw profile/gateway on 127.0.0.1:18791.
  * RiftLab never receives the OpenClaw operator token and never calls /tools/invoke directly.
  */
-internal object RiftClawContract {
+object RiftClawContract {
     const val DEFAULT_ENDPOINT = "http://127.0.0.1:18790"
     @Deprecated("Use DEFAULT_ENDPOINT; this is the RiftClaw bridge, not the OpenClaw Gateway")
     const val DEFAULT_GATEWAY = DEFAULT_ENDPOINT
@@ -84,7 +84,7 @@ internal object RiftClawContract {
  * Treat every byte returned by Weibo/OpenClaw as hostile content.
  * This is a data sanitizer, not a prompt-based defense.
  */
-internal object RiftClawInjectionGuard {
+object RiftClawInjectionGuard {
     private const val MAX_FIELD = 1200
 
     private val suspicious = listOf(

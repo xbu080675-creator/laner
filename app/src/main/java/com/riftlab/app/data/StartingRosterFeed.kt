@@ -68,9 +68,8 @@ internal class StartingRosterFeed(
         private data class Endpoint(val label: String, val url: String)
 
         private val ENDPOINTS = listOf(
-            Endpoint("GITEE", "https://gitee.com/xiaobaiaaa1/Rlftlab/raw/main/data/global/starting_rosters.json"),
-            Endpoint("JSDELIVR", "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/starting_rosters.json"),
-            Endpoint("GITHUB_RAW", "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/global/starting_rosters.json")
+            Endpoint("JSDELIVR", "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/global/starting_rosters.json"),
+            Endpoint("GITHUB_RAW", "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/global/starting_rosters.json")
         )
 
         val FEED_URLS: List<String> = ENDPOINTS.map { it.url }

@@ -7,7 +7,7 @@ package com.riftlab.app.data
  * publish qualified teams before its own match schedule/standings payload contains participants.
  * The source/check date is carried into every consumer so a later sync can replace it cleanly.
  */
-internal data class WorldsQualifiedTeam(
+data class WorldsQualifiedTeam(
     val code: String,
     val region: String,
     val qualificationOrigin: String,
@@ -15,7 +15,7 @@ internal data class WorldsQualifiedTeam(
     val checkedAt: String
 )
 
-internal object Worlds2026QualifiedTeams {
+object Worlds2026QualifiedTeams {
     const val TOURNAMENT_ID = "115660540725177488"
     const val CHECKED_AT = "2026-09-11"
     const val SOURCE = "Riot LoL Esports · Worlds 2026 Qualifying Teams · checked 2026-09-11"

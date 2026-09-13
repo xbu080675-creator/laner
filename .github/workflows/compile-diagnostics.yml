@@ -4,8 +4,14 @@ on:
   push:
     paths:
       - '.github/workflows/compile-diagnostics.yml'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'core/**'
       - 'app/build.gradle.kts'
       - 'app/src/main/java/**/*.kt'
+      - 'scripts/**'
+      - 'tools/check_core_boundary.py'
+      - 'tools/check_repository_links.py'
 
 jobs:
   compile:
@@ -19,6 +25,10 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Install SDK 36
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Enforce Core boundary
+        run: python3 tools/check_core_boundary.py
+      - name: Enforce Laner repository links
+        run: python3 tools/check_repository_links.py
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.6.0'
@@ -26,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          gradle :app:assembleDebug --stacktrace --no-daemon 2>&1 | tee compile.log
+          gradle :core:test :app:assembleDebug --stacktrace --no-daemon 2>&1 | tee compile.log
           code=${PIPESTATUS[0]}
           echo "$code" > compile.exit
           exit 0

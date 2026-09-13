@@ -8,7 +8,7 @@ package com.riftlab.app.data
  * particular series. Identity validation is centralized in MatchIdentityPolicy so every provider,
  * router, archive and UI uses the same fail-closed rule.
  */
-internal object LiveMatchTargetRegistry {
+object LiveMatchTargetRegistry {
     @Volatile
     private var current: ScheduledEsportsMatch? = null
 

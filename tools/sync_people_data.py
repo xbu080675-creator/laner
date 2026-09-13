@@ -18,7 +18,7 @@ DATA = ROOT / "data" / "lpl"
 PROFILES_PATH = DATA / "team_profiles.json"
 PEOPLE_PATH = DATA / "people.json"
 BING_RSS = "https://www.bing.com/search?format=rss&q={}"
-USER_AGENT = "RiftLab-PeopleSync/1.1 (+https://github.com/xbu080675-creator/Rlftlab)"
+USER_AGENT = "RiftLab-PeopleSync/1.1 (+https://github.com/xbu080675-creator/laner)"
 
 AVATAR_PRIORITY = {
     "TEAM_OFFICIAL": 100,

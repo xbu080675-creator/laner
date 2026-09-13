@@ -41,9 +41,8 @@ internal class StartingRosterAnnouncementFeed(
         .build()
 ) {
     private val endpoints = listOf(
-        "https://gitee.com/xiaobaiaaa1/Rlftlab/raw/main/data/global/starting_rosters.json",
-        "https://cdn.jsdelivr.net/gh/xbu080675-creator/Rlftlab@main/data/global/starting_rosters.json",
-        "https://raw.githubusercontent.com/xbu080675-creator/Rlftlab/main/data/global/starting_rosters.json"
+        "https://cdn.jsdelivr.net/gh/xbu080675-creator/laner@main/data/global/starting_rosters.json",
+        "https://raw.githubusercontent.com/xbu080675-creator/laner/main/data/global/starting_rosters.json"
     )
 
     suspend fun fetchFor(target: ScheduledEsportsMatch): List<StartingRosterAnnouncement> = withContext(Dispatchers.IO) {

@@ -7,7 +7,7 @@ package com.riftlab.app.data
  * can reach the live UI or lifecycle archive it must still belong to the currently selected
  * schedule series. When identity is ambiguous we prefer a short data gap over cross-event data.
  */
-internal object LiveFrameIdentityGate {
+object LiveFrameIdentityGate {
     data class Verdict(
         val allowed: Boolean,
         val reason: String
