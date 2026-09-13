@@ -110,14 +110,19 @@ Block 3 从 `main@2b9cf6ba39d3306ec89557451207aa30d29a7cc9` 完成 fresh Constit
 
 自动化覆盖 stable destination contract 与六平台 catalog。Android 真机外部 App/浏览器 handoff、权限设置返回、具体客户端 deep-link 行为必须外部验证，因此状态保持 `WAITING EXTERNAL TEST`。
 
-## 当前推进顺序
-1. **Block 4：赛前/赛后剩余功能** — 必须在 LNR-022 implementation Gate + 独立 Constitution Review 通过后，从届时最新 main fresh Preflight 开始。
-2. 第 5 块：OTA + 设置 + 主题/缓存/诊断。
-3. 第 6 块：Local AI / OCR。
-4. 第 7 块：全量回归。
-5. 第 8 块：Migration Audit / release closure。
+独立产品一致性复查从最新 `main@09ea83708461f64754f4dcd21b473babf94ff839` 发现 `INC-LNR-022-002`：已合入实现把旧 RiftLab 的全局左下角 Watch Hub 改造成 RiftScreen 控制卡内按钮，丢失 `LIVE / ON AIR / 直播入口` 生命周期反馈、对阵信息与独立平台弹窗；同时发现权限恢复路径在延迟 launch 前提前返回 `OPENED`，且 Android launch 异常存在静默吞噬。当前整改分支 `fix/lnr-022-watch-hub-parity` 恢复旧产品需求资产，但继续使用新架构 canonical Application/domain truth，不恢复旧 Store、不允许 UI 直连 Provider。`INC-LNR-022-002` 未完成 final Gate/PCR 前，Block 4 不允许开始。
 
-LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证、LNR-022 Android Watch handoff 补证继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
+旧 `MatchVodUi / BilibiliNativePlayback` 的 Media3/WebView/VOD 能力继续由 `POST-013~018` 追踪；它们是必须保留的 POST 需求资产，不能因 Watch Hub 重构被删除，也不能被错误塞进 LIVE handoff。
+
+## 当前推进顺序
+1. **先关闭 `INC-LNR-022-002`** — exact-head Gate、独立 Post-change Compliance Review、文档同步、合并、post-merge main Gate 全部完成后才解除门禁。
+2. **Block 4：赛前/赛后剩余功能** — 从届时最新 main fresh Preflight 开始。
+3. 第 5 块：OTA + 设置 + 主题/缓存/诊断。
+4. 第 6 块：Local AI / OCR。
+5. 第 7 块：全量回归。
+6. 第 8 块：Migration Audit / release closure。
+
+LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证、LNR-022 Android Watch handoff 补证继续独立回填，不阻塞后续工程切片；但 `INC-LNR-022-002` 作为已确认的工程/产品一致性缺陷必须先关闭。任何 CI 都不得冒充 Android 真机证据。
 
 用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
 
