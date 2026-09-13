@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,8 +41,12 @@ import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.SourceRequestContext
+import com.laner.core.application.WatchHubContextResult
+import com.laner.core.application.WatchHubContextService
 import com.laner.core.application.WatchPort
 import com.laner.core.domain.MatchPhase
+import kotlinx.coroutines.delay
 
 /** Product shell preserves the legacy RiftLab visual/interaction contract. */
 @Composable
@@ -50,6 +55,7 @@ fun LanerRoot(
     preMatchContextService: PreMatchContextService,
     competitionStructureService: CompetitionStructureService,
     liveMatchContextService: LiveMatchContextService,
+    watchHubContextService: WatchHubContextService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
     watchPort: WatchPort,
@@ -60,7 +66,30 @@ fun LanerRoot(
     onStopRiftScreen: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.LIVE_MATCH) }
-    var watchHubPresentation by remember { mutableStateOf(WatchHubPresentation.Idle) }
+    val watchHubPresentation by produceState(
+        initialValue = WatchHubPresentation.Idle,
+        key1 = watchHubContextService,
+    ) {
+        while (true) {
+            val now = System.currentTimeMillis()
+            value = when (
+                val result = watchHubContextService.load(
+                    SourceRequestContext(
+                        nowEpochMillis = now,
+                        correlationId = "watch-hub-$now",
+                    )
+                )
+            ) {
+                is WatchHubContextResult.Ready -> WatchHubPresentationMapper.from(
+                    match = result.match,
+                    lifecycle = result.liveState.state.lifecycle,
+                )
+                is WatchHubContextResult.NoTarget,
+                is WatchHubContextResult.Failed -> WatchHubPresentation.Idle
+            }
+            delay(WATCH_HUB_REFRESH_MILLIS)
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         Scaffold(containerColor = RiftBg) { padding ->
@@ -93,7 +122,6 @@ fun LanerRoot(
                             onRequestOverlayPermission = onRequestOverlayPermission,
                             onStartRiftScreen = onStartRiftScreen,
                             onStopRiftScreen = onStopRiftScreen,
-                            onWatchPresentationChange = { watchHubPresentation = it },
                             modifier = Modifier.fillMaxSize(),
                         )
                         MatchPhase.POST_MATCH -> PostMatchScreen(
@@ -189,6 +217,8 @@ private val MatchPhase.label: String
         MatchPhase.LIVE_MATCH -> "赛中"
         MatchPhase.POST_MATCH -> "赛后"
     }
+
+private const val WATCH_HUB_REFRESH_MILLIS = 15_000L
 
 val RiftBg = Color(0xFF090B10)
 val RiftPanel = Color(0xFF11151D)
