@@ -40,6 +40,7 @@
 - `MatchIdentityPolicy` / `LiveMatchTargetRegistry` / `LiveFrameIdentityGate` 的比赛身份规则。
 - `OpenClawSecurityPolicy` / `RiftClawContract` / `RiftClawInjectionGuard` 的 localhost 协议与纯安全校验规则。
 - `Qualification*` 资格领域模型、LPL/Worlds/LCP 官方资格静态快照与规则。
+- `TournamentEdition*` 年度赛事档案模型，以及 `TournamentResearch*` 纯赛事研究模型/推导器与 schema。
 - `LplChampionshipPoints2026` / `Worlds2026QualifiedTeams` 的已核实资格快照与领域状态。
 
 ## 日志
