@@ -81,7 +81,10 @@ internal class LplOfficialAwardsProvider {
         val dedupMvps = mvps
             .filter { it.playerName.isNotBlank() }
             .distinctBy { "${it.game ?: 0}|${key(it.playerName)}|${key(it.team)}" }
-        val gameMvps = dedupMvps.filter { it.game != null && it.game > 0 }.sortedBy { it.game }
+        val gameMvps = dedupMvps.filter { record ->
+            val game = record.game
+            game != null && game > 0
+        }.sortedBy { it.game }
         val seriesMvp = dedupMvps.firstOrNull { it.game == null || it.game == 0 }
             ?: dedupMvps.takeIf { gameMvps.isEmpty() }?.firstOrNull()
         val dedupVotes = votes
