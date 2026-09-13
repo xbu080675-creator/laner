@@ -1,0 +1,29 @@
+name: Apply dev91 roster identity fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/dev91-roster-identity-fix.yml'
+      - 'scripts/dev91_roster_fix.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply patch
+        run: python3 scripts/dev91_roster_fix.py
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/java/com/riftlab/app/data/StartingRosterFeed.kt app/src/main/java/com/riftlab/app/ui/RiftLabApp.kt app/build.gradle.kts
+          git commit -m 'dev.91: harden official roster identity matching' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
