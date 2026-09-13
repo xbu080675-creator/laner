@@ -100,7 +100,7 @@ class LiveEventDerivationServiceTest {
     }
 
     @Test
-    fun missingOrRegressingCountersDoNotManufactureEvents() = runSuspend {
+    fun missingCountersDoNotManufactureEvents() = runSuspend {
         val repository = MemoryTimelineRepository()
         val timelineService = LiveTimelineService(repository)
         val service = LiveEventDerivationService(timelineService)

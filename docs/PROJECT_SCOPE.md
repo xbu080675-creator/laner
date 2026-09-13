@@ -72,8 +72,8 @@ Laner 的视觉与交互统一以：
 ## 当前阶段
 
 - 阶段：`M1 / Feature Migration`
-- 当前门禁：先完成 `LNR-020 / INC-LNR-020-001` 合规整改，再进入第 2 块 Tactical HUD
-- 业务代码：已进入 PRE / LIVE / POST 功能迁移与 Android 平台实现阶段
+- 当前门禁：`Block 2 / LNR-021` 已完成工程交付，但 `INC-LNR-021-001` 正在整改；整改、重测和独立合规复查完成前不得进入 Block 3
+- 业务代码：已进入 PRE / LIVE / POST 功能迁移、Android 平台实现与逐块合规冻结阶段
 - 旧工程功能基线：`docs/FEATURE_BASELINE.md = DONE`；逐项迁移状态继续按该文件验收
 - 当前真实任务状态：以 `docs/IMPLEMENTATION_STATUS.md` 为准
 
@@ -147,6 +147,6 @@ Laner 的视觉与交互统一以：
 M0 时的下列 `N/A` 已不能继续作为 M1 的默认状态：
 
 - 运行时性能预算：按具体高频/实时模块建立并在相关开发任务中验证；
-- 数据库 / 文件 Schema Migration：凡持久化 Schema 发生变化必须先定义 migration/recovery；本次 LNR-020 整改未改变 Draft HUD layout schema；
+- 数据库 / 文件 Schema Migration：凡持久化 Schema 发生变化必须先定义 migration/recovery；LNR-021 Timeline `v1 → v2` 必须保留升级前可验证恢复点；
 - 实机测试矩阵：Android overlay、真实 Provider 等不能由 CI 证明的项目使用 `WAITING EXTERNAL TEST`，不得写成 N/A 或 DONE；
 - Release 签名：仍未进入正式 release closure，最终由第 8 块 Migration Audit / release closure 统一验收。

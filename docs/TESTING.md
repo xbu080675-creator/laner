@@ -213,3 +213,97 @@ current code/UI head `0681c3b20f2e6cad4cd6fb52bf90a4912e299608` / run `346960816
 - Global per-game winner evidence / CompletedGame 完整恢复：`IN PROGRESS`。
 
 因此 LNR-015 自动测试收口后最多进入 `WAITING EXTERNAL TEST`，不得标记 `DONE`。
+
+## LNR-016 — Riot Global LIVE / APK Delivery
+
+### 自动化
+
+最终功能 Gate 已覆盖：Architecture、Domain/Application、Android Adapter Unit、Android debug build 与 APK artifact 生成。Riot lifecycle target/discovery/request 的 fixture/diagnostic 路径已自动验证。
+
+### 未执行 / 外部验收
+
+- 真实 Riot credential + 赛事现场 LIVE lifecycle：`WAITING EXTERNAL TEST`；
+- Android 真机网络、时区、生命周期与 APK 行为：`WAITING EXTERNAL TEST`。
+
+自动 APK 构建成功不等于具体 Android 版本或 ROM 已 `SUPPORTED`。
+
+## LNR-019 — LIVE Snapshot / Timeline / Match HUD
+
+### 自动回归
+
+已覆盖 canonical Match/Game/team identity validation、wrong-team/noncanonical rejection、真实字段缺失保持 null、Timeline ingest/query 与 LIVE UI mapping。
+
+历史失败 run `34699837518`：Architecture PASS，Core test compile FAIL；原因是新测试错误引入本模块未配置的 coroutine/JUnit harness。fix `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5` 后 run `34699942180` 全 Gate PASS。
+
+### 未执行 / 外部验收
+
+- 真实 Riot LiveStats 赛事采样：`WAITING EXTERNAL TEST`；
+- Android 真机 Match HUD：`WAITING EXTERNAL TEST`。
+
+## LNR-020 — RiftScreen / Draft HUD
+
+### 自动回归与合规整改
+
+原功能 PR #10 合入后，`INC-LNR-020-001` 通过独立整改闭环。当前自动测试覆盖 Application current LIVE context、Draft mapper、OverlayWindowHost diagnostics、窗口控制器边界与历史失败回归。
+
+历史失败必须继续保留：
+- run `34704014273`：旧 Presentation test 绑定已删除 UI-private 选择逻辑；
+- PR run `34705468018`：新 Draft HUD 测试断言自身错误。
+
+### 未执行 / 外部验收
+
+Overlay permission、后台/前台切换、拖动、Edit/Lock、横竖屏 profile、touch-through 与实际 ROM WindowManager 行为：`WAITING EXTERNAL TEST`。
+
+## LNR-021 — Tactical HUD / LIVE Event Derivation
+
+### 原交付自动证据
+
+最终 feature head `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5`：
+- push run `34712441374`：Architecture / Domain+Application / Android Adapter Unit / Android debug compile / APK upload 全 `PASS`；
+- PR run `34712444119`：同组 Gate 全 `PASS`；
+- PR #15 merge `6c72a748a23758c975d78a78e80092b16d225d34`；post-merge main run `34712560708` 全 `PASS`。
+
+历史 Failure A run `34709821178`：Architecture/Core PASS，Android production compile 因 `LiveMatchScreen.eventLabel()` 未穷举新增 sealed event 而 FAIL；fix `403bba4e874ad37978179618e84dceaafb9f06f8`，故障知识库为 `LNR-UI-LIVE-004`。
+
+### 事件派生回归
+
+必须覆盖并保持：
+- aggregate Kill delta 不制造 killer/victim；
+- player kill delta 只有完整解释 team delta 才绑定 PlayerId；
+- MultiKillWindow 只是采样窗口事实，不冒充官方多杀；
+- TeamFightWindow 只有双方 kill delta 都可比较、窗口 <=20s 且累计 >=3 时生成；任一侧 unknown 时不得用 0 替代；
+- team kill counter regression 不制造 Kill/TeamFight；
+- player kill counter regression 或 player row 缺失时退化为 aggregate unknown-player Kill，不制造身份；
+- Dragon 总数差分不推断龙种/龙魂/远古龙；
+- Gold lead 只有越过 deadband 且领先方真正易手时生成；
+- generated-event reconciliation 只替换自己的 generator 输出；
+- late/out-of-order/stronger same-second snapshot 重算后保持幂等。
+
+`LiveEventDerivationSafetyRegressionTest` 是 `INC-LNR-021-001` 的永久事实安全回归入口。
+
+### Timeline v1 → v2 migration / recovery
+
+Adapter 测试必须覆盖：
+- v2 round-trip；
+- v1 读取；
+- v1 下一次写入升级到 v2；
+- 首次覆盖 v1 前创建内容完全一致的 `.schema-v1.bak`；
+- 后续 v2 写入不得改写该 v1 recovery copy；
+- 已存在但与当前 v1 不一致的 recovery copy 必须阻断覆盖；
+- corrupt / unsupported schema 显式失败。
+
+`JsonLiveTimelineMigrationRecoveryTest` 是升级恢复点永久回归入口。
+
+### Tactical HUD 自动回归
+
+覆盖 Verified/Preview 隔离、canonical lifecycle=`IN_GAME`、25s game-time TTL、30s wall-clock freshness、Draft > Tactical > RiftScreen 优先级的 Presentation/Controller 逻辑。Preview 固定 `LOCAL PREVIEW · NOT FACT`，不得进入 Core/Repository/Timeline。
+
+### `INC-LNR-021-001` 整改证据
+
+本事故整改期间的中途 Gate 只能作为中途证据；只有整改文档/状态全部同步后冻结的 exact-head Gate、PR Gate、post-merge main Gate 才能作为最终整改证据。事故未关闭前不得把任何单次绿色 CI 写成 Constitution PASS。
+
+### 未执行 / 外部验收
+
+- 真实 Riot online 采样触发 Kill/Objective/GoldLead/Tactical：`WAITING EXTERNAL TEST`；
+- Android Tactical Overlay permission、窗口视觉、touch-through、真实优先级、横竖屏、断流退场：`WAITING EXTERNAL TEST`；
+- 官方 killer/victim pairing、官方 Double/Triple/Quadra/Penta、dragon subtype：没有明确 Provider evidence 时不得声称支持。

@@ -28,7 +28,8 @@
 - 派生 provider 固定为 `laner-live-event-derivation`，便于只替换自己生成的事件，不删除 Provider explicit 事件。
 - 队伍击杀计数差分只生成 aggregate KillEvent；只有 player kill 计数前后可比较且总和与 team delta 完全一致时，才允许绑定 playerId。
 - `MultiKillWindowEvent` 只在同一 player 的 kill delta >=2 且采样窗 <=20s 时生成；不得称官方 Double/Triple/Quadra/Penta。
-- `TeamFightWindowEvent` 只在 <=20s 的窗口内双方总 kill delta >=3 时生成；它是 `DERIVED_WINDOW`，不宣称官方团战语义。
+- `TeamFightWindowEvent` 只有在采样窗 <=20s、**双方 kill delta 都可比较**且累计 >=3 时生成；任一侧 unknown 时不得用 0 替代，也不得生成 TeamFightWindow。
+- team kill counter regression 不制造 Kill/TeamFight；player kill counter regression 或 player row 缺失时最多保留 team aggregate Kill，不能制造 PlayerId。
 - GoldLeadChange 使用 ±250g deadband，只在领先方从一侧明确切到另一侧时生成，避免持平附近抖动和 Timeline flood。
 - Objective delta 只对现有可信计数字段生成；Dragon 总数不能推导龙种/龙魂/远古龙。Baron 可用；Herald/Atakhan 仍未全局标准化。
 - `LiveTimelineService.reconcileGeneratedEvents` 只能替换指定 generatorProviderId 的事件；Provider explicit / Draft / lifecycle 等其他来源事件必须保留。
@@ -45,9 +46,10 @@
 - `LNR-APP-LIVE-001`：LIVE lifecycle Provider 返回其他 Match；
 - `LNR-APP-LIVE-002`：LIVE snapshot canonical Match/Game/team identity 或 lifecycle validation 失败；
 - `LNR-APP-LIVE-003`：Current LIVE Context Query 意外失败；
+- `LNR-APP-LIVE-004`：历史事实完整性故障 ID，指向 TeamFight unknown→0 事故；当前通过永久回归防止复发；
 - POST historical identity mismatch：`LNR-APP-POST-005`。
 
-LNR-021 的 event derivation 当前属于确定性纯 Application 逻辑，不新增“猜测型”运行时错误码；非法 identity/source/event 继续由既有 Domain/Timeline 边界拒绝。若未来引入外部事件 Provider，必须为 Adapter/Source 另建稳定错误码，而不能复用本地 derivation 语义。
+LNR-021 的 event derivation 当前属于确定性纯 Application 逻辑，不为普通“没有足够事实所以不派生”情况输出错误；非法 identity/source/event 继续由既有 Domain/Timeline 边界拒绝。若未来引入外部事件 Provider，必须为 Adapter/Source 另建稳定错误码。
 
 ## 测试
 `gradle :core:application:test`
@@ -69,12 +71,16 @@ LNR-021 LIVE Event 回归：
 - team kill delta 生成 aggregate KillEvent，不造 killer/victim；
 - player kill delta 完全解释 team delta 时允许 player-bound KillEvent；
 - 采样窗多杀生成 `MultiKillWindowEvent`，不冒充官方 multi-kill；
-- 短窗累计 >=3 kill 生成 `TeamFightWindowEvent`；
+- TeamFightWindow 需要双方 delta 均已知且短窗累计 >=3；一侧 unknown 时不生成；
+- team counter regression 不生成 combat event；
+- player counter regression / player row 缺失退化为 aggregate unknown-player Kill；
 - Dragon/Baron/Tower count delta 生成标准 Objective；Dragon subtype 保持未知；
 - Gold lead 只有跨越 deadband 且领先方真正易手时生成；
 - 外部 Provider explicit 事件可抑制同区间重复 local-derived 事件；
 - 同 generator 的旧派生事件可 reconcile 替换，其他来源事件不被删除；
 - late/out-of-order/stronger same-second snapshot 后重新派生保持幂等。
+
+永久事实安全入口：`LiveEventDerivationSafetyRegressionTest`。
 
 POST 回归继续覆盖独立事实、archive fallback-only、wrong identity、LIVE+POST canonical Timeline coexistence 与 Global-first routing。
 

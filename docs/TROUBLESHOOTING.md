@@ -97,6 +97,26 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **排障路径**：`Core PASS + Android compile sealed-when fail → 检查 Domain sealed hierarchy 新增类型 → 同步所有 Presentation exhaustive mapper → 不用 catch-all else 掩盖遗漏`。
 
+### `LNR-APP-LIVE-004` — TeamFightWindow 把 unknown kill delta 写成 0
+首次发现：Block 2 独立宪法复查 / `INC-LNR-021-001`。
+
+**现象**：当一侧 team kill counter 前后可比较且增长、另一侧任一帧 kill counter 为 null 时，旧 `LiveEventDerivationService` 使用 `?: 0` 参与阈值并写入 `TeamFightWindowEvent`，导致 canonical Timeline 把“未知”固化成“+0”。
+
+**影响**：事实完整性。该事件会进入持久化、HUD 和后续分析，因此不是 UI 占位问题。
+
+**根因**：实现把“没有可计算 delta”错误等同于“delta=0”，为了支持单侧高密度击杀窗口而越过了 `unknown != zero` 边界。
+
+**修复**：`TeamFightWindowEvent` 只有在 blue/red 两侧 kill delta 都非 null、窗口 <=20s 且累计 >=3 时才生成；任一侧 unknown 则不生成 TeamFightWindow。已知一侧的 aggregate KillEvent 仍可单独保留。
+
+**永久回归**：`LiveEventDerivationSafetyRegressionTest.oneSidedUnknownKillDeltaDoesNotBecomeZeroInTeamFightWindow`；同文件同时覆盖 team counter regression、player counter regression 与 player row 缺失退化。
+
+**排障路径**：`Tactical 团战窗口出现不可信 +0 → 查 canonical snapshot 两侧 kill counter 是否都可比较 → LiveEventDerivationService → LNR-APP-LIVE-004 回归`。
+
+### LNR-021 Timeline v1→v2 migration recovery
+`JsonLiveTimelineRepository` 读取 v1、写 v2。首次覆盖已有 v1 文件前，必须生成并验证同目录 `.schema-v1.bak`，内容与升级前 v1 完全一致；若已有 recovery copy 与当前 v1 不一致，迁移必须失败且不得覆盖主文件。
+
+永久回归：`JsonLiveTimelineMigrationRecoveryTest`。该恢复点只保证恢复“升级前 v1”；新建的纯 v2 Timeline 不声明无损 downgrade。
+
 ### LNR-021 Tactical stale-card 防护
 Tactical HUD 同时使用：
 - 游戏时间 TTL：标准事件只在 canonical current game second 的 25s 内可候选；
@@ -104,7 +124,7 @@ Tactical HUD 同时使用：
 
 原因：Provider 断流时 game clock / latest snapshot 可能冻结，如果只有游戏时间 TTL，旧 Tactical card 会永久停留。`TacticalHudPresentation.isDisplayableAt()` 是永久回归入口；Preview 明确不使用 Provider freshness，因为它固定是 `LOCAL PREVIEW · NOT FACT`。
 
-最终自动证据：feature head `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5` 的 push run `34712441374` 与 PR run `34712444119` 均全 Gate PASS；PR #15 merge `6c72a748a23758c975d78a78e80092b16d225d34` 后 main run `34712560708` 也全 Gate PASS。真机断流退场仍为 `WAITING EXTERNAL TEST`。
+原交付自动证据：feature head `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5` 的 push run `34712441374` 与 PR run `34712444119` 均全 Gate PASS；PR #15 merge `6c72a748a23758c975d78a78e80092b16d225d34` 后 main run `34712560708` 也全 Gate PASS。真机断流退场仍为 `WAITING EXTERNAL TEST`。
 
 ### `LNR-APP-LIVE-003` — Current LIVE Context Query 意外失败
 LNR-020 合规整改新增。`LiveMatchContextService` 是当前 LIVE 上下文唯一 Application 编排入口；若 Schedule/Target/Lifecycle/Snapshot/Timeline 组合链出现非业务降级类异常，返回 typed `Failed` 并通过 `[Laner:LIVE]` 记录 `LNR-APP-LIVE-003`。UI/Overlay 不得自行复制相同编排作为 fallback。
@@ -129,7 +149,7 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 - `LNR-SRC-LIVE-004`：无法从 Riot global schedule 唯一定位 event / identity 缺失。
 - `LNR-SRC-LIVE-005`：EventDetails / LiveStats 等 Riot LIVE lifecycle 请求失败。
 - `LNR-SRC-LIVE-006`：Riot API Key 未配置（Gameplay Snapshot）。
-- `LNR-SRC-LIVE-007`：Gameplay Snapshot EventDetails/LiveStats 请求或解析失败。
+- `LNR-SRC-LIVE-007`：Riot LIVE Snapshot EventDetails/LiveStats 请求或解析失败。
 - `LNR-APP-LIVE-002`：Provider snapshot 的 canonical Match/Game/team identity 校验失败；不得写入 Timeline。
 
 设备错误码只用于定位，UI 不得绕过 Application 修正赛事事实。
@@ -143,4 +163,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。Block 1 / LNR-020 已冻结。Block 2 / LNR-021 工程交付已通过 PR #15 合入主线，final feature push/PR Gate 与 post-merge main Gate 均 PASS；功能状态保持 `WAITING EXTERNAL TEST`。下一步不是 Block 3，而是按用户规定对 Block 2 独立复查工程宪法；若发现偏离，先记录并整改，复查闭环后才能冻结 Block 2。Cito 继续 DEFERRED。
+M1 Feature Migration。Block 1 / LNR-020 已冻结。Block 2 / LNR-021 的功能交付历史保持不变，但 `INC-LNR-021-001` 正在整改；事故关闭前 Block 2 不冻结，Block 3 不启动。真实 Riot online 与 Android overlay 行为继续 `WAITING EXTERNAL TEST`。

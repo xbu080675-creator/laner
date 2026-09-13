@@ -6,8 +6,8 @@
 - Project phase: `M1 / Feature Migration`
 - Functional migration: `IN PROGRESS`
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
-- LNR-020 Block 1: frozen after `INC-LNR-020-001 / CLOSED`
-- LNR-021 Block 2: engineering delivery merged; separate constitution re-audit required before freeze
+- LNR-020 Block 1: frozen after `INC-LNR-020-001 / CLOSED`；合规结论在正文记录，不混入任务状态 token
+- LNR-021 Block 2: `INC-LNR-021-001` 整改中；Block 2 未冻结，Block 3 被该审计门禁阻塞
 - Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”。
 
 ## Task Status
@@ -24,26 +24,29 @@
 | LNR-017 | Local AI / OCR / Roster Assist | TODO |
 | LNR-018 | Compatibility / Full Regression / Migration Audit | TODO |
 | LNR-019 | Global LIVE Snapshot / Timeline / Match HUD | WAITING EXTERNAL TEST |
-| LNR-020 | RiftScreen / Draft HUD Android Overlay | WAITING EXTERNAL TEST (functional) / COMPLIANCE PASS |
-| LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST / ENGINEERING DELIVERY MERGED |
+| LNR-020 | RiftScreen / Draft HUD Android Overlay | WAITING EXTERNAL TEST |
+| LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST |
 
 ## Block 1 / LNR-020 Frozen Truth
 - Original functional merge: PR #10 / `967e112d6efcf8e6daa86f0b007cedc39b63b04c`；post-merge main run `34706047380` PASS。
 - Compliance remediation merge: PR #12 / `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`；exact-head run `34708127194` PASS；post-merge run `34708285172` PASS。
 - Closeout merge: PR #13 / `e92bb65b2469cbeb23e56a531890945880f99eba`；post-merge run `34708701976` PASS。
 - Final factual-status correction merge: `87f90a89ad7a35fdb9717ef1003fa984bba4fdab`；main run `34708959768` PASS。
-- `INC-LNR-020-001 = CLOSED`；Block 1 不再接受顺手功能改动。
+- `INC-LNR-020-001 = CLOSED`，Block 1 compliance review PASS；这属于工程认证事实，不是任务状态枚举。
 - `LIVE-024~029` 继续等待 Android 真机证据；`LIVE-012` 仍 TODO。
 
 ## Block 2 / LNR-021 Delivered Truth
-### Stable anchors
+### Stable delivery anchors
 - Baseline before Block 2: `main@87f90a89ad7a35fdb9717ef1003fa984bba4fdab`；
 - PR #15 final feature head: `4c1f256daf288bbc835d30f01ce1bcf3b6fa85f5`；
 - final push run `34712441374`: Architecture / Domain+Application / Android Adapter unit / Android debug compile / APK upload PASS；
 - final PR run `34712444119`: all same Gates PASS；
 - PR #15 merge: `6c72a748a23758c975d78a78e80092b16d225d34`；
 - post-merge main run `34712560708`: all Gates PASS；
-- main artifact `10303469002`；digest `sha256:8d6ba46a3ef8664eb3e480634f3e305d339b2bec227ae4d95b9b8f71a887ba4a`。
+- docs closeout PR #16 merge: `c73d551925ba273d4caf6259ef621100c105b5de`；
+- closeout main run `34712899722`: all Gates PASS。
+
+这些是历史工程交付证据，不等于当前独立合规审计 PASS。`INC-LNR-021-001` 在整改完成、重测和独立复查前保持 OPEN。
 
 ### Canonical event derivation
 ```text
@@ -59,11 +62,12 @@ Verified LiveGameSnapshot
 → OverlayWindowHost
 ```
 
-已实现：
+当前规则：
 - aggregate Kill delta；没有明确配对证据时 killer/victim 保持 null；
 - 当 player kill delta 可完整解释 team delta 时，允许绑定 canonical PlayerId；
 - `MultiKillWindowEvent`：<=20s 采样窗内同一选手 kill delta >=2，仅称“采样窗口多杀”，不冒充官方 multi-kill；
-- `TeamFightWindowEvent`：<=20s 窗口内双方总 kill delta >=3，仅称“团战窗口”；
+- `TeamFightWindowEvent`：只有双方 kill delta 都可比较、窗口 <=20s 且累计 >=3 时生成；任一侧 unknown 时不生成，绝不把 unknown 补成 0；
+- team kill counter regression 不制造 Kill/TeamFight；player counter regression 或 player row 缺失不能制造 PlayerId；
 - `GoldLeadChangedEvent`：±250g deadband，只有领先方明确易手才生成；
 - Tower / Dragon / Baron delta；Dragon 不推断龙种/龙魂/远古龙；Herald/Atakhan 仍未全局标准化；
 - `reconcileGeneratedEvents` 只替换 `laner-live-event-derivation` 自己的派生事件，不删除 Provider explicit / lifecycle / Draft facts；
@@ -78,19 +82,25 @@ Verified LiveGameSnapshot
 - `TacticalHudPreviewSession` 仅用于本地视觉测试，固定 `LOCAL PREVIEW · NOT FACT`，不进入 Core/Repository/Timeline。
 
 ### Persistence
-- LIVE Timeline schema 从 v1 升到 v2，以保存新增 Tactical event 字段/类型；
-- `JsonLiveTimelineRepository` 仍可读取 v1；下一次写入自动升级 v2；
-- corrupt / unsupported schema 继续显式失败；不要求用户手动清缓存。
+- LIVE Timeline 当前写入 schema 为 v2，并继续读取 v1；
+- 首次把已有 v1 Timeline 写成 v2 前，必须保存内容完全一致的 `.schema-v1.bak` 并验证一致性；恢复副本异常时迁移失败，主文件不得被覆盖；
+- 后续 v2 写入不改写该 v1 recovery copy；
+- corrupt / unsupported schema 继续显式失败；
+- 不声称任意 v2 可无损降级；只有存在已验证 v1 recovery copy 的升级文件可以恢复升级前状态。
 
-## LNR-021 Failure History
+## LNR-021 Failure / Incident History
 ### Failure A — preserved
 - run `34709821178`；
 - Architecture boundary PASS；Domain/Application PASS；
 - Android Adapter Unit 阶段 production `:app:compileDebugKotlin` FAIL；
 - root cause：`LiveMatchScreen.eventLabel()` 未穷举新 `MultiKillWindowEvent / TeamFightWindowEvent`；
 - fix：`403bba4e874ad37978179618e84dceaafb9f06f8`；
-- permanent rule：Domain sealed event 扩展必须同步所有 Presentation exhaustive mapper，禁止用 catch-all `else` 掩盖遗漏；
 - Troubleshooting: `LNR-UI-LIVE-004`。
+
+### `INC-LNR-021-001`
+- 独立 Block 2 宪法复查确认 6 项偏离；
+- 当前整改范围包括事实安全、真实负向/边界回归、Timeline migration recovery、权威文档同步、标准状态 token 与新整改留档；
+- 当前状态：OPEN；最终 exact-head / PR / post-merge main Gate 和 Post-change Compliance Review 尚未全部完成。
 
 ## Waiting External Test / Honest Gaps
 - LNR-021 `LIVE-014 / LIVE-015 / LIVE-030` 自动实现存在，但真实 Riot online 触发仍未证明；
@@ -98,8 +108,8 @@ Verified LiveGameSnapshot
 - 真实官方 multi-kill / killer-victim / dragon subtype 仍依赖未来明确 Provider event evidence，当前不得声称已拥有；
 - `LIVE-009` Herald/Atakhan 仍 `IN PROGRESS`；
 - `LIVE-012` real Draft Provider 仍 TODO；
-- LNR-019 BLG vs AL / 其他真实赛事 online evidence 继续外部补证；
+- LNR-019 真实赛事 online evidence 继续外部补证；
 - Cito remains DEFERRED。
 
 ## Next
-按用户规定，在进入 Block 3 前先对 **Block 2 / LNR-021** 做独立工程宪法复查：重新读取届时最新 main 与宪法，产出合规/违宪记录；若发现偏离，先整改并重新闭环。只有该复查与必要整改完成后，第二块才能冻结，之后才进入第 3 块 Watch Hub + 播放器。
+完成 `INC-LNR-021-001` 整改 → 冻结 exact-head → 完整 Gate → PR Gate → merge → main Gate → 独立 Post-change Compliance Review。只有事故通过新记录正式关闭后，Block 2 才能冻结；随后才允许进入 Block 3 Watch Hub + 播放器。

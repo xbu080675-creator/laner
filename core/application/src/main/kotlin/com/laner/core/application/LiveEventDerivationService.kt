@@ -78,7 +78,9 @@ class LiveEventDerivationService(
             )
 
             if (interval <= TEAM_FIGHT_MAX_WINDOW_SECONDS &&
-                (blueKillDelta ?: 0) + (redKillDelta ?: 0) >= TEAM_FIGHT_MIN_KILLS
+                blueKillDelta != null &&
+                redKillDelta != null &&
+                blueKillDelta + redKillDelta >= TEAM_FIGHT_MIN_KILLS
             ) {
                 output += TeamFightWindowEvent(
                     matchId = timeline.matchId,
@@ -86,8 +88,8 @@ class LiveEventDerivationService(
                     sequence = nextSequence(),
                     gameTimeSeconds = current.gameTimeSeconds,
                     provenance = provenance,
-                    blueKillDelta = blueKillDelta ?: 0,
-                    redKillDelta = redKillDelta ?: 0,
+                    blueKillDelta = blueKillDelta,
+                    redKillDelta = redKillDelta,
                     windowSeconds = interval,
                 )
             }
