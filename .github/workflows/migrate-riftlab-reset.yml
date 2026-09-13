@@ -1,0 +1,43 @@
+name: migrate-riftlab-full-reset
+
+on:
+  push:
+    branches:
+      - migration/riftlab-full-reset
+    paths:
+      - .github/workflows/migrate-riftlab-reset.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Laner migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/riftlab-full-reset
+          fetch-depth: 0
+
+      - name: Fetch pinned RiftLab baseline
+        run: |
+          git clone https://github.com/xbu080675-creator/Rlftlab.git /tmp/riftlab
+          cd /tmp/riftlab
+          git checkout e46e4ea35ff8058ce90af1f79f15de31e14377dd
+
+      - name: Replace Laner worktree with RiftLab tree
+        run: |
+          rsync -a --delete --exclude='.git' /tmp/riftlab/ ./
+
+      - name: Commit exact tree migration
+        run: |
+          git config user.name "laner-migration-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "migration: reset Laner to RiftLab e46e4ea baseline"
+          git push origin HEAD:migration/riftlab-full-reset
