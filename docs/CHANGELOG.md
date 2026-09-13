@@ -22,7 +22,8 @@ All notable project changes must be recorded here at release or milestone level.
 - Implementation baseline head `b83a83c0c8908b8da1755d306958352fbfe389cf` / run `34710012697` passed Architecture/Core/App Unit/Android compile/APK upload and produced artifact `10303071228` (`sha256:1e0d24bd8e5423216442a97d70c6307f128a93f22476e462b9942e62da906d6f`).
 - Original delivery final push `34712441374`, PR `34712444119`, and post-merge main `34712560708` all passed; those historical Gates do not replace the independent constitution remediation Gate.
 - Constitution remediation PR #17 exact head `a62df876bf21f6009ea4a7fc1c9227fd48e219b1` passed run `34732025919`; merge `2d7ff40034a8e834f20c02bef41f8c088e98f479` passed post-merge main run `34732179957` with Architecture / Domain+Application / Android Adapter Unit / Android debug compile / APK upload all green.
-- Independent post-remediation review found the six confirmed `INC-LNR-021-001` deviations remediated with no new confirmed violation in scope. Incident certification is `CLOSURE READY`; formal `CLOSED` waits for the docs-only closeout PR and its post-merge main Gate.
+- Documentation closeout PR #18 exact head `df58f5651fd241dc95137e0d40aa05e2e29850ee` passed run `34732993654`; merge `38161578e04a523c9247c64c762f4dd983561a9d` passed post-merge main run `34733073857` with all five Gates green.
+- Independent post-remediation review found all six confirmed `INC-LNR-021-001` deviations remediated with no new confirmed violation in scope. `INC-LNR-021-001 = CLOSED`; Block 2 engineering scope is frozen. Final immutable evidence lives in `docs/development/2026/2026-09-13_LNR-021_constitution-closeout-final.md`.
 - `LIVE-014 / LIVE-015 / LIVE-030` remain `WAITING EXTERNAL TEST`; real Riot online event triggering and Android overlay behavior are not claimed PASS from CI.
 
 #### LNR-020 — RiftScreen / Draft HUD Android Overlay
