@@ -14,13 +14,15 @@ All notable project changes must be recorded here at release or milestone level.
 - Added permanent factual-safety regressions for one-sided unknown counters, team counter regression, player counter regression and missing player rows.
 - Added `LiveTimelineService.reconcileGeneratedEvents` so late/out-of-order or stronger same-second snapshots can replace only Laner-generated derived events while preserving Provider explicit / Draft / lifecycle events.
 - Upgraded LIVE Timeline persistence to schema v2 for the new event fields/types while retaining v1 read compatibility and write-forward migration.
-- `INC-LNR-021-001` remediation now preserves and verifies the exact pre-upgrade v1 payload in a sibling `.schema-v1.bak` before the first v1→v2 replacement; a mismatched recovery copy blocks migration instead of overwriting the source file.
+- `INC-LNR-021-001` remediation preserves and verifies the exact pre-upgrade v1 payload in a sibling `.schema-v1.bak`; source and recovery are fully decoded and canonical GameId-checked before v2 replacement. Wrong identity, malformed v1, or mismatched recovery blocks overwrite.
 - Added Tactical HUD Presentation/View/WindowController and preserved visible overlay priority `Draft > Tactical > RiftScreen`.
 - Tactical Verified cards use 25s game-time TTL plus 30s wall-clock freshness so a frozen game clock after provider loss cannot leave a stale tactical card permanently visible.
 - Added Android-only Tactical Preview marked `LOCAL PREVIEW · NOT FACT`; it never enters Core, source arbitration, repositories or Timeline.
 - Preserved Failure A: run `34709821178` passed Architecture/Core but failed Android production compile because `LiveMatchScreen.eventLabel()` had not yet exhausted the expanded `MatchEvent` sealed hierarchy. Fix `403bba4e874ad37978179618e84dceaafb9f06f8` added the missing `MultiKillWindowEvent / TeamFightWindowEvent` branches without hiding future omissions behind a catch-all `else`.
 - Implementation baseline head `b83a83c0c8908b8da1755d306958352fbfe389cf` / run `34710012697` passed Architecture/Core/App Unit/Android compile/APK upload and produced artifact `10303071228` (`sha256:1e0d24bd8e5423216442a97d70c6307f128a93f22476e462b9942e62da906d6f`).
 - Original delivery final push `34712441374`, PR `34712444119`, and post-merge main `34712560708` all passed; those historical Gates do not replace the independent constitution remediation Gate.
+- Constitution remediation PR #17 exact head `a62df876bf21f6009ea4a7fc1c9227fd48e219b1` passed run `34732025919`; merge `2d7ff40034a8e834f20c02bef41f8c088e98f479` passed post-merge main run `34732179957` with Architecture / Domain+Application / Android Adapter Unit / Android debug compile / APK upload all green.
+- Independent post-remediation review found the six confirmed `INC-LNR-021-001` deviations remediated with no new confirmed violation in scope. Incident certification is `CLOSURE READY`; formal `CLOSED` waits for the docs-only closeout PR and its post-merge main Gate.
 - `LIVE-014 / LIVE-015 / LIVE-030` remain `WAITING EXTERNAL TEST`; real Riot online event triggering and Android overlay behavior are not claimed PASS from CI.
 
 #### LNR-020 — RiftScreen / Draft HUD Android Overlay
