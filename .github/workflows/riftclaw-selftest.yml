@@ -8,7 +8,8 @@ on:
       - 'scripts/riftclaw-bootstrap.sh'
       - 'scripts/riftclaw-bridge.mjs'
       - 'app/src/main/java/com/riftlab/app/data/RiftClaw*.kt'
-      - 'app/src/main/java/com/riftlab/app/data/OpenClawSecurityPolicy.kt'
+      - 'core/src/main/kotlin/com/riftlab/app/data/RiftClaw*.kt'
+      - 'core/src/main/kotlin/com/riftlab/app/data/OpenClawSecurityPolicy.kt'
       - 'docs/riftclaw-*.md'
       - '.github/workflows/riftclaw-selftest.yml'
 
@@ -43,9 +44,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          CONTRACT=app/src/main/java/com/riftlab/app/data/RiftClawContract.kt
+          CONTRACT=core/src/main/kotlin/com/riftlab/app/data/RiftClawContract.kt
           CLIENT=app/src/main/java/com/riftlab/app/data/RiftClawClient.kt
-          POLICY=app/src/main/java/com/riftlab/app/data/OpenClawSecurityPolicy.kt
+          POLICY=core/src/main/kotlin/com/riftlab/app/data/OpenClawSecurityPolicy.kt
           STORE=app/src/main/java/com/riftlab/app/data/ProviderCredentialStore.kt
           grep -q 'DEFAULT_ENDPOINT = "http://127.0.0.1:18790"' "$CONTRACT"
           grep -q 'enum class Capability { WEIBO_SEARCH }' "$CONTRACT"
@@ -59,7 +60,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          GUARD=app/src/main/java/com/riftlab/app/data/RiftClawContract.kt
+          GUARD=core/src/main/kotlin/com/riftlab/app/data/RiftClawContract.kt
           CLIENT=app/src/main/java/com/riftlab/app/data/RiftClawClient.kt
           grep -q 'blocked-untrusted-instruction' "$GUARD"
           grep -q 'system\\\\s\*prompt' "$GUARD"
