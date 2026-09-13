@@ -14,8 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Laner"
-
+rootProject.name = "RiftLab"
 include(":app")
-include(":core:domain")
-include(":core:application")

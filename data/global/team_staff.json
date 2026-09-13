@@ -1,0 +1,3341 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-09-12T07:56:33+00:00",
+  "source": "Riot LoL Global Contract Database (GCD)",
+  "officialSource": "https://competitiveops.riotgames.com/en-US/league-of-legends",
+  "teams": {
+    "7REXTEAM": {
+      "name": "7REX Team",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "7REX Team"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "7REX Team 官方战队联系人",
+          "realName": "Gustavo Nobre <contato@7rex.org>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "ANYONESLEGEND": {
+      "name": "Anyone's Legend",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Anyone's Legend"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Anyone's Legend 官方战队联系人",
+          "realName": "shaoxiaohang@allgamers.com.cn",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "BARÇAESPORTS": {
+      "name": "Barça Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Barça Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Barça Esports 官方战队联系人",
+          "realName": "jordi.guarte@studios.fcbarcelona.cat",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Jandro",
+          "realName": "Alejandro Fernández Valdés",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "BEIJINGJDGESPORTS": {
+      "name": "Beijing JDG Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Beijing JDG Esports"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Beijing JDG Esports 官方战队联系人",
+          "realName": "panfei@jdgaming.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "BERLININTERNATIONALGAMING": {
+      "name": "Berlin International Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Berlin International Gaming"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Berlin International Gaming 官方战队联系人",
+          "realName": "Finn Luca Wettern finnluca.wettern@bigleet.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Don Arts",
+          "realName": "Finn-Lukas Salomon",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Pandar",
+          "realName": "Yannick Greff",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "BILIBILIGAMING": {
+      "name": "BILIBILI GAMING",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "BILIBILI GAMING"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "BILIBILI GAMING 官方战队联系人",
+          "realName": "LINQING@BILIBILI.COM",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "BLUEOTTER": {
+      "name": "Blue Otter",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Blue Otter"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Blue Otter 官方战队联系人",
+          "realName": "Brad Kurtz - bradk@blueottersolutions.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "BNKFEARX": {
+      "name": "BNK FEARX",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "BNK FEARX"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Key",
+          "realName": "Hangi Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Lira",
+          "realName": "Taeyou Nam",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Edo",
+          "realName": "Junseok Park",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Rather",
+          "realName": "Hyoungsub Shin",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "BOOSTGATEESPORTS": {
+      "name": "Boostgate Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Boostgate Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Boostgate Esports 官方战队联系人",
+          "realName": "talhareceparslan@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "DooMBuLL",
+          "realName": "Serhan Ata",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "BUSHIDOWILDCATS": {
+      "name": "Bushido Wildcats",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Bushido Wildcats"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Bushido Wildcats 官方战队联系人",
+          "realName": "holyphoenix@hotmail.com.tr",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Astro",
+          "realName": "Aydın Efe Çalışkan",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Pades",
+          "realName": "Serdar Padeş",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "CLOCKS": {
+      "name": "Clocks",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Clocks"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Clocks 官方战队联系人",
+          "realName": "dssk665@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "CLOUD9": {
+      "name": "Cloud9",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Cloud9"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Cloud9 官方战队联系人",
+          "realName": "Tiffany Truong <tiffany.truong@cloud9.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "CTBCFLYINGOYSTER": {
+      "name": "CTBC Flying Oyster",
+      "short": "CFO",
+      "page": "",
+      "aliases": [
+        "CFO",
+        "CTBC Flying Oyster"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "CFO 官方战队联系人",
+          "realName": "kenny.shang@ctbcsports.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "CTBCFLYINGOYSTERACADEMY": {
+      "name": "CTBC Flying Oyster Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "CTBC Flying Oyster Academy"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "CTBC Flying Oyster Academy 官方战队联系人",
+          "realName": "shang.fin01@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "DARKPASSAGE": {
+      "name": "Dark Passage",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Dark Passage"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Dark Passage 官方战队联系人",
+          "realName": "ertug@dp-gaming.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Real Homie",
+          "realName": "Emre Çolak",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "DEEPCROSSGAMING": {
+      "name": "Deep Cross Gaming",
+      "short": "DCG",
+      "page": "",
+      "aliases": [
+        "DCG",
+        "Deep Cross Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "DCG 官方战队联系人",
+          "realName": "peter@deepcrossgaming.cc",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "DETONATIONFOCUSME": {
+      "name": "DetonatioN FocusMe",
+      "short": "DFM",
+      "page": "",
+      "aliases": [
+        "DFM",
+        "DetonatioN FocusMe"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "DFM 官方战队联系人",
+          "realName": "keisuke.oda@detonation.jp",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "DETONATIONFOCUSMEACADEMY": {
+      "name": "DetonatioN FocusMe Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "DetonatioN FocusMe Academy"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "DetonatioN FocusMe Academy 官方战队联系人",
+          "realName": "r-nakano@detonation.jp",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "DIAOZAROXESPORTS": {
+      "name": "DIA Ozarox Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "DIA Ozarox Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Wuju",
+          "realName": "Mert Ali Kutbay",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "DISGUISED": {
+      "name": "Disguised",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Disguised"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Disguised 官方战队联系人",
+          "realName": "Chris Yong <chris@disguised.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "DNSOOPERS": {
+      "name": "DN SOOPers",
+      "short": "DNS",
+      "page": "",
+      "aliases": [
+        "DN SOOPers",
+        "DNS"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "DNS 官方战队联系人",
+          "realName": "yaki3@sooplive.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Ggoong",
+          "realName": "Byeongjun Yu",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Millimas",
+          "realName": "Geonwoo Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "RapidStar",
+          "realName": "Minsung Jung",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Cube",
+          "realName": "Changsung Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Minit",
+          "realName": "Hyunmin Yang",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "DPLUSKIA": {
+      "name": "Dplus Kia",
+      "short": "DK",
+      "page": "",
+      "aliases": [
+        "DK",
+        "Dplus Kia"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "DK 官方战队联系人",
+          "realName": "jin@dpluskia.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "cvMax",
+          "realName": "Dae Ho Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Hachani",
+          "realName": "Seungchan Ha",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Sungmin",
+          "realName": "Sungmin Ko",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "PoohManDu",
+          "realName": "JEONG HYEON LEE",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Woong",
+          "realName": "Sun Woong Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "EDWARDGAMING": {
+      "name": "EDWARD GAMING",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "EDWARD GAMING"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "EDWARD GAMING 官方战队联系人",
+          "realName": "jasper@edgteam.cn",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "EINERDESPORTS": {
+      "name": "Ei Nerd Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Ei Nerd Esports"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Ei Nerd Esports 官方战队联系人",
+          "realName": "Alef Pires <alef.pires@einerd.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "EINTRACHTFRANKFURT": {
+      "name": "Eintracht Frankfurt",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Eintracht Frankfurt"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Eintracht Frankfurt 官方战队联系人",
+          "realName": "m.broemel@eintrachtfrankfurt.de",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Bleim",
+          "realName": "Jakob Anuth",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Kami",
+          "realName": "Gregory Schmit",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "EINTRACHTSPANDAU": {
+      "name": "Eintracht Spandau",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Eintracht Spandau"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Eintracht Spandau 官方战队联系人",
+          "realName": "kevin.westphal@instinct3.de",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "x4NTY",
+          "realName": "Titus Kippe",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "EQUINOXCORE": {
+      "name": "Equinox Core",
+      "short": "EQX",
+      "page": "",
+      "aliases": [
+        "EQX",
+        "Equinox Core"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "EQX 官方战队联系人",
+          "realName": "zxcasd78941@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "ES": {
+      "name": "ES",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "ES"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Stifler",
+          "realName": "Marcos Ramos Vizcaino",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "ESTRALESPORTS": {
+      "name": "Estral Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Estral Esports"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Estral Esports 官方战队联系人",
+          "realName": "Arturo Gonzalez <agonzalez@estral.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "EWIEEINFACHESPORTS": {
+      "name": "E WIE EINFACH E-SPORTS",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "E WIE EINFACH E-SPORTS"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "E WIE EINFACH E-SPORTS 官方战队联系人",
+          "realName": "Alexander Bochert alexander.bochert@e-wie-einfach.de",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Lothi",
+          "realName": "Lothar Schadrin",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "FALKEESPORTS": {
+      "name": "Falke Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Falke Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Falke Esports 官方战队联系人",
+          "realName": "rafael.b@falke.pro",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Murci",
+          "realName": "Alejandro Carrillo Onieva",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "FAST8": {
+      "name": "Fast8",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Fast8"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Fast8 官方战队联系人",
+          "realName": "mine8023@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FENNEL": {
+      "name": "FENNEL",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "FENNEL"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "FENNEL 官方战队联系人",
+          "realName": "m.ueno@fennel.jp",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FLUXOW7M": {
+      "name": "Fluxo W7M",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Fluxo W7M"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Fluxo W7M 官方战队联系人",
+          "realName": "Alex Watanabe <alex@fluxo.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FLYQUEST": {
+      "name": "FlyQuest",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "FlyQuest"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "FlyQuest 官方战队联系人",
+          "realName": "Andrew Barton <andrew@flyquest.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FNATIC": {
+      "name": "Fnatic",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Fnatic"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Fnatic 官方战队联系人",
+          "realName": "Javier Zafra <lol-management@fnatic.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "GrabbZ",
+          "realName": "Fabian Lohmann",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Gaax",
+          "realName": "Pablo Pérez",
+          "role": "STRATEGIC_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "FRANKESPORTS": {
+      "name": "FRANK Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "FRANK Esports"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "FRANK Esports 官方战队联系人",
+          "realName": "jonleung@spm.vc",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FUKUOKASOFTBANKHAWKSGAMING": {
+      "name": "Fukuoka SoftBank HAWKS gaming",
+      "short": "SHG",
+      "page": "",
+      "aliases": [
+        "Fukuoka SoftBank HAWKS gaming",
+        "SHG"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "SHG 官方战队联系人",
+          "realName": "narumi.ando@g.softbank.co.jp",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "FURIA": {
+      "name": "FURIA",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "FURIA"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "FURIA 官方战队联系人",
+          "realName": "Jaime de Pádua <jaime@furia.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "G2ESPORTS": {
+      "name": "G2 Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "G2 Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "G2 Esports 官方战队联系人",
+          "realName": "ownership-group-lec@g2esports.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Rodrigo",
+          "realName": "Rodrigo Oliveira",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Memento",
+          "realName": "Jonas Elmarghichi",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Perkz",
+          "realName": "Luka Perkovic",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "G2NORD": {
+      "name": "G2 NORD",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "G2 NORD"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "G2 NORD 官方战队联系人",
+          "realName": "nick@nordesports.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Nico",
+          "realName": "Nicolas Perez",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "GALIONS": {
+      "name": "Galions",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Galions"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Xani",
+          "realName": "Nikola Zrinjski",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Karot",
+          "realName": "ALAN TROCHEL",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "GAMESPORTS": {
+      "name": "GAM Esports",
+      "short": "GAM",
+      "page": "",
+      "aliases": [
+        "GAM",
+        "GAM Esports"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "GAM 官方战队联系人",
+          "realName": "izumin@gam.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "GENG": {
+      "name": "Gen.G",
+      "short": "GEN",
+      "page": "",
+      "aliases": [
+        "GEN",
+        "Gen.G"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "GEN 官方战队联系人",
+          "realName": "jhlee@geng.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Ryu",
+          "realName": "Sangwook Yoo",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Jerry",
+          "realName": "Sungjun Kang",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Nova",
+          "realName": "Chanho Park",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Lyn",
+          "realName": "DABIN KIM",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "GIANTX": {
+      "name": "GIANTX",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "GIANTX"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "GIANTX 官方战队联系人",
+          "realName": "David Alonso <david.alonso@giantx.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Guilhoto",
+          "realName": "André Pereira Guilhoto",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Rhuckz",
+          "realName": "Ruben Alexandre Barbosa Neves",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Maxlore",
+          "realName": "Nubar Manoug Sarafian",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "GIANTXITERO": {
+      "name": "Giantx Itero",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Giantx Itero"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Giantx Itero 官方战队联系人",
+          "realName": "david.alonso@giantx.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "F1re",
+          "realName": "Jose María Iznardo Salar",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "GROUNDZEROACADEMY": {
+      "name": "Ground Zero Academy",
+      "short": "GZA",
+      "page": "",
+      "aliases": [
+        "GZA",
+        "Ground Zero Academy"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "GZA 官方战队联系人",
+          "realName": "jhyegz@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "GROUNDZEROGAMING": {
+      "name": "Ground Zero Gaming",
+      "short": "GZ",
+      "page": "",
+      "aliases": [
+        "GZ",
+        "Ground Zero Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "GZ 官方战队联系人",
+          "realName": "matt@groundzerogaming.com.au",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "HANJINBRION": {
+      "name": "HANJIN BRION",
+      "short": "BRO",
+      "page": "",
+      "aliases": [
+        "BRO",
+        "HANJIN BRION"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "BRO 官方战队联系人",
+          "realName": "bladejihwan@brion.co.kr",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Ssumday",
+          "realName": "Chanho Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Duke",
+          "realName": "Hoseong Lee",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Ssong",
+          "realName": "Sangsu Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Cheoni",
+          "realName": "Seungmo Jo",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "HANWHALIFEESPORTS": {
+      "name": "Hanwha Life Esports",
+      "short": "HLE",
+      "page": "",
+      "aliases": [
+        "HLE",
+        "Hanwha Life Esports"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "HLE 官方战队联系人",
+          "realName": "rohjaeyoon@hanwha.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Homme",
+          "realName": "Sungyoung Yoon",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Sensation",
+          "realName": "Donghyun Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Sin",
+          "realName": "Hyeongmo Yeon",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Mowgli",
+          "realName": "Jaeha Lee",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "HERETICSACADEMY": {
+      "name": "Heretics Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Heretics Academy"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Heretics Academy 官方战队联系人",
+          "realName": "arnau@teamheretics.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Kamikaze",
+          "realName": "Óscar Pedrosa González",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Dan",
+          "realName": "Daniel Simon Hockley",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "IJC": {
+      "name": "IJC",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "IJC"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Naruterador",
+          "realName": "Ramón Meseguer Fructuoso",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Krakeer",
+          "realName": "David Bruk",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "INFERNODRIVETOKYO": {
+      "name": "Inferno Drive Tokyo",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Inferno Drive Tokyo"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Inferno Drive Tokyo 官方战队联系人",
+          "realName": "varrel.nagi@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "INTZ": {
+      "name": "INTZ",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "INTZ"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "INTZ 官方战队联系人",
+          "realName": "Thiago Campos <thiago.campos@stellaegg.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "INVICTUSGAMING": {
+      "name": "Invictus Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Invictus Gaming"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Invictus Gaming 官方战队联系人",
+          "realName": "huyueqian@ig.show",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "JL": {
+      "name": "JL",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "JL"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Arkhe",
+          "realName": "Emre Akpınarlı",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Yong",
+          "realName": "Rafael BERNARDINO",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "KABUMESPORTS": {
+      "name": "KaBuM! Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "KaBuM! Esports"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "KaBuM! Esports 官方战队联系人",
+          "realName": "Marcelo Fadul <marcelo.fadul@kabum.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "KARMINECORP": {
+      "name": "Karmine Corp",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Karmine Corp"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Karmine Corp 官方战队联系人",
+          "realName": "Clement Laparra <clement.laparra@karminecorp.fr>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Reapered",
+          "realName": "Hangyu Bok",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Zeph",
+          "realName": "Quentin Viguié",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "KAUFLANDHANGRYKNIGHTS": {
+      "name": "Kaufland Hangry Knights",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Kaufland Hangry Knights"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Kaufland Hangry Knights 官方战队联系人",
+          "realName": "dennis@weedoo.group",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Leggifant",
+          "realName": "Dennis Hennersdorf",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Edward",
+          "realName": "Eduard Abgarian",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "KCB": {
+      "name": "KCB",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "KCB"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Blidzy",
+          "realName": "Iannis Paul",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Fara",
+          "realName": "Benjamin Stoffel",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "KRX": {
+      "name": "KRX",
+      "short": "KRX",
+      "page": "",
+      "aliases": [
+        "KRX"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "KRX 官方战队联系人",
+          "realName": "staff@drx.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Catch",
+          "realName": "Sangho Yoon",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Frozen",
+          "realName": "Tae Il Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Raise",
+          "realName": "Jihwan Oh",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Joker",
+          "realName": "Jaeeup Jo",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Naehyun",
+          "realName": "Naehyun Yoo",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "KTROLSTER": {
+      "name": "kt Rolster",
+      "short": "KT",
+      "page": "",
+      "aliases": [
+        "KT",
+        "kt Rolster"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "KT 官方战队联系人",
+          "realName": "wonil.lee@kt.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Score",
+          "realName": "Dongbin Ko",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Lilac",
+          "realName": "Hojin Jeon",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Museong",
+          "realName": "Museong Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Sonstar",
+          "realName": "Seungik Son",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Spark",
+          "realName": "Byungryul Kang",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "LEVIATÁN": {
+      "name": "LEVIATÁN",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LEVIATÁN"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "LEVIATÁN 官方战队联系人",
+          "realName": "Guido Gernetti <guido@leviatan.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "LGDGAMING": {
+      "name": "LGD GAMING",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LGD GAMING"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "LGD GAMING 官方战队联系人",
+          "realName": "qinwei@lgdgaming.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "LGUIDEGAMING": {
+      "name": "L Guide Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "L Guide Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "L Guide Gaming 官方战队联系人",
+          "realName": "s.sato@sephirothic-system.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "LOS": {
+      "name": "LOS",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LOS"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "LOS 官方战队联系人",
+          "realName": "Alexandre Peres <alexandre@teamoneesports.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "LOUD": {
+      "name": "LOUD",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LOUD"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "LOUD 官方战队联系人",
+          "realName": "Jean Ortega <jean.ortega@loud.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "LUA": {
+      "name": "LUA",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LUA"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "LUA 官方战队联系人",
+          "realName": "Genai@luagaming.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Sliezzan",
+          "realName": "Fernando Villar Gómez",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "LYON": {
+      "name": "LYON",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "LYON"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "LYON 官方战队联系人",
+          "realName": "Alex Hwang <alex@lyonllc.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "MGNVIKINGSESPORTS": {
+      "name": "MGN Vikings Esports",
+      "short": "MVKE",
+      "page": "",
+      "aliases": [
+        "MGN Vikings Esports",
+        "MVKE"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "MVKE 官方战队联系人",
+          "realName": "lily@vikingsesports.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "MOVISTARKOI": {
+      "name": "Movistar KOI",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Movistar KOI"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Movistar KOI 官方战队联系人",
+          "realName": "Luis Filgueira lec@oam.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Melzhet",
+          "realName": "Tomas Campelos Fernandez",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Alphari",
+          "realName": "Barney Morris",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Independent",
+          "realName": "Eric Ruiz Bogurina",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "MOVISTARKOIFÉNIX": {
+      "name": "Movistar KOI Fénix",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Movistar KOI Fénix"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Movistar KOI Fénix 官方战队联系人",
+          "realName": "lfilgueira@oam.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Disgrace",
+          "realName": "Jorge Lopez Used",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "NATUSVINCERE": {
+      "name": "Natus Vincere",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Natus Vincere"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Natus Vincere 官方战队联系人",
+          "realName": "Yaroslav Klochko n1ghtend@navi-gaming.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "TheRock",
+          "realName": "Vasilis Voltis",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Fredy122",
+          "realName": "Simon Payne",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "GotoOne",
+          "realName": "Adrien Picard",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "NEWMETA": {
+      "name": "New Meta",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "New Meta"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "New Meta 官方战队联系人",
+          "realName": "miyoshi@newmeta.co.jp",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "NOVEX": {
+      "name": "NOVEX",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "NOVEX"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "NOVEX 官方战队联系人",
+          "realName": "rikukomuro16@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "NRG": {
+      "name": "NRG",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "NRG"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "NRG 官方战队联系人",
+          "realName": "James Kandel < james@nrg.gg >",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "NSREDFORCE": {
+      "name": "NS REDFORCE",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "NS REDFORCE"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Chelly",
+          "realName": "Seongjin Park",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "bonO",
+          "realName": "Kibum Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Crazy",
+          "realName": "Chaehee Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Dandy",
+          "realName": "Ingyu Choi",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "OHMYGOD": {
+      "name": "Oh My God",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Oh My God"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Oh My God 官方战队联系人",
+          "realName": "26444250@qq.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "ONEROUNDSPECIALISTS": {
+      "name": "One Round Specialists",
+      "short": "ORS",
+      "page": "",
+      "aliases": [
+        "ORS",
+        "One Round Specialists"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "ORS 官方战队联系人",
+          "realName": "hungsiuyip32@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "PAINGAMING": {
+      "name": "paiN Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "paiN Gaming"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "paiN Gaming 官方战队联系人",
+          "realName": "Arthur Zarzur <arthur.curiati@pain.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "PAINGAMINGACADEMY": {
+      "name": "paiN Gaming Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "paiN Gaming Academy"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "paiN Gaming Academy 官方战队联系人",
+          "realName": "Arthur Zarzur <arthur.curiati@pain.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "PCIFICESPORTS": {
+      "name": "PCIFIC Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "PCIFIC Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "PCIFIC Esports 官方战队联系人",
+          "realName": "altanfirtina@pcific.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Chonocleas",
+          "realName": "Berkay Özata",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Zeus",
+          "realName": "Zeus Mora Corredera",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "REDCANIDSKALUNGA": {
+      "name": "RED Canids Kalunga",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "RED Canids Kalunga"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "RED Canids Kalunga 官方战队联系人",
+          "realName": "Felippe Corradini <felippe@redcanids.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "REDCANIDSKALUNGAACADEMY": {
+      "name": "RED Canids Kalunga Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "RED Canids Kalunga Academy"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "RED Canids Kalunga Academy 官方战队联系人",
+          "realName": "Felippe Corradini <felippe@redcanids.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "RISINGGAMING": {
+      "name": "Rising Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Rising Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Rising Gaming 官方战队联系人",
+          "realName": "shiraishimoviestudio@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "RMDGAMING": {
+      "name": "RMD Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "RMD Gaming"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "RMD Gaming 官方战队联系人",
+          "realName": "Robison Martins <robisonmartins59@gmail.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "ROSSMANNCENTAURS": {
+      "name": "Rossmann Centaurs",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Rossmann Centaurs"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Rossmann Centaurs 官方战队联系人",
+          "realName": "leander.fueger@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SAIGON1TAPDINO": {
+      "name": "Saigon 1TAP Dino",
+      "short": "DINO",
+      "page": "",
+      "aliases": [
+        "DINO",
+        "Saigon 1TAP Dino"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "DINO 官方战队联系人",
+          "realName": "windd1996@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SAIGON9GAMINGESPORTS": {
+      "name": "Saigon 9gaming Esports",
+      "short": "9G",
+      "page": "",
+      "aliases": [
+        "9G",
+        "Saigon 9gaming Esports"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "9G 官方战队联系人",
+          "realName": "lehongngoc.hn@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SAIGONMVKACADEMY": {
+      "name": "Saigon MVK Academy",
+      "short": "MVKA",
+      "page": "",
+      "aliases": [
+        "MVKA",
+        "Saigon MVK Academy"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "MVKA 官方战队联系人",
+          "realName": "yen.luu@themetub.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SAIGONWARRIORS": {
+      "name": "Saigon Warriors",
+      "short": "SGW",
+      "page": "",
+      "aliases": [
+        "SGW",
+        "Saigon Warriors"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "SGW 官方战队联系人",
+          "realName": "vutrantuanvi@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SC": {
+      "name": "SC",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "SC"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Eika",
+          "realName": "Jérémy Valdenaire",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Hairost",
+          "realName": "Aymerick Sergeant",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "iFreeZzy",
+          "realName": "Theotu Pernot",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SENTINELS": {
+      "name": "Sentinels",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Sentinels"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Sentinels 官方战队联系人",
+          "realName": "Kevin Jeon<kevin@sentinels.gg>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SHADOWKEEPERSESPORTS": {
+      "name": "Shadow Keepers Esports",
+      "short": "SHKP",
+      "page": "",
+      "aliases": [
+        "SHKP",
+        "Shadow Keepers Esports"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "SHKP 官方战队联系人",
+          "realName": "2505823365@qq.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SHARKATTACK": {
+      "name": "Shark Attack",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Shark Attack"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Shark Attack 官方战队联系人",
+          "realName": "japone993@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Twenty7",
+          "realName": "Efe Seytin",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SHENZHENNINJASINPYJAMAS": {
+      "name": "Shenzhen NINJAS IN PYJAMAS",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Shenzhen NINJAS IN PYJAMAS"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Shenzhen NINJAS IN PYJAMAS 官方战队联系人",
+          "realName": "vlan@nipg.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SHIFTERS": {
+      "name": "Shifters",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Shifters"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Shifters 官方战队联系人",
+          "realName": "Mathieu Débonnaire <debonnaire@bdsesport.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Striker",
+          "realName": "Yanis Kella",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "MenQ",
+          "realName": "Marek Dziemian",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SHOPIFYREBELLION": {
+      "name": "Shopify Rebellion",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Shopify Rebellion"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Shopify Rebellion 官方战队联系人",
+          "realName": "David Han<david.han@shopify.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SILLYSILLYGAMING": {
+      "name": "SillySilly Gaming",
+      "short": "SSG",
+      "page": "",
+      "aliases": [
+        "SSG",
+        "SillySilly Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "SSG 官方战队联系人",
+          "realName": "q3294065@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "SKGAMING": {
+      "name": "SK Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "SK Gaming"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "SK Gaming 官方战队联系人",
+          "realName": "Mitch Voorspoels <mitch@sk-gaming.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Own3r",
+          "realName": "David Rodriguez De La torre",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Duffman",
+          "realName": "Christopher Duff",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Baguette",
+          "realName": "Simon Cordonnier",
+          "role": "ASSISTANT_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SOLARY": {
+      "name": "Solary",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Solary"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Gine",
+          "realName": "Fabrizio GINESTRONI",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Dandan",
+          "realName": "Danny Le Comte",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SUESPORTS": {
+      "name": "SU Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "SU Esports"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "SU Esports 官方战队联系人",
+          "realName": "bahadirpolat@windowslive.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Basei",
+          "realName": "Ömer ONAY",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "SUZHOULNGESPORTS": {
+      "name": "Suzhou LNG Esports",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Suzhou LNG Esports"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Suzhou LNG Esports 官方战队联系人",
+          "realName": "wanlei@lngesports.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "T1": {
+      "name": "T1",
+      "short": "T1",
+      "page": "",
+      "aliases": [
+        "T1"
+      ],
+      "regions": [
+        "KR"
+      ],
+      "management": [
+        {
+          "name": "T1 官方战队联系人",
+          "realName": "becker@t1.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Easyhoon",
+          "realName": "Jihoon Lee",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "kkOma",
+          "realName": "Jeonggyun Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "DooTi",
+          "realName": "Duseong Choi",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Mata",
+          "realName": "Cho Sehyoung",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Nagne",
+          "realName": "Sangmoon Kim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Tom",
+          "realName": "Jaehyun Lim",
+          "role": "COACHING_STAFF",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "TEAMHERETICS": {
+      "name": "Team Heretics",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Team Heretics"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Team Heretics 官方战队联系人",
+          "realName": "niklas@teamheretics.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Hidon",
+          "realName": "Jonas Tobias Vraa",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Nukeduck",
+          "realName": "Erlend Våtevik Holm",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Mithy",
+          "realName": "Alfonso Aguirre Rodriguez",
+          "role": "STRATEGIC_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "TEAMLIQUID": {
+      "name": "Team Liquid",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Team Liquid"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Team Liquid 官方战队联系人",
+          "realName": "Jun Kang <dodo@teamliquid.com>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "TEAMORANGEGAMING": {
+      "name": "TeamOrangeGaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "TeamOrangeGaming"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "TeamOrangeGaming 官方战队联系人",
+          "realName": "sport@teamorangegaming.one",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "DeadShadow",
+          "realName": "João Fernandes",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "TEAMPHOENIX": {
+      "name": "Team Phoenix",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Team Phoenix"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Team Phoenix 官方战队联系人",
+          "realName": "kaangr1967@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Shiguro",
+          "realName": "Furkan Yürük",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Çayır",
+          "realName": "Batuhan Çayır",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "TEAMSECRETWHALES": {
+      "name": "Team Secret Whales",
+      "short": "TSW",
+      "page": "",
+      "aliases": [
+        "TSW",
+        "Team Secret Whales"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "TSW 官方战队联系人",
+          "realName": "ken@teamsecret.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "TEAMSOLID": {
+      "name": "Team Solid",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Team Solid"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Team Solid 官方战队联系人",
+          "realName": "Marcos Guerra <marcos.guerra@teamsolid.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "TEAMVITALITY": {
+      "name": "Team Vitality",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Team Vitality"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Team Vitality 官方战队联系人",
+          "realName": "Till Werdermann: till.werdermann@vitality.gg",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Pad",
+          "realName": "Patrick Suckow-Breum",
+          "role": "HEAD_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Arvindir",
+          "realName": "Danusch Fischer",
+          "role": "STRATEGIC_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Hansen",
+          "realName": "Bjørn-Vegar Skauvold Hansen",
+          "role": "STRATEGIC_COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "THUNDERTALKGAMING": {
+      "name": "THUNDER TALK GAMING",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "THUNDER TALK GAMING"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "THUNDER TALK GAMING 官方战队联系人",
+          "realName": "xiaochuyu@52tt.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "TOPESPORTS": {
+      "name": "TOP ESPORTS",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "TOP ESPORTS"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "TOP ESPORTS 官方战队联系人",
+          "realName": "guo.h@topsports.com.cn",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "TPHCMSNCYBERCOREESPORTS": {
+      "name": "TPHCM SN CyberCore Esports",
+      "short": "SCBC",
+      "page": "",
+      "aliases": [
+        "SCBC",
+        "TPHCM SN CyberCore Esports"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "SCBC 官方战队联系人",
+          "realName": "vuongdoanh0903@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "UBALMAMATER": {
+      "name": "UB Alma Mater",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "UB Alma Mater"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "UB Alma Mater 官方战队联系人",
+          "realName": "icaralt@ub.edu",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "UCAMESPORTSCLUB": {
+      "name": "UCAM Esports Club",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "UCAM Esports Club"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "UCAM Esports Club 官方战队联系人",
+          "realName": "ayanez@esports.ucam.edu",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Crusher",
+          "realName": "Gonçalo Pinto Brandão",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Gaio",
+          "realName": "Ricardo Gaio Sousa Ferreira",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "ULTRAPRIME": {
+      "name": "Ultra Prime",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Ultra Prime"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Ultra Prime 官方战队联系人",
+          "realName": "dab@ultprime.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "UNICORNSOFLOVESEXYEDITION": {
+      "name": "Unicorns of Love - Sexy Edition",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Unicorns of Love - Sexy Edition"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [
+        {
+          "name": "Unicorns of Love - Sexy Edition 官方战队联系人",
+          "realName": "vivien@mallant.de",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Sheepy",
+          "realName": "Fabian Mallant",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "Sam",
+          "realName": "Samuel Messerer",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "UWINKS": {
+      "name": "Uwinks",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Uwinks"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Uwinks 官方战队联系人",
+          "realName": "guzmasou@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "VAREELYOUTH": {
+      "name": "VAREEL YOUTH",
+      "short": "VLY",
+      "page": "",
+      "aliases": [
+        "VAREEL YOUTH",
+        "VLY"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "VLY 官方战队联系人",
+          "realName": "echointhemirror.gg@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "VFBSTUTTGART": {
+      "name": "VfB Stuttgart",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "VfB Stuttgart"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "MaxSchallah",
+          "realName": "Maximiliam Schaller",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "GreenThor",
+          "realName": "Throge Berg",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "VIPERNIGHTRAIDER": {
+      "name": "Viper Night Raider",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Viper Night Raider"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Viper Night Raider 官方战队联系人",
+          "realName": "a1963268312@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "VITB": {
+      "name": "VITB",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "VITB"
+      ],
+      "regions": [
+        "EMEA"
+      ],
+      "management": [],
+      "staff": [
+        {
+          "name": "Nahovsky",
+          "realName": "Kacper Merski",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        },
+        {
+          "name": "DevilPiotr",
+          "realName": "Piotr Zaborowski",
+          "role": "COACH",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ]
+    },
+    "VIVOKEYDSTARS": {
+      "name": "Vivo Keyd Stars",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Vivo Keyd Stars"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Vivo Keyd Stars 官方战队联系人",
+          "realName": "Hugo Tristao <hugo.tristao@keydstars.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "VIVOKEYDSTARSACADEMY": {
+      "name": "Vivo Keyd Stars Academy",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Vivo Keyd Stars Academy"
+      ],
+      "regions": [
+        "AME"
+      ],
+      "management": [
+        {
+          "name": "Vivo Keyd Stars Academy 官方战队联系人",
+          "realName": "Hugo Tristao <hugo.tristao@keydstars.com.br>",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "WANGTING": {
+      "name": "WangTing",
+      "short": "WTG",
+      "page": "",
+      "aliases": [
+        "WTG",
+        "WangTing"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "WTG 官方战队联系人",
+          "realName": "p820729@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "WEIBOGAMING": {
+      "name": "WeiboGaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "WeiboGaming"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "WeiboGaming 官方战队联系人",
+          "realName": "chenyu22@weijing.weibo.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "XIANTEAMWE": {
+      "name": "Xi'an Team WE",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Xi'an Team WE"
+      ],
+      "regions": [
+        "CN"
+      ],
+      "management": [
+        {
+          "name": "Xi'an Team WE 官方战队联系人",
+          "realName": "smallorc@teamwe.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "XUJIBASALT": {
+      "name": "Xu Ji Basalt",
+      "short": "XJB",
+      "page": "",
+      "aliases": [
+        "XJB",
+        "Xu Ji Basalt"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "XJB 官方战队联系人",
+          "realName": "r25579664@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    },
+    "YANGYANGGAMING": {
+      "name": "Yang Yang Gaming",
+      "short": "",
+      "page": "",
+      "aliases": [
+        "Yang Yang Gaming"
+      ],
+      "regions": [
+        "LCP"
+      ],
+      "management": [
+        {
+          "name": "Yang Yang Gaming 官方战队联系人",
+          "realName": "jucducyt@gmail.com",
+          "role": "TEAM_CONTACT",
+          "source": "Riot LoL Global Contract Database (GCD)"
+        }
+      ],
+      "staff": []
+    }
+  }
+}

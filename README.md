@@ -1,38 +1,89 @@
-# Laner
+# RiftLab
 
-Laner 是电竞观赛助手的下一代重构工程。
+英雄联盟赛事数据、观赛副屏与复盘工具。当前 DEV 基线：`1.0.0-dev.66`。
 
-## 核心原则
+RiftLab 的目标不是再做一个只有比分的 APP，而是在官方直播之外提供一层可持续积累的赛事资料、实时数据、回放/Timeline 和 RiftScreen 辅助层。RiftLab 不托管直播流。
 
-- **功能不改，底层重做。**
-- **可以快，但不能以跳过质量门禁换速度。**
-- **聊天不是工程记忆，仓库才是。**
-- **每一次开发都必须留档。**
-- **历史错误只作为证据与回归输入；修复旧错不能制造新错。**
+## 当前产品结构
 
-## 当前状态
+### PRE / 赛前
 
-项目目前处于 `M1 / Feature Migration`。
+- 全球/赛区赛事目录与赛程；
+- 赛区订阅；
+- 首发、替补、教练/管理人员；
+- 战队档案、运营关系、人物履历与电竞图谱；
+- Championship Points / 资格与赛事治理能力；
+- 赛前选边与后续 Rank/近期状态补全接口。
 
-LNR-010~020 已推进到不同程度的自动验证 / 外部实机待验收状态；完整事实以 `docs/IMPLEMENTATION_STATUS.md` 与 `docs/FEATURE_BASELINE.md` 为准，不在 README 复制一份会漂移的详细表格。
+### LIVE / 赛中
 
-`INC-LNR-020-001` 已完成整改并关闭：PR #12 合入 `main@452ab8f5df3f4536c5c7f39c4024dc51ebc38084`，整改 exact-head run `34708127194` 与 post-merge main run `34708285172` 均全 Gate PASS。历史违宪事故记录和原失败记录继续保留，不反向改写。
+- `GAME_LIVE / EVENT_LIVE / BETWEEN_GAMES` 等真实生命周期语义；
+- Riot/LPL 多数据源与降级链；
+- 经济、击杀、塔、龙、男爵、选手实时状态等可用数据；
+- Match Timeline 持续采集；
+- RiftScreen 悬浮副屏；
+- 可编辑/锁定 Draft HUD；
+- Bilibili / 虎牙 / LoL Esports / YouTube / Twitch / X 等观赛入口。
 
-Android 系统悬浮窗、触摸穿透、横竖屏 Profile 等真实设备行为仍保持 `WAITING EXTERNAL TEST`；CI/fixture 不冒充实机 PASS。
+### POST / 赛后
 
-## 权威文档
+- Series / Game 比分与历史小局；
+- 比赛详情、资源与选手数据；
+- Timeline 本地归档；
+- Bilibili / Riot / YouTube 等回放链；
+- APP 内 Media3 / WebView 播放；
+- OP.GG / Riot / Cito 等全球赛后补全；
+- Tournament Research / Awards / Team Archive。
 
-- `docs/ENGINEERING_CONSTITUTION.md` — 工程唯一规则源
-- `docs/PROJECT_SCOPE.md` — 项目范围与冻结边界
-- `docs/ARCHITECTURE.md` — 目标架构
-- `docs/DEVELOPMENT_PLAN.md` — 开发计划
-- `docs/IMPLEMENTATION_STATUS.md` — 当前真实状态
-- `docs/FEATURE_BASELINE.md` — 旧功能 1:1 迁移验收基线
-- `docs/TESTING.md` — 测试策略
-- `docs/TROUBLESHOOTING.md` — 故障知识库
-- `docs/COMPATIBILITY.md` — 支持与兼容边界
-- `docs/development/` — 每次开发不可变留档
+## 数据可靠性
 
-## 下一步
+关键数据不押注单一公网接口。当前多条链路支持类似：
 
-第 2 块 `Tactical HUD + 赛中事件层` 已解除合规阻塞，可以在新的 Constitution Preflight 后开始。后续每个大版本继续执行“开发 → 宪法复查 → 事故/偏离留档 → 先整改 → 再进入下一版本”的固定节奏，直到第 8 块 Migration Audit / release closure。
+```text
+Official Provider
+→ RiftLab Mirror / Secondary Provider
+→ Device Cache
+→ APK Seed
+```
+
+UI 应明确来源，不把缓存、结构推导或第三方 Provider 伪装成官方实时数据。没有可靠记录时宁可显示缺失，也不为了填页面制造假事实。
+
+## APP 内 OTA
+
+当前架构（dev.59 起，dev.65 完成自适应测速，dev.66 锁定决策）：
+
+```text
+GitHub canonical dev-latest Release
+→ GitHub 直连 + GitHub-only 加速节点并发测速
+→ 按真实 APK 吞吐选择最快路径
+→ 失败/过慢时保留断点自动换线
+```
+
+**Gitee OTA 已废弃。** Gitee 不参与 RiftLab APK / `latest.json` 分发，不需要 `GITEE_TOKEN`，也不得重新成为 APP 运行时或发布工作流的更新依赖；如保留 Gitee 仓库，只作为源码镜像使用。
+
+安装前继续强制验证 SHA-256、包名、versionCode 和固定 DEV 签名证书。详见 `docs/OTA_CN.md`。
+
+## 构建环境
+
+- Gradle 9.6.0
+- Compose BOM 2026.06.00
+- compileSdk 36
+- targetSdk 36
+- minSdk 28
+- JDK 17
+
+本仓库不附 Gradle Wrapper 二进制：
+
+- Android Studio：使用 JDK 17 / Gradle 9.6.0；
+- 本地已有 Gradle：`./build.sh`；
+- GitHub Actions：`.github/workflows/android-build.yml` 与 `.github/workflows/ota-direct.yml`。
+
+## 文档
+
+- `docs/RIFTLAB_DEVELOPMENT_HISTORY.md`：MVP ～ dev.30 的产品/工程演化；
+- `docs/RIFTLAB_DEVELOPMENT_HISTORY_DEV31_66.md`：dev.31 ～ dev.66 续篇；
+- `docs/RIFTLAB_DEV_67_86.md`：从当前真实版本重新排定的后续 20 版路线；
+- `docs/OTA_CN.md`：中国大陆 APP 内更新架构；
+- `docs/SIGNING.md`：DEV 签名说明。
+
+旧 `docs/RIFTLAB_DEV_59_78.md` 保留为 dev.58 时的历史计划快照；其中版本号已被实际开发占用，不再作为当前执行排期。

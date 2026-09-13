@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 3,
+  "lookbackHours": 36,
+  "keywords": ["首发", "首发名单", "先发", "starting roster", "starting lineup", "lineup", "roster", "선발", "선발 명단", "라인업", "先発", "スタメン"],
+  "leaguePolicies": {
+    "LPL": {
+      "adapter": "LPL_DAILY_ROSTER",
+      "lineupKeywords": ["首发名单", "首发", "先发"],
+      "matchupTokens": ["对战", "VS", "vs"],
+      "preferredOcrLanguages": "eng+chi_sim",
+      "officialLeaguePostCanContainMultipleMatches": true,
+      "imageOrderFollowsMatchupOrder": true,
+      "allowImageOnlyTeamFallback": true
+    },
+    "LCK": {
+      "adapter": "MATCH_TARGET_LINEUP",
+      "lineupKeywords": ["starting lineup", "starting roster", "lineup", "roster", "선발", "선발 명단", "라인업"],
+      "matchupTokens": ["VS", "vs", "v", "대"],
+      "preferredOcrLanguages": "eng+kor",
+      "officialLeaguePostCanContainMultipleMatches": false,
+      "imageOrderFollowsMatchupOrder": false,
+      "allowImageOnlyTeamFallback": true
+    },
+    "LEC": {
+      "adapter": "MATCH_TARGET_LINEUP",
+      "lineupKeywords": ["starting lineup", "starting roster", "lineup", "roster"],
+      "matchupTokens": ["VS", "vs", "v"],
+      "preferredOcrLanguages": "eng",
+      "officialLeaguePostCanContainMultipleMatches": false,
+      "imageOrderFollowsMatchupOrder": false,
+      "allowImageOnlyTeamFallback": true
+    },
+    "LCS": {
+      "adapter": "MATCH_TARGET_LINEUP",
+      "lineupKeywords": ["starting lineup", "starting roster", "lineup", "roster"],
+      "matchupTokens": ["VS", "vs", "v"],
+      "preferredOcrLanguages": "eng",
+      "officialLeaguePostCanContainMultipleMatches": false,
+      "imageOrderFollowsMatchupOrder": false,
+      "allowImageOnlyTeamFallback": true
+    },
+    "LCP": {
+      "adapter": "MATCH_TARGET_LINEUP",
+      "lineupKeywords": ["starting lineup", "starting roster", "lineup", "roster", "首发", "先発", "スタメン", "선발", "라인업"],
+      "matchupTokens": ["VS", "vs", "v", "对战", "対", "대"],
+      "preferredOcrLanguages": "eng+chi_sim+jpn+kor",
+      "officialLeaguePostCanContainMultipleMatches": false,
+      "imageOrderFollowsMatchupOrder": false,
+      "allowImageOnlyTeamFallback": true
+    }
+  },
+  "leagues": [
+    {
+      "league": "LPL",
+      "timezone": "Asia/Shanghai",
+      "platform": "WEIBO",
+      "account": "英雄联盟赛事",
+      "source": "LEAGUE_SOCIAL",
+      "kind": "WEIBO_MOBILE",
+      "uid": "5756404150",
+      "profileUrl": "https://weibo.com/u/5756404150"
+    },
+    {
+      "league": "LCK",
+      "timezone": "Asia/Seoul",
+      "platform": "X",
+      "account": "LCK",
+      "source": "LEAGUE_SOCIAL",
+      "kind": "X_SYNDICATION",
+      "handle": "LCK",
+      "profileUrl": "https://x.com/LCK"
+    },
+    {
+      "league": "LEC",
+      "timezone": "Europe/Berlin",
+      "platform": "X",
+      "account": "LEC",
+      "source": "LEAGUE_SOCIAL",
+      "kind": "X_SYNDICATION",
+      "handle": "LEC",
+      "profileUrl": "https://x.com/LEC"
+    },
+    {
+      "league": "LCS",
+      "timezone": "America/Los_Angeles",
+      "platform": "X",
+      "account": "LCS",
+      "source": "LEAGUE_SOCIAL",
+      "kind": "X_SYNDICATION",
+      "handle": "LCSOfficial",
+      "profileUrl": "https://x.com/LCSOfficial"
+    },
+    {
+      "league": "LCP",
+      "timezone": "Asia/Taipei",
+      "platform": "X",
+      "account": "LCP",
+      "source": "LEAGUE_SOCIAL",
+      "kind": "X_SYNDICATION",
+      "handle": "lolpacificen",
+      "profileUrl": "https://x.com/lolpacificen"
+    }
+  ],
+  "teams": [
+    {"league":"LPL","team":"IG","account":"iG电子竞技俱乐部","source":"TEAM_SOCIAL","kind":"WEIBO_MOBILE","uid":"2099708877","profileUrl":"https://weibo.com/igaming"},
+    {"league":"LPL","team":"BLG","account":"BLG电子竞技俱乐部","source":"TEAM_SOCIAL","kind":"WEIBO_MOBILE","uid":"5926660141","profileUrl":"https://weibo.com/u/5926660141"},
+    {"league":"LPL","team":"JDG","account":"JDG京东电子竞技俱乐部","source":"TEAM_SOCIAL","kind":"WEIBO_MOBILE","uid":"6174976862","profileUrl":"https://weibo.com/jdgaming"},
+    {"league":"LPL","team":"NIP","account":"NIP电子竞技俱乐部","source":"TEAM_SOCIAL","kind":"WEIBO_MOBILE","uid":"6420953344","profileUrl":"https://weibo.com/u/6420953344"},
+    {"league":"LPL","team":"WE","account":"WE电子竞技俱乐部","source":"TEAM_SOCIAL","kind":"WEIBO_MOBILE","uid":"1869429662","profileUrl":"https://weibo.com/teamwe"}
+  ],
+  "teamAliases": {
+    "IG": ["IG", "iG", "Invictus Gaming"],
+    "AL": ["AL", "Anyone's Legend", "Anyones Legend"],
+    "BLG": ["BLG", "Bilibili Gaming"],
+    "TES": ["TES", "Top Esports"],
+    "JDG": ["JDG", "JD Gaming"],
+    "WE": ["WE", "Team WE"],
+    "NIP": ["NIP", "Ninjas in Pyjamas"],
+    "WBG": ["WBG", "Weibo Gaming"],
+    "LNG": ["LNG", "LNG Esports"],
+    "EDG": ["EDG", "EDward Gaming"],
+    "LGD": ["LGD", "LGD Gaming"],
+    "TT": ["TT", "ThunderTalk Gaming"],
+    "T1": ["T1"],
+    "GEN": ["GEN", "Gen.G", "GenG"],
+    "HLE": ["HLE", "Hanwha Life Esports"],
+    "DK": ["DK", "Dplus KIA", "Dplus"],
+    "KT": ["KT", "KT Rolster"],
+    "NS": ["NS", "Nongshim RedForce"],
+    "DRX": ["DRX"],
+    "BRO": ["BRO", "OKSavingsBank BRION", "BRION"],
+    "G2": ["G2", "G2 Esports"],
+    "FNC": ["FNC", "Fnatic"],
+    "KC": ["KC", "Karmine Corp"],
+    "MKOI": ["MKOI", "Movistar KOI"],
+    "VIT": ["VIT", "Team Vitality"],
+    "BDS": ["BDS", "Team BDS"],
+    "SK": ["SK", "SK Gaming"],
+    "GX": ["GX", "GIANTX"],
+    "TH": ["TH", "Team Heretics"],
+    "C9": ["C9", "Cloud9"],
+    "TL": ["TL", "Team Liquid"],
+    "FLY": ["FLY", "FlyQuest"],
+    "100T": ["100T", "100 Thieves"],
+    "CFO": ["CFO", "CTBC Flying Oyster"],
+    "GAM": ["GAM", "GAM Esports"],
+    "SHG": ["SHG", "Fukuoka SoftBank HAWKS gaming", "SoftBank HAWKS gaming"],
+    "GZ": ["GZ", "Ground Zero Gaming"],
+    "DFM": ["DFM", "DetonatioN FocusMe"],
+    "TSW": ["TSW", "Team Secret Whales"]
+  }
+}

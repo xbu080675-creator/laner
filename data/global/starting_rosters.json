@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 3,
+  "updatedAt": "2026-09-13T01:10:18Z",
+  "policy": "official team/league social and official websites are equal-trust evidence; website publication never gates first visibility; conflicting official evidence is surfaced instead of silently overwritten",
+  "delivery": {
+    "canonical": "GitHub",
+    "mainlandMirror": "Gitee",
+    "note": "The app consumes normalized evidence and does not need direct access to overseas social platforms."
+  },
+  "evidence": [
+    {
+      "matchDateLocal": "2026-09-12",
+      "timezone": "Asia/Shanghai",
+      "league": "LPL",
+      "team": "IG",
+      "opponent": "AL",
+      "source": "TEAM_SOCIAL",
+      "platform": "WEIBO",
+      "account": "iG电子竞技俱乐部",
+      "publishedAt": "2026-09-11T15:00:00Z",
+      "observedAt": "2026-09-11T15:04:00Z",
+      "evidenceType": "TEXT",
+      "confidence": 1.0,
+      "starters": [
+        {
+          "role": "TOP",
+          "id": "TheShy"
+        },
+        {
+          "role": "JUG",
+          "id": "Wei"
+        },
+        {
+          "role": "MID",
+          "id": "Rookie"
+        },
+        {
+          "role": "BOT",
+          "id": "JiaQi"
+        },
+        {
+          "role": "SUP",
+          "id": "Meiko"
+        }
+      ]
+    }
+  ],
+  "collector": {
+    "mode": "official-social-text-plus-image-ocr",
+    "lastRunAt": "2026-09-13T01:10:18Z",
+    "freshEvidence": 0,
+    "sourceCount": 10
+  },
+  "announcements": [
+    {
+      "id": ":5926660141:L5dQFtmAt",
+      "league": "LPL",
+      "team": "BLG",
+      "source": "TEAM_SOCIAL",
+      "platform": "OFFICIAL",
+      "account": "BLG电子竞技俱乐部",
+      "publishedAt": "",
+      "observedAt": "2026-09-13T01:10:18Z",
+      "sourceUrl": "https://weibo.com/5926660141/L5dQFtmAt",
+      "textSnippet": "返回 BLG电子竞技俱乐部 345.6万粉丝 435关注 1019.3万转评赞 关注 客服 白银超话 电竞周榜No.57 LPL 战力值 84.08 热门电竞博主 数据飙升 BLG电子竞技俱乐部官方微博 微博 视频 相册 超话 全部微博 前方有点拥堵，请登录后使用",
+      "imageCount": 2,
+      "imageUrls": [
+        "https://wx1.sinaimg.cn/mw2000/006t5F2Bgy1ig71a8ep7lj318g18gqcz.jpg",
+        "https://wx3.sinaimg.cn/large/006Uk2Fyly8gx7i6zzm41j31hc0u0jv3.jpg"
+      ],
+      "parseStatus": "UNPARSED",
+      "candidateBasis": "TEAM_IMAGE_ONLY_FALLBACK",
+      "candidateTeams": [
+        "BLG"
+      ],
+      "candidateScore": 35,
+      "adapter": "LPL_DAILY_ROSTER"
+    }
+  ]
+}
