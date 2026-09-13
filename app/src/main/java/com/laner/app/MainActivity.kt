@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.laner.app.overlay.RiftScreenController
+import com.laner.app.stream.StreamLauncher
 import com.laner.app.ui.LanerRoot
 import com.laner.app.ui.LanerTheme
 
@@ -44,6 +45,11 @@ class MainActivity : ComponentActivity() {
                         riftScreenController.stop()
                         riftScreenRunning = false
                     },
+                    onWatchPlatform = { platform ->
+                        if (StreamLauncher.watch(this, riftScreenController, platform)) {
+                            riftScreenRunning = riftScreenController.isRunning()
+                        }
+                    },
                 )
             }
         }
@@ -57,6 +63,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         overlayPermissionGranted = riftScreenController.hasOverlayPermission()
+        StreamLauncher.resumePendingIfReady(this, riftScreenController)
         riftScreenRunning = riftScreenController.isRunning()
     }
 
