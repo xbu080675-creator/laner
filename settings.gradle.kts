@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "RiftLab"
+include(":core")
 include(":app")

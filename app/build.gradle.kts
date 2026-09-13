@@ -85,6 +85,8 @@ tasks.named("clean").configure {
 }
 
 dependencies {
+    implementation(project(":core"))
+
     val composeBom = platform("androidx.compose:compose-bom:2026.06.00")
     implementation(composeBom)
 
