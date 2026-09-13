@@ -1,0 +1,70 @@
+name: Apply dev89 roster delivery diagnostics
+
+on:
+  push:
+    paths:
+      - '.github/workflows/dev89-roster-delivery-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Expose roster transport state in pre-match UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('app/src/main/java/com/riftlab/app/ui/RiftLabApp.kt')
+          s = p.read_text()
+          pattern = re.compile(
+              r'''(?P<indent>[ \t]*)Text\(\s*if \(socialCount > 0\) officialRosterState\.message else data\.rosterNote,\s*color = RiftMuted,\s*fontSize = 11\.sp,\s*lineHeight = 17\.sp\s*\)''',
+              re.MULTILINE,
+          )
+          m = pattern.search(s)
+          if not m:
+              raise SystemExit('roster status block not found')
+          i = m.group('indent')
+          new = f'''{i}Text(
+          {{i}}    officialRosterState.message,
+          {{i}}    color = if (socialCount > 0) RiftCyan else RiftMuted,
+          {{i}}    fontSize = 11.sp,
+          {{i}}    lineHeight = 17.sp
+          {{i}})
+          {{i}}if (officialRosterState.diagnostics.isNotBlank()) {{
+          {{i}}    Spacer(Modifier.height(4.dp))
+          {{i}}    Text(
+          {{i}}        "DELIVERY ${{officialRosterState.endpointLabel}} · checked ${{officialRosterState.checkedEndpoints}} · " +
+          {{i}}            (if (officialRosterState.usedLastGood) "LAST-GOOD CACHE" else "LIVE FETCH"),
+          {{i}}        color = RiftMuted,
+          {{i}}        fontSize = 10.sp,
+          {{i}}        lineHeight = 15.sp
+          {{i}}    )
+          {{i}}    Text(
+          {{i}}        officialRosterState.diagnostics,
+          {{i}}        color = RiftMuted,
+          {{i}}        fontSize = 9.sp,
+          {{i}}        lineHeight = 14.sp
+          {{i}}    )
+          {{i}}}}
+          {{i}}if (socialCount == 0 && data.rosterNote.isNotBlank()) {{
+          {{i}}    Spacer(Modifier.height(4.dp))
+          {{i}}    Text(data.rosterNote, color = RiftMuted, fontSize = 10.sp, lineHeight = 15.sp)
+          {{i}}}}'''.replace('{i}', i)
+          s = s[:m.start()] + new + s[m.end():]
+          p.write_text(s)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/java/com/riftlab/app/ui/RiftLabApp.kt
+          git commit -m "dev.89: expose official roster delivery diagnostics"
+          git pull --rebase origin main
+          git push origin HEAD:main
