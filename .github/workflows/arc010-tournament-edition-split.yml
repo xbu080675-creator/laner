@@ -1,3 +1,4 @@
+# ARC010 verified migration runner
 name: ARC010 Tournament Edition Domain Split
 
 on:
@@ -32,25 +33,21 @@ jobs:
               raise SystemExit(f'{src}: expected one edition model marker')
           if text.count(store_marker) != 1:
               raise SystemExit(f'{src}: expected one TournamentEditionArchiveStore marker')
-
           model_start = text.index(model_marker)
           store_start = text.index(store_marker)
           if model_start >= store_start:
               raise SystemExit('edition model/store order is invalid')
-
           prefix = text[:model_start].rstrip()
           model_body = text[model_start:store_start].rstrip()
           store_body = text[store_start + 1:].lstrip().rstrip()
           package_line = 'package com.riftlab.app.data'
           if not prefix.startswith(package_line):
               raise SystemExit('unexpected TournamentEditionArchive package')
-
           core_path = Path('core/src/main/kotlin/com/riftlab/app/data/TournamentEditionModels.kt')
           if core_path.exists():
               raise SystemExit(f'{core_path}: already exists')
           core_path.write_text(package_line + '\n\n' + model_body + '\n', encoding='utf-8')
           src.write_text(prefix + '\n\n' + store_body + '\n', encoding='utf-8')
-
           core_text = core_path.read_text(encoding='utf-8')
           forbidden = ('import android.', 'import androidx.', 'kotlinx.coroutines', 'okhttp3.', 'org.json.', 'java.io.File')
           for token in forbidden:
@@ -71,7 +68,6 @@ jobs:
               raise SystemExit('runtime store leaked into Core')
           if src.read_text(encoding='utf-8').count('object TournamentEditionArchiveStore') != 1:
               raise SystemExit('app runtime store missing after split')
-
           schema_src = Path('app/src/main/java/com/riftlab/app/data/TournamentResearchSchema.kt')
           schema_core = Path('core/src/main/kotlin/com/riftlab/app/data/TournamentResearchSchema.kt')
           if schema_core.exists():
@@ -81,7 +77,6 @@ jobs:
               raise SystemExit(f'{schema_src}: unexpected schema declaration')
           schema_core.write_text(schema_text, encoding='utf-8')
           schema_src.unlink()
-
           readme = Path('core/README.md')
           readme_text = readme.read_text(encoding='utf-8')
           anchor = '- `Qualification*` 资格领域模型、LPL/Worlds/LCP 官方资格静态快照与规则。\n'
@@ -91,7 +86,6 @@ jobs:
           if addition not in readme_text:
               readme_text = readme_text.replace(anchor, anchor + addition, 1)
           readme.write_text(readme_text, encoding='utf-8')
-
           record = Path('docs/development/2026/2026-09-13_LNR-ARC-010_tournament-edition-domain-split.md')
           if record.exists():
               raise SystemExit(f'{record}: already exists')
@@ -116,7 +110,6 @@ jobs:
               encoding='utf-8'
           )
           PY
-
           git diff --check
           test -e core/src/main/kotlin/com/riftlab/app/data/TournamentEditionModels.kt
           test -e core/src/main/kotlin/com/riftlab/app/data/TournamentResearchSchema.kt
@@ -126,24 +119,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-
       - uses: android-actions/setup-android@v3
-
       - name: Install SDK 36
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
-
       - name: Enforce architecture gates
         run: |
           python3 tools/check_core_boundary.py
           python3 tools/check_repository_links.py
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.6.0'
-
       - name: Verify full build
         run: gradle :core:test :app:assembleDebug --stacktrace --no-daemon
-
       - name: Commit verified migration
         shell: bash
         run: |
