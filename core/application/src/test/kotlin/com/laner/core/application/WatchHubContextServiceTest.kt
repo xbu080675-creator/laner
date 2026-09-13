@@ -1,6 +1,7 @@
 package com.laner.core.application
 
 import com.laner.core.domain.DataAuthority
+import com.laner.core.domain.GameIdentity
 import com.laner.core.domain.LiveMatchState
 import com.laner.core.domain.MatchId
 import com.laner.core.domain.MatchLifecycleState
@@ -119,6 +120,8 @@ class WatchHubContextServiceTest {
                 draftStarted = true,
                 loadingObserved = true,
                 liveFrameObserved = true,
+                gameId = GameIdentity.canonical(query.matchId, 1),
+                gameNumber = 1,
                 observedAtEpochMillis = context.nowEpochMillis,
             )
         )
