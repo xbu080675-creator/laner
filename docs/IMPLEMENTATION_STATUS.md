@@ -1,6 +1,6 @@
 # IMPLEMENTATION_STATUS
 
-更新日期：2026-09-13
+更新日期：2026-09-14
 
 ## 迁移结论
 
@@ -36,7 +36,7 @@ Laner 已完成从固定 Rlftlab 功能基线的全仓迁移、架构重构、�
 | 历史一次性 workflow 收口 | DONE | 17 个原 blob 归档到 `.github/workflow-archive/legacy-one-shot/`，不再 active |
 | 长期 workflow | DONE | active 区保留 11 个 build/selftest/OTA/数据同步能力 |
 | Gradle 工程身份 | DONE | `rootProject.name = "Laner"` |
-| App 兼容身份 | UNCHANGED | `applicationId=com.riftlab.app`、包名、版本、UI/用户侧产品行为不改 |
+| App 兼容身份 | UNCHANGED | `applicationId=com.riftlab.app`、包名、版本继续保持兼容 |
 | main 接管 | DONE | 普通 fast-forward 提交，无 force |
 | main 最新数据保留 | DONE | 接管时保留 `data@a3a4c7cd...`；同步持续推进，验收留档前为 `data@cfc4e12ccbf472c06880bec45a27138206380389` |
 
@@ -86,13 +86,50 @@ main 接管触发的长期工作流：
 
 RiftClaw Selftest 在接管后先后暴露两个真实测试问题：迁入 Core 后的旧路径、以及源基线自带的陈旧 credential 文本断言。两项均只修 selftest 接线/断言，没有修改 RiftClaw 运行时协议或安全策略，最终 run `34745871662` PASS。
 
-## 明确未改变
+## 迁移任务明确未改变
 
-- 不新增业务功能。
-- 不改 UI/布局/交互。
+以下约束描述的是 **Rlftlab -> Laner 迁移任务本身**，不是迁移完成后的永久产品冻结：
+
+- 迁移阶段不新增业务功能。
+- 迁移阶段不改 UI/布局/交互。
 - 不替换赛事逻辑或数据语义。
 - 不从迁移前 Laner 复制实现代码。
 - 不改 `applicationId=com.riftlab.app`、现有包名、版本号和用户侧兼容身份。
 - 不做与迁移或现存 bug 无关的“顺手优化”。
 
-当前状态可进入人工联合验收。
+迁移状态仍可进入人工联合验收。
+
+## LNR-013：主机式 Console UI 视觉系统 V1
+
+**状态：WAITING EXTERNAL TEST**
+
+2026-09-14 用户在迁移完成后明确授权 UI 视觉方向变更：现有偏 iOS / 手机卡片式语言改为主机系统风格。该授权不改变迁移任务的历史结论。
+
+已完成：
+- 共享 HUD 面板改为低圆角矩形、方向性 Focus Rail、层级渐变；
+- 键盘/手柄 Focus 增加可见反馈和轻量聚焦缩放；
+- Section / Status 组件改为系统导轨与低圆角标签；
+- 新增不承载业务状态的 Console Ambient Layer（弱扫描带、方向 Glow、系统边轨）；
+- Theme 改为 dark-first，并继续复用现有 TeamSkin Accent / Motif；
+- 字体层级调整为更接近主机 OS / 赛事终端的标题与标签密度；
+- 未修改 Core、赛事数据、Provider、比赛状态机、网络或持久化。
+
+可追溯实现：
+- branch commit：`52814bf0c92c2f000ca58319dcf3fd5af08e4771`
+- PR：`#26`
+- main merge：`8772aa5586d1785f66f5911cb34710bf90288a20`
+
+真实门禁：
+- branch Compile Diagnostics `34789497885`：PASS；
+- main Compile Diagnostics `34789638480`：PASS；
+- main Android Build `34789638341`：PASS；
+- fixed dev signature：PASS；
+- artifact：`RiftLab-global-debug` / id `10328120735`；
+- artifact digest：`sha256:bfa82641618a8ea8b9a41ead26b04c91e836ac995da36c142884ee1b75c123fc`。
+
+尚未完成：
+- Android 真机视觉验收；
+- 触屏、不同屏幕尺寸的人工联合验收；
+- 实体键盘/手柄 Focus 顺序与反馈验收。
+
+因此 LNR-013 当前不能写 DONE。完整留档见 `docs/development/2026/2026-09-14_LNR-013_console-ui-system.md`。
