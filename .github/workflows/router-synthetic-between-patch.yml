@@ -1,0 +1,69 @@
+name: Router Synthetic Between Patch
+
+on:
+  push:
+    branches:
+      - fix/router-synthetic-between-games
+    paths:
+      - .github/workflows/router-synthetic-between-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/router-synthetic-between-games
+          fetch-depth: 0
+      - name: Apply router and provider semantics fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          router = Path('app/src/main/java/com/riftlab/app/data/LplOfficialLiveDataSource.kt')
+          text = router.read_text()
+          old = '''        val between = eligibleProvidersLocked()\n            .filter { provider ->\n                providerStatuses[provider.name]?.phase == LiveSourcePhase.BETWEEN_GAMES &&\n                    providerMatchesCurrentTargetLocked(provider, requireFrame = false)\n            }\n            .minByOrNull { it.priority }'''
+          new = '''        val between = eligibleProvidersLocked()\n            .filter { provider ->\n                val status = providerStatuses[provider.name]\n                status?.phase == LiveSourcePhase.BETWEEN_GAMES &&\n                    !isSyntheticBetweenGamesStatus(status) &&\n                    providerMatchesCurrentTargetLocked(provider, requireFrame = false)\n            }\n            .minByOrNull { it.priority }'''
+          if old not in text:
+              raise SystemExit('router between block not found')
+          text = text.replace(old, new, 1)
+
+          marker = '''    private fun providerMatchesCurrentTargetLocked(provider: Provider, requireFrame: Boolean): Boolean {'''
+          helper = '''    /**\n     * COMM/TJ placeholders such as COMM:13505:G4 or TJ:13505:G4 only mean\n     * \"the next expected game number is G4\". They are not proof that the series is\n     * physically between games, so they must never pin the public lifecycle there.\n     */\n    private fun isSyntheticBetweenGamesStatus(status: LiveSourceStatus?): Boolean {\n        val gameId = status?.gameId?.trim().orEmpty()\n        return gameId.startsWith(\"COMM:\") || gameId.startsWith(\"TJ:\")\n    }\n\n'''
+          if marker not in text:
+              raise SystemExit('router helper marker not found')
+          text = text.replace(marker, helper + marker, 1)
+          router.write_text(text)
+
+          tj = Path('app/src/main/java/com/riftlab/app/data/LplCurrentGameLiveDataSource.kt')
+          text = tj.read_text()
+          old = '''                    val phase = if (scoreA + scoreB > 0) LiveSourcePhase.BETWEEN_GAMES else LiveSourcePhase.WAITING_FOR_MATCH'''
+          new = '''                    // No current game object/frame means only that G$expectedBo is expected.\n                    // This synthetic TJ:Gx placeholder is not authoritative BETWEEN_GAMES evidence.\n                    val phase = LiveSourcePhase.WAITING_FOR_MATCH'''
+          if old not in text:
+              raise SystemExit('TJ synthetic phase block not found')
+          tj.write_text(text.replace(old, new, 1))
+
+          comm = Path('app/src/main/java/com/riftlab/app/data/LplCommRealtimeDataSource.kt')
+          text = comm.read_text()
+          old = '''                        phase = if (series.scoreA + series.scoreB > 0) LiveSourcePhase.BETWEEN_GAMES else LiveSourcePhase.WAITING_FOR_MATCH,'''
+          new = '''                        // route=undiscovered only means the expected Gx realtime route is not ready yet.\n                        // COMM:Gx is a synthetic placeholder and must not assert BETWEEN_GAMES.\n                        phase = LiveSourcePhase.WAITING_FOR_MATCH,'''
+          if old not in text:
+              raise SystemExit('COMM synthetic phase block not found')
+          comm.write_text(text.replace(old, new, 1))
+
+          record = Path('docs/development/2026/2026-09-13-router-synthetic-between-games.md')
+          record.write_text('''# Router synthetic BETWEEN_GAMES fix\n\n## Problem\nLPL fallback providers emitted synthetic game IDs such as `COMM:<bmid>:Gx` and `TJ:<bmid>:Gx` while they only knew the next expected game number. The global router treated those placeholders as authoritative `BETWEEN_GAMES`, masking Riot LiveStats handoff/diagnostics even after the game had started.\n\n## Change\n- Router rejects synthetic COMM/TJ placeholder statuses as authoritative BETWEEN_GAMES evidence.\n- TJ current-game fallback reports WAITING_FOR_MATCH when the expected game object/frame is absent.\n- COMM realtime reports WAITING_FOR_MATCH while the expected game route is undiscovered.\n- True LIVE frames remain unchanged and still win by provider priority after identity validation.\n\n## Boundary\nNo Core API or UI contract change. This is App/Adapter lifecycle arbitration only.\n''')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/java/com/riftlab/app/data/LplOfficialLiveDataSource.kt \
+                  app/src/main/java/com/riftlab/app/data/LplCurrentGameLiveDataSource.kt \
+                  app/src/main/java/com/riftlab/app/data/LplCommRealtimeDataSource.kt \
+                  docs/development/2026/2026-09-13-router-synthetic-between-games.md
+          git commit -m "fix(live): stop synthetic fallbacks pinning between-games"
+          git push origin HEAD:fix/router-synthetic-between-games
