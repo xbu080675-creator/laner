@@ -104,9 +104,9 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **影响**：事实完整性。该事件会进入持久化、HUD 和后续分析，因此不是 UI 占位问题。
 
-**根因**：实现把“没有可计算 delta”错误等同于“delta=0”，为了支持单侧高密度击杀窗口而越过了 `unkown != zero` 边界。
+**根因**：实现把“没有可计算 delta”错误等同于“delta=0”，为了支持单侧高密度击杀窗口而越过了 `unknown != zero` 边界。
 
-***修复**：`TeamFightWindowEvent` 只有在 blue/red 两侧 kill delta 都非 null、窗口 <=20s 且累计 >=3 时才生成；任一侧 unknown 则不生成 TeamFightWindow。已知一侧的 aggregate KillEvent 仍可单独保留。
+**修复**：`TeamFightWindowEvent` 只有在 blue/red 两侧 kill delta 都非 null、窗口 <=20s 且累计 >=3 时才生成；任一侧 unknown 则不生成 TeamFightWindow。已知一侧的 aggregate KillEvent 仍可单独保留。
 
 **永久回归**：`LiveEventDerivationSafetyRegressionTest.oneSidedUnknownKillDeltaDoesNotBecomeZeroInTeamFightWindow`；同文件同时覆盖 team counter regression、player counter regression 与 player row 缺失退化。
 
@@ -165,4 +165,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。Block 1 / LNR-020 已工程冻结。Block 2 / LNR-021 的六项 `INC-LNR-021-001` 整改已通过 PR #17 合入主线，remediation exact-head run `34732025919` 与 post-merge main run `34732179957` 全 Gate PASS；独立复查结论为 `CLOSURE READY`。在 docs-only closeout PR 与其 post-merge main Gate 完成前，Block 2 仍不冻结、Block 3 仍不启动。真实 Riot online 与 Android overlay 行为继续 `WAITING EXTERNAL TEST`。
+M1 Feature Migration。Block 1 / LNR-020 已工程冻结。Block 2 / LNR-021 的 `INC-LNR-021-001 = CLOSED`：remediation PR #17 与 docs-only closeout PR #18 均已合入，相关 exact-head 与 post-merge main Gate 全 PASS，最终证据见 `2026-09-13_LNR-021_constitution-closeout-final.md`。Block 2 engineering scope 已冻结；Block 3 治理门禁已解除但尚未开始。LNR-021 产品状态仍为 `WAITING EXTERNAL TEST`，真实 Riot online 与 Android overlay 行为继续外部补证。
