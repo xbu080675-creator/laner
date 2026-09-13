@@ -68,7 +68,7 @@ internal class GlobalOfficialLiveDataSource : LiveMatchDataSource {
     )
 
     private val commRealtime = LplCommRealtimeDataSource()
-    private val riotLiveStats = LolEsportsLiveDataSource()
+    private val riotLiveStats = RiotEventDrivenLiveDataSource()
     private val citoLive = CitoRealtimeLiveDataSource()
     private val lplMatchDetail = LplCurrentGameLiveDataSource()
 
