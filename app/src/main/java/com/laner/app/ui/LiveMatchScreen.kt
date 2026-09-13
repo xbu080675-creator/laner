@@ -16,9 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,9 +34,6 @@ import com.laner.core.application.LiveStateLoadStatus
 import com.laner.core.application.LiveStateResolution
 import com.laner.core.application.LiveTargetUnavailableReason
 import com.laner.core.application.SourceRequestContext
-import com.laner.core.application.WatchDestination
-import com.laner.core.application.WatchPort
-import com.laner.core.application.WatchRegion
 import com.laner.core.domain.DraftChangedEvent
 import com.laner.core.domain.GameTimeline
 import com.laner.core.domain.GoldLeadChangedEvent
@@ -65,12 +62,12 @@ private sealed interface LiveScreenState {
 @Composable
 fun LiveMatchScreen(
     liveMatchContextService: LiveMatchContextService,
-    watchPort: WatchPort,
     overlayPermissionGranted: Boolean = false,
     riftScreenRunning: Boolean = false,
     onRequestOverlayPermission: () -> Unit = {},
     onStartRiftScreen: () -> Unit = {},
     onStopRiftScreen: () -> Unit = {},
+    onWatchPresentationChange: (WatchHubPresentation) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var refreshNonce by remember { mutableIntStateOf(0) }
@@ -106,6 +103,17 @@ fun LiveMatchScreen(
         }
     }
 
+    LaunchedEffect(state) {
+        val ready = state as? LiveScreenState.Ready
+        onWatchPresentationChange(
+            if (ready == null) {
+                WatchHubPresentation.Idle
+            } else {
+                WatchHubPresentationMapper.from(ready.match, ready.resolution.state.lifecycle)
+            },
+        )
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -113,7 +121,6 @@ fun LiveMatchScreen(
         item { LiveHeaderCard(onRefresh = { refreshNonce += 1 }) }
         item {
             RiftScreenControlCard(
-                watchPort = watchPort,
                 overlayPermissionGranted = overlayPermissionGranted,
                 running = riftScreenRunning,
                 onRequestPermission = onRequestOverlayPermission,
@@ -155,18 +162,12 @@ private fun LiveHeaderCard(onRefresh: () -> Unit) {
 
 @Composable
 private fun RiftScreenControlCard(
-    watchPort: WatchPort,
     overlayPermissionGranted: Boolean,
     running: Boolean,
     onRequestPermission: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
 ) {
-    var watchMessage by remember { mutableStateOf<String?>(null) }
-    val destinations = remember(watchPort) { watchPort.destinations() }
-    val mainland = destinations.filter { it.region == WatchRegion.MAINLAND }
-    val global = destinations.filter { it.region == WatchRegion.GLOBAL }
-
     Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(18.dp)) {
             Text("RIFTSCREEN / 赛事副屏", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
@@ -190,56 +191,8 @@ private fun RiftScreenControlCard(
                     Button(onClick = onStart) { Text("启动 RiftScreen") }
                 }
             }
-
-            Spacer(Modifier.height(14.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(12.dp))
-            Text("WATCH HUB / 观赛入口", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(5.dp))
-            Text(
-                "直播跳转只是快捷入口；赛事数据与直播平台完全解耦。Region 仅用于展示分组。",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            WatchDestinationRow(mainland, watchPort) { watchMessage = it }
-            WatchDestinationRow(global.take(3), watchPort) { watchMessage = it }
-            WatchDestinationRow(global.drop(3), watchPort) { watchMessage = it }
-            watchMessage?.let {
-                Spacer(Modifier.height(7.dp))
-                Text(it, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
         }
     }
-}
-
-@Composable
-private fun WatchDestinationRow(
-    destinations: List<WatchDestination>,
-    watchPort: WatchPort,
-    onMessage: (String) -> Unit,
-) {
-    if (destinations.isEmpty()) return
-    Spacer(Modifier.height(8.dp))
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        destinations.forEach { destination ->
-            Button(
-                onClick = { onMessage(watchPort.launch(destination.id).message) },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(watchButtonLabel(destination), fontSize = 11.sp)
-            }
-        }
-    }
-}
-
-private fun watchButtonLabel(destination: WatchDestination): String = when (destination.id) {
-    "bilibili" -> "B站观赛"
-    "huya" -> "虎牙观赛"
-    "lol_esports" -> "LoL Esports"
-    "youtube" -> "YouTube"
-    "twitch" -> "Twitch"
-    "x_lolesports" -> "X"
-    else -> destination.displayName
 }
 
 @Composable
