@@ -10,6 +10,8 @@
 - 迁移前旧 Laner：`archive/pre-riftlab-reset-2026-09-13`
 - 架构工作分支：`refactor/riftlab-architecture`
 - ARC-011 已验证提交：`f811b11c4b9dd6220b261e9b7703b938db42bb0a`
+- ARC-012 已验证候选：`863e0add003800a9c048a088b23357cf215e6afa`
+- ARC-012 Compile Diagnostics：run `34745478294`，PASS
 
 ## 状态
 
@@ -23,20 +25,21 @@
 | Adapter 分层与重新接线 | DONE | Android/网络/OCR/Store/Provider 留 App；纯领域规则进入 Core |
 | 仓库/OTA 数据地址重链接到 Laner | DONE | 旧 Rlftlab 运行时地址已清理，仓库链接门禁已建立 |
 | 赛后/比赛详情领域拆分 | DONE | ARC-011 完整构建 PASS |
-| 历史一次性 workflow 退出 active 区 | TESTING | ARC-012 候选中，原 blob 归档保留 |
-| Gradle 工程身份切换为 Laner | TESTING | 仅改 `rootProject.name`，不改 app id/package/UI |
-| Android 全量构建验收 | TESTING | ARC-012 候选提交后执行 `:core:test + :app:assembleDebug` |
-| main 最终接管 | TODO | 仅在 ARC-012 全绿后执行，并保留 main 最新 `data/` tree |
+| 历史一次性 workflow 退出 active 区 | DONE | 17 个原 blob 已迁入 `.github/workflow-archive/legacy-one-shot/` |
+| Gradle 工程身份切换为 Laner | DONE | 仅改 `rootProject.name`；app id/package/UI 不变 |
+| ARC-012 Android 全量构建验收 | DONE | Core boundary / repository link / `:core:test` / `:app:assembleDebug` 全绿 |
+| main 最终接管 | TESTING | 将验证后的架构 tree 与接管瞬间 main 最新 `data/` tree 合并后提交 |
 
-## 已验证门禁
+## ARC-012 验证结果
 
-ARC-011 已通过：
-- Core boundary gate；
-- Laner repository link gate；
-- `:core:test`；
-- `:app:assembleDebug`。
+GitHub Actions run `34745478294`：
+- Core boundary gate：PASS；
+- Laner repository link gate：PASS；
+- `:core:test`：PASS；
+- `:app:assembleDebug`：PASS；
+- Compile Diagnostics job：PASS。
 
-ARC-012 未完成前，不将最终迁移状态标记为 COMPLETE。
+最终迁移只有在 `main` 接管后的主线构建也实际通过后才标记 COMPLETE。
 
 ## 明确不做
 
