@@ -1,12 +1,10 @@
 package com.riftlab.app.ui
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -19,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.riftlab.app.data.MatchDetailRepository
 import com.riftlab.app.data.TeamDetailRepository
 
-/** Skin-aware tokens shared by the existing Compose screens. */
+/** Skin-aware tokens shared by the Compose screens. */
 val RiftBg: Color
     @Composable get() = LocalRiftTeamSkin.current.palette(LocalRiftDarkMode.current).background
 val RiftPanel: Color
@@ -37,62 +35,82 @@ val RiftText: Color
 val RiftMuted: Color
     @Composable get() = LocalRiftTeamSkin.current.palette(LocalRiftDarkMode.current).muted
 
-/** Central RiftLab type scale. Explicit dense HUD metadata starts at 11sp; normal reading text is 12sp+. */
+/**
+ * Console-first type scale.
+ *
+ * Laner is a persistent match system rather than a conventional phone information feed, so labels
+ * carry a little more tracking and hierarchy is driven by size/weight instead of rounded chrome.
+ */
 private val RiftTypography = Typography(
-    titleLarge = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, lineHeight = 26.sp),
-    titleMedium = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.SemiBold, lineHeight = 23.sp),
-    titleSmall = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 21.sp),
+    titleLarge = TextStyle(
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 28.sp,
+        letterSpacing = 0.2.sp
+    ),
+    titleMedium = TextStyle(
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmall = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 20.sp,
+        letterSpacing = 0.35.sp
+    ),
     bodyLarge = TextStyle(fontSize = 15.sp, lineHeight = 22.sp),
     bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
     bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
-    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 17.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, lineHeight = 16.sp)
+    labelLarge = TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 18.sp,
+        letterSpacing = 0.45.sp
+    ),
+    labelMedium = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 17.sp,
+        letterSpacing = 0.55.sp
+    ),
+    labelSmall = TextStyle(
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 15.sp,
+        letterSpacing = 0.75.sp
+    )
 )
 
 @Composable
 fun RiftTheme(content: @Composable () -> Unit) {
     val teamState by TeamDetailRepository.state.collectAsState()
     val matchState by MatchDetailRepository.state.collectAsState()
-    val dark = isSystemInDarkTheme()
 
+    // Console shell V1 is intentionally dark-first. Team identity remains dynamic through the
+    // palette accent/motif while the system chrome no longer flips into a mobile light-card mode.
+    val dark = true
     val teamSkin = RiftTeamSkins.resolve(teamState.team)
     val matchSkin = RiftTeamSkins.resolve(matchState.match)
     // Team-detail context wins over a match selection. Direct match entry uses the first listed team.
     val skin = if (teamSkin.id != RiftSkinId.DEFAULT) teamSkin else matchSkin
     val palette = skin.palette(dark)
 
-    val scheme = if (dark) {
-        darkColorScheme(
-            primary = palette.accent,
-            secondary = palette.secondary,
-            background = palette.background,
-            surface = palette.panel,
-            surfaceVariant = palette.panelAlt,
-            outline = palette.line,
-            error = palette.danger,
-            onPrimary = palette.background,
-            onSecondary = palette.background,
-            onBackground = palette.text,
-            onSurface = palette.text,
-            onSurfaceVariant = palette.muted
-        )
-    } else {
-        lightColorScheme(
-            primary = palette.accent,
-            secondary = palette.secondary,
-            background = palette.background,
-            surface = palette.panel,
-            surfaceVariant = palette.panelAlt,
-            outline = palette.line,
-            error = palette.danger,
-            onPrimary = Color.White,
-            onSecondary = Color.White,
-            onBackground = palette.text,
-            onSurface = palette.text,
-            onSurfaceVariant = palette.muted
-        )
-    }
+    val scheme = darkColorScheme(
+        primary = palette.accent,
+        secondary = palette.secondary,
+        background = palette.background,
+        surface = palette.panel,
+        surfaceVariant = palette.panelAlt,
+        outline = palette.line,
+        error = palette.danger,
+        onPrimary = palette.background,
+        onSecondary = palette.background,
+        onBackground = palette.text,
+        onSurface = palette.text,
+        onSurfaceVariant = palette.muted
+    )
 
     CompositionLocalProvider(
         LocalRiftTeamSkin provides skin,
@@ -101,6 +119,7 @@ fun RiftTheme(content: @Composable () -> Unit) {
         MaterialTheme(colorScheme = scheme, typography = RiftTypography) {
             Box(Modifier.fillMaxSize()) {
                 RiftTeamSkinBackdrop(skin, dark, Modifier.fillMaxSize())
+                RiftConsoleAmbientLayer(Modifier.fillMaxSize())
                 content()
             }
         }
