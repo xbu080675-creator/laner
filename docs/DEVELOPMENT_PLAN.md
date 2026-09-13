@@ -80,7 +80,7 @@ Block 1 已完成独立合规整改并工程冻结；`INC-LNR-020-001 = CLOSED`�
 ### LNR-021 — Tactical HUD / LIVE Event Derivation
 状态：`WAITING EXTERNAL TEST`
 
-第 2 块功能工程交付、独立宪法复查和六项整改均已进入主线。`INC-LNR-021-001` 当前为 `CLOSURE READY`：代码/测试/权威文档整改已通过 PR #17 和 post-merge main Gate；只剩 docs-only closeout PR 与其 post-merge main Gate 完成后，才正式标记 `CLOSED` 并工程冻结 Block 2。
+Block 2 已完成工程交付、独立宪法复查、六项整改与 docs-only closeout；`INC-LNR-021-001 = CLOSED`，Block 2 engineering scope 已冻结。冻结不等于 LNR-021 产品任务 DONE：真实 Riot online 与 Android device 项继续 `WAITING EXTERNAL TEST`。
 
 当前业务规则：
 - `LiveEventDerivationService` 从 canonical Timeline snapshot 保守派生 aggregate Kill delta、player-backed kill delta、`MultiKillWindowEvent`、`TeamFightWindowEvent`、Objective delta 与 `GoldLeadChangedEvent`；
@@ -95,28 +95,24 @@ Block 1 已完成独立合规整改并工程冻结；`INC-LNR-020-001 = CLOSED`�
 
 自动功能状态：`LIVE-014 / LIVE-015 / LIVE-030 → WAITING EXTERNAL TEST`。真实 Riot online 事件触发、Android overlay 视觉/触摸/窗口优先级/断流行为仍需外部验证，不能升级 DONE。
 
-稳定整改锚点：
-- remediation PR #17 exact head `a62df876bf21f6009ea4a7fc1c9227fd48e219b1`；
-- exact-head run `34732025919` 全 Gate PASS；
-- PR #17 merge `2d7ff40034a8e834f20c02bef41f8c088e98f479`；
-- post-merge main run `34732179957` 全 Gate PASS；
-- main artifact `10309656271`；digest `sha256:bb185e9822c7e3e559906623e3bc272cbcfbe5bc879112b2988db6f63cb204cb`。
+合规关闭锚点：
+- remediation PR #17 exact head `a62df876bf21f6009ea4a7fc1c9227fd48e219b1`；run `34732025919` 全 Gate PASS；merge `2d7ff40034a8e834f20c02bef41f8c088e98f479`；main run `34732179957` 全 Gate PASS；
+- closeout PR #18 exact head `df58f5651fd241dc95137e0d40aa05e2e29850ee`；run `34732993654` 全 Gate PASS；merge `38161578e04a523c9247c64c762f4dd983561a9d`；main run `34733073857` 全 Gate PASS；
+- final evidence: `docs/development/2026/2026-09-13_LNR-021_constitution-closeout-final.md`；
+- 不创建 freeze Tag：LNR-021 的外部/实机 DoD 尚未完成。
 
 历史 Failure A 继续保留：run `34709821178` 的 Core 已 PASS，但 Android production compile 因 `LiveMatchScreen.eventLabel()` 未穷举新增 sealed event 失败；fix `403bba4e874ad37978179618e84dceaafb9f06f8`，Troubleshooting `LNR-UI-LIVE-004`。
 
 ## 当前推进顺序
-1. 完成 `INC-LNR-021-001` docs-only closeout PR；
-2. closeout exact-head Gate PASS 后合并；
-3. closeout post-merge main Gate PASS；
-4. 新增不可变 final transport-evidence addendum，将事故正式标记 `CLOSED`，Block 2 工程冻结；
-5. 第 3 块：Watch Hub + 播放器；
-6. 第 4 块：赛前/赛后剩余功能；
-7. 第 5 块：OTA + 设置 + 主题/缓存/诊断；
-8. 第 6 块：Local AI / OCR；
-9. 第 7 块：全量回归；
-10. 第 8 块：Migration Audit / release closure。
+1. **Block 3：Watch Hub + 播放器** — 已解除治理门禁，但尚未开始；启动时必须从届时最新 main 做 fresh Constitution Preflight。
+2. Block 3 完成后按固定节奏独立复查工程宪法；有偏离则先记录、整改、重新认证，再进入 Block 4。
+3. 第 4 块：赛前/赛后剩余功能。
+4. 第 5 块：OTA + 设置 + 主题/缓存/诊断。
+5. 第 6 块：Local AI / OCR。
+6. 第 7 块：全量回归。
+7. 第 8 块：Migration Audit / release closure。
 
-LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证继续独立回填，不阻塞事故正式关闭后的后续工程切片，也不得被 CI 冒充 PASS。
+LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
 
 用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
 
