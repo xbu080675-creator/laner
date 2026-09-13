@@ -89,7 +89,6 @@ internal fun WatchHubSurface(
     modifier: Modifier = Modifier,
 ) {
     var open by remember { mutableStateOf(false) }
-    var launchMessage by remember { mutableStateOf<String?>(null) }
 
     WatchHubLauncher(
         presentation = presentation,
@@ -100,12 +99,11 @@ internal fun WatchHubSurface(
     if (open) {
         WatchHubDialog(
             watchPort = watchPort,
-            launchMessage = launchMessage,
             onClose = { open = false },
             onLaunch = { destination ->
-                val result = watchPort.launch(destination.id)
-                launchMessage = result.message
-                if (result.destinationId != null) open = false
+                // Legacy contract: close the picker before handing off to Android/platform launch.
+                open = false
+                watchPort.launch(destination.id)
             },
         )
     }
@@ -140,7 +138,6 @@ private fun WatchHubLauncher(
                 },
                 shape,
             )
-            .border(1.dp, RiftLine, shape)
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -171,7 +168,6 @@ private fun WatchHubLauncher(
 @Composable
 private fun WatchHubDialog(
     watchPort: WatchPort,
-    launchMessage: String?,
     onClose: () -> Unit,
     onLaunch: (WatchDestination) -> Unit,
 ) {
@@ -221,10 +217,6 @@ private fun WatchHubDialog(
                     onLaunch = onLaunch,
                 )
 
-                launchMessage?.let {
-                    Spacer(Modifier.height(12.dp))
-                    Text(it, color = RiftMuted, fontSize = 11.sp)
-                }
                 Spacer(Modifier.height(14.dp))
                 Text(
                     "直播入口只负责跳转到对应平台；RiftScreen 与赛事实时数据仍由 Laner 独立运行。海外入口包括 LoL Esports 官方站、YouTube、Twitch 与 X。",
