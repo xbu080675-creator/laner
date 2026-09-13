@@ -26,11 +26,14 @@ jobs:
           cd /tmp/riftlab
           git checkout e46e4ea35ff8058ce90af1f79f15de31e14377dd
 
-      - name: Replace Laner worktree with RiftLab tree
+      - name: Replace Laner worktree with RiftLab tree except workflow directory
         run: |
-          rsync -a --delete --exclude='.git' /tmp/riftlab/ ./
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github/workflows/' \
+            /tmp/riftlab/ ./
 
-      - name: Commit exact tree migration
+      - name: Commit migrated tree
         run: |
           git config user.name "laner-migration-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -39,5 +42,5 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "migration: reset Laner to RiftLab e46e4ea baseline"
+          git commit -m "migration: reset Laner to RiftLab e46e4ea baseline (workflows pending)"
           git push origin HEAD:migration/riftlab-full-reset
