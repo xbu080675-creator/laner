@@ -1,0 +1,23 @@
+name: Esports8 Research Probe
+
+on:
+  push:
+    branches:
+      - research/esports8-api-probe
+    paths:
+      - '.github/workflows/esports8-research-probe.yml'
+      - 'tools/esports8_probe.sh'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe LPL live match
+        shell: bash
+        run: bash tools/esports8_probe.sh er5s6s3t2r559f6
+      - name: Probe LCK live sample
+        shell: bash
+        run: bash tools/esports8_probe.sh l70s9sjtm011ytx
