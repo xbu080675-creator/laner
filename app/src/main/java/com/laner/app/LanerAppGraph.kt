@@ -18,6 +18,7 @@ import com.laner.app.data.riot.RiotGlobalResultSource
 import com.laner.app.data.riot.RiotTeamRosterSource
 import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
+import com.laner.app.data.vod.BilibiliReplaySource
 import com.laner.core.application.CompletedGameSourcePort
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
@@ -30,6 +31,7 @@ import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostResultSourcePort
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.ReplaySourcePort
 import java.io.File
 
 /**
@@ -76,6 +78,7 @@ class LanerAppGraph(
         apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
+    private val bilibiliReplaySource = BilibiliReplaySource()
     private val riotGlobalHistoricalTimelineSource = RiotGlobalHistoricalTimelineSource(
         apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
@@ -134,12 +137,16 @@ class LanerAppGraph(
     private val completedGameSources: List<CompletedGameSourcePort> = buildList {
         if (lplHistoryEnabled) add(lplHistoricalPostMatchSource)
     }
+    private val replaySources: List<ReplaySourcePort> = buildList {
+        if (riotEnabled) add(riotGlobalReplaySource)
+        add(bilibiliReplaySource)
+    }
 
     val postMatchService = PostMatchService(
         resultSources = postResultSources,
         gameSources = completedGameSources,
         awardSources = listOf(verifiedAwardsMirrorSource),
-        replaySources = if (riotEnabled) listOf(riotGlobalReplaySource) else emptyList(),
+        replaySources = replaySources,
         archiveRepository = postArchiveRepository,
         diagnostics = diagnostics,
     )
