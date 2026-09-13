@@ -59,49 +59,58 @@ fun LanerRoot(
     onStopRiftScreen: () -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.LIVE_MATCH) }
+    var watchHubPresentation by remember { mutableStateOf(WatchHubPresentation.Idle) }
 
-    Scaffold(containerColor = RiftBg) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            LanerHeader()
-            PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
-            AnimatedContent(
-                targetState = selectedPhase,
-                modifier = Modifier.weight(1f),
-                transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
-                label = "laner-phase",
-            ) { phase ->
-                when (phase) {
-                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
-                        CompetitionStructurePanel(
-                            service = competitionStructureService,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(containerColor = RiftBg) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                LanerHeader()
+                PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
+                AnimatedContent(
+                    targetState = selectedPhase,
+                    modifier = Modifier.weight(1f),
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                    label = "laner-phase",
+                ) { phase ->
+                    when (phase) {
+                        MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                            CompetitionStructurePanel(
+                                service = competitionStructureService,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            PreMatchScreen(
+                                scheduleService = scheduleService,
+                                preMatchContextService = preMatchContextService,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        MatchPhase.LIVE_MATCH -> LiveMatchScreen(
+                            liveMatchContextService = liveMatchContextService,
+                            overlayPermissionGranted = overlayPermissionGranted,
+                            riftScreenRunning = riftScreenRunning,
+                            onRequestOverlayPermission = onRequestOverlayPermission,
+                            onStartRiftScreen = onStartRiftScreen,
+                            onStopRiftScreen = onStopRiftScreen,
+                            onWatchPresentationChange = { watchHubPresentation = it },
+                            modifier = Modifier.fillMaxSize(),
                         )
-                        Spacer(Modifier.height(10.dp))
-                        PreMatchScreen(
+                        MatchPhase.POST_MATCH -> PostMatchScreen(
                             scheduleService = scheduleService,
-                            preMatchContextService = preMatchContextService,
-                            modifier = Modifier.weight(1f),
+                            postMatchService = postMatchService,
+                            postTimelineService = postTimelineService,
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
-                    MatchPhase.LIVE_MATCH -> LiveMatchScreen(
-                        liveMatchContextService = liveMatchContextService,
-                        watchPort = watchPort,
-                        overlayPermissionGranted = overlayPermissionGranted,
-                        riftScreenRunning = riftScreenRunning,
-                        onRequestOverlayPermission = onRequestOverlayPermission,
-                        onStartRiftScreen = onStartRiftScreen,
-                        onStopRiftScreen = onStopRiftScreen,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    MatchPhase.POST_MATCH -> PostMatchScreen(
-                        scheduleService = scheduleService,
-                        postMatchService = postMatchService,
-                        postTimelineService = postTimelineService,
-                        modifier = Modifier.fillMaxSize(),
-                    )
                 }
             }
         }
+
+        WatchHubSurface(
+            presentation = watchHubPresentation,
+            watchPort = watchPort,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 18.dp, bottom = 18.dp),
+        )
     }
 }
 
