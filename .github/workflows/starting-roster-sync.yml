@@ -1,0 +1,132 @@
+name: Starting Roster Sync
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/starting-roster-sync.yml'
+      - 'scripts/starting_roster_collector.py'
+      - 'scripts/starting_roster_global_collector.py'
+      - 'scripts/starting_roster_fast_global_collector.py'
+      - 'scripts/starting_roster_four_lane_collector.py'
+      - 'scripts/starting_roster_match_query.py'
+      - 'scripts/starting_roster_match_targets.py'
+      - 'scripts/starting_roster_match_search_executor.py'
+      - 'scripts/starting_roster_weibo_openapi.py'
+      - 'scripts/starting_roster_policy_selftest.py'
+      - 'scripts/starting_roster_browser_collector.py'
+      - 'scripts/starting_roster_browser_four_lane.py'
+      - 'data/global/starting_roster_sources.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: starting-roster-sync-browser-v2
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      RIFTLAB_ROSTER_MAX_POSTS_PER_SOURCE: '6'
+      RIFTLAB_ROSTER_MAX_IMAGES_PER_POST: '2'
+      RIFTLAB_ROSTER_OCR_TIMEOUT_SECONDS: '10'
+      RIFTLAB_ROSTER_OCR_MAX_DIMENSION: '2200'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install browser and OCR runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng tesseract-ocr-kor tesseract-ocr-jpn
+          python3 -m pip install --disable-pip-version-check --quiet \
+            requests beautifulsoup4 pillow pytesseract playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: Validate roster publishing policies
+        run: |
+          python3 scripts/starting_roster_policy_selftest.py
+
+      - name: Derive imminent match search targets
+        run: |
+          python3 scripts/starting_roster_match_targets.py
+
+      - name: Collect recent social posts as fallback
+        continue-on-error: true
+        run: |
+          rm -rf data/global/starting_roster_browser_media
+          mkdir -p data/global/starting_roster_browser_media
+          python3 scripts/starting_roster_browser_four_lane.py
+
+      - name: Discover LPL roster posts through Weibo Open API
+        continue-on-error: true
+        env:
+          WEIBO_APP_ID: ${{ secrets.WEIBO_APP_ID }}
+          WEIBO_APP_SECRET: ${{ secrets.WEIBO_APP_SECRET }}
+        run: |
+          python3 scripts/starting_roster_weibo_openapi.py
+
+      - name: Search match targets through browser fallback
+        continue-on-error: true
+        run: |
+          python3 scripts/starting_roster_match_search_executor.py
+
+      - name: Collect official starting rosters globally
+        timeout-minutes: 5
+        run: |
+          python3 scripts/starting_roster_four_lane_collector.py
+
+      - name: Upload OCR inspection trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: starting-roster-ocr-trace
+          path: |
+            data/global/starting_roster_match_targets.json
+            data/global/starting_roster_ocr_trace.json
+            data/global/starting_roster_browser_posts.json
+            data/global/starting_roster_collector_status.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Commit normalized evidence safely
+        run: |
+          set -euo pipefail
+          OUT=/tmp/starting_rosters.json
+          STATUS=/tmp/starting_roster_collector_status.json
+          cp data/global/starting_rosters.json "$OUT"
+          cp data/global/starting_roster_collector_status.json "$STATUS"
+
+          git config user.name 'riftlab-roster-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          for attempt in 1 2 3; do
+            echo "publish attempt $attempt"
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$OUT" data/global/starting_rosters.json
+            cp "$STATUS" data/global/starting_roster_collector_status.json
+
+            if git diff --quiet -- data/global/starting_rosters.json data/global/starting_roster_collector_status.json; then
+              echo 'No roster data change.'
+              exit 0
+            fi
+
+            git add data/global/starting_rosters.json data/global/starting_roster_collector_status.json
+            git commit -m 'data: sync official starting rosters'
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+
+            echo 'main moved while publishing; retrying on fresh head'
+          done
+
+          echo 'failed to publish roster data after 3 attempts' >&2
+          exit 1
