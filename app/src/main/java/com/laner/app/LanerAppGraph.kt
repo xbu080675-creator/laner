@@ -5,6 +5,7 @@ import com.laner.app.data.archive.JsonTournamentEditionArchiveRepository
 import com.laner.app.data.live.JsonLiveMatchStateRepository
 import com.laner.app.data.live.JsonLiveTimelineRepository
 import com.laner.app.data.post.JsonPostMatchArchiveRepository
+import com.laner.app.data.post.LplHistoricalPostMatchSource
 import com.laner.app.data.post.VerifiedAwardsMirrorSource
 import com.laner.app.data.qualification.Official2026QualificationSource
 import com.laner.app.data.riot.RiotCompetitionStructureSource
@@ -17,6 +18,7 @@ import com.laner.app.data.riot.RiotGlobalResultSource
 import com.laner.app.data.riot.RiotTeamRosterSource
 import com.laner.app.data.roster.NormalizedStartingRosterSource
 import com.laner.app.data.staff.NormalizedTeamStaffSource
+import com.laner.core.application.CompletedGameSourcePort
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveEventDerivationService
@@ -25,16 +27,27 @@ import com.laner.core.application.LiveMatchStateService
 import com.laner.core.application.LiveSnapshotService
 import com.laner.core.application.LiveTimelineService
 import com.laner.core.application.PostMatchService
+import com.laner.core.application.PostResultSourcePort
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
 import java.io.File
 
+/**
+ * Android composition root.
+ *
+ * No provider is a product dependency. Providers are registered only when their capability is
+ * available; Core/Application still own one global competition flow and never branch by region.
+ */
 class LanerAppGraph(
     filesDir: File,
     riotApiKey: String = BuildConfig.LOL_ESPORTS_API_KEY,
+    lplTjstatsAuth: String = BuildConfig.LPL_TJSTATS_AUTH,
 ) {
     val diagnostics = AndroidDiagnosticsPort()
     private val providerIdentityRepository = JsonProviderMatchIdentityRepository(File(filesDir, "identity/provider-match.json"))
+
+    private val riotEnabled = riotApiKey.isNotBlank()
+    private val lplHistoryEnabled = lplTjstatsAuth.isNotBlank()
 
     private val riotPreMatchSource = RiotGlobalPreMatchSource(apiKey = riotApiKey)
     private val riotTeamRosterSource = RiotTeamRosterSource(apiKey = riotApiKey)
@@ -67,19 +80,23 @@ class LanerAppGraph(
         apiKey = riotApiKey,
         identityRepository = providerIdentityRepository,
     )
+    private val lplHistoricalPostMatchSource = LplHistoricalPostMatchSource(tjstatsAuth = lplTjstatsAuth)
 
-    val globalScheduleService = GlobalScheduleService(listOf(riotPreMatchSource), diagnostics)
+    val globalScheduleService = GlobalScheduleService(
+        sources = if (riotEnabled) listOf(riotPreMatchSource) else emptyList(),
+        diagnostics = diagnostics,
+    )
 
     val preMatchContextService = PreMatchContextService(
-        rosterSources = listOf(riotTeamRosterSource),
+        rosterSources = if (riotEnabled) listOf(riotTeamRosterSource) else emptyList(),
         staffSources = listOf(normalizedTeamStaffSource),
         startingRosterSources = listOf(normalizedStartingRosterSource),
         diagnostics = diagnostics,
     )
 
     val competitionStructureService = CompetitionStructureService(
-        editionSources = listOf(riotCompetitionStructureSource),
-        standingsSources = listOf(riotCompetitionStructureSource),
+        editionSources = if (riotEnabled) listOf(riotCompetitionStructureSource) else emptyList(),
+        standingsSources = if (riotEnabled) listOf(riotCompetitionStructureSource) else emptyList(),
         championshipPointsSources = emptyList(),
         qualificationSources = listOf(official2026QualificationSource),
         archiveRepository = editionArchiveRepository,
@@ -88,7 +105,7 @@ class LanerAppGraph(
 
     /** Lifecycle authority remains independent from gameplay snapshot ingestion. */
     val liveMatchStateService = LiveMatchStateService(
-        sources = listOf(riotGlobalLiveStateSource),
+        sources = if (riotEnabled) listOf(riotGlobalLiveStateSource) else emptyList(),
         repository = liveStateRepository,
         diagnostics = diagnostics,
     )
@@ -97,7 +114,7 @@ class LanerAppGraph(
     val liveEventDerivationService = LiveEventDerivationService(liveTimelineService)
 
     val liveSnapshotService = LiveSnapshotService(
-        sources = listOf(riotGlobalLiveSnapshotSource),
+        sources = if (riotEnabled) listOf(riotGlobalLiveSnapshotSource) else emptyList(),
         timelineService = liveTimelineService,
         diagnostics = diagnostics,
     )
@@ -111,17 +128,25 @@ class LanerAppGraph(
         diagnostics = diagnostics,
     )
 
+    private val postResultSources: List<PostResultSourcePort> = buildList {
+        if (riotEnabled) add(riotGlobalResultSource)
+        if (lplHistoryEnabled) add(lplHistoricalPostMatchSource)
+    }
+    private val completedGameSources: List<CompletedGameSourcePort> = buildList {
+        if (lplHistoryEnabled) add(lplHistoricalPostMatchSource)
+    }
+
     val postMatchService = PostMatchService(
-        resultSources = listOf(riotGlobalResultSource),
-        gameSources = emptyList(),
+        resultSources = postResultSources,
+        gameSources = completedGameSources,
         awardSources = listOf(verifiedAwardsMirrorSource),
-        replaySources = listOf(riotGlobalReplaySource),
+        replaySources = if (riotEnabled) listOf(riotGlobalReplaySource) else emptyList(),
         archiveRepository = postArchiveRepository,
         diagnostics = diagnostics,
     )
 
     val postTimelineService = PostTimelineService(
-        sources = listOf(riotGlobalHistoricalTimelineSource),
+        sources = if (riotEnabled) listOf(riotGlobalHistoricalTimelineSource) else emptyList(),
         timelineService = liveTimelineService,
         diagnostics = diagnostics,
     )
