@@ -288,7 +288,9 @@ internal class GlobalOfficialLiveDataSource : LiveMatchDataSource {
 
         val between = eligibleProvidersLocked()
             .filter { provider ->
-                providerStatuses[provider.name]?.phase == LiveSourcePhase.BETWEEN_GAMES &&
+                val status = providerStatuses[provider.name]
+                status?.phase == LiveSourcePhase.BETWEEN_GAMES &&
+                    !isSyntheticBetweenGamesStatus(status) &&
                     providerMatchesCurrentTargetLocked(provider, requireFrame = false)
             }
             .minByOrNull { it.priority }
@@ -421,6 +423,16 @@ internal class GlobalOfficialLiveDataSource : LiveMatchDataSource {
             sinceEpochMs = since,
             updatedAtEpochMs = now
         )
+    }
+
+    /**
+     * COMM/TJ placeholders such as COMM:13505:G4 or TJ:13505:G4 only mean
+     * "the next expected game number is G4". They are not proof that the series is
+     * physically between games, so they must never pin the public lifecycle there.
+     */
+    private fun isSyntheticBetweenGamesStatus(status: LiveSourceStatus?): Boolean {
+        val gameId = status?.gameId?.trim().orEmpty()
+        return gameId.startsWith("COMM:") || gameId.startsWith("TJ:")
     }
 
     private fun providerMatchesCurrentTargetLocked(provider: Provider, requireFrame: Boolean): Boolean {

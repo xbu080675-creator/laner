@@ -154,7 +154,9 @@ internal class LplCurrentGameLiveDataSource : LiveMatchDataSource {
                 }
 
                 if (current == null) {
-                    val phase = if (scoreA + scoreB > 0) LiveSourcePhase.BETWEEN_GAMES else LiveSourcePhase.WAITING_FOR_MATCH
+                    // No current game object/frame means only that G$expectedBo is expected.
+                    // This synthetic TJ:Gx placeholder is not authoritative BETWEEN_GAMES evidence.
+                    val phase = LiveSourcePhase.WAITING_FOR_MATCH
                     val diagnostic = games.joinToString(",") {
                         "G${it.bo}:s${it.status}:t${it.gameTime}:teams${it.teams.size}"
                     }

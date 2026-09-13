@@ -137,7 +137,9 @@ internal class LplCommRealtimeDataSource : LiveMatchDataSource {
                 val route = cachedRoute ?: discoverRoute(active, series).also { cachedRoute = it }
                 if (route == null) {
                     _status.value = LiveSourceStatus(
-                        phase = if (series.scoreA + series.scoreB > 0) LiveSourcePhase.BETWEEN_GAMES else LiveSourcePhase.WAITING_FOR_MATCH,
+                        // route=undiscovered only means the expected Gx realtime route is not ready yet.
+                        // COMM:Gx is a synthetic placeholder and must not assert BETWEEN_GAMES.
+                        phase = LiveSourcePhase.WAITING_FOR_MATCH,
                         message = buildString {
                             append("COMM · bmid=${active.bmid} · 等待 G${series.expectedBo} realtime")
                             append(" · ids=")
