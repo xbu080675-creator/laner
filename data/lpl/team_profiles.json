@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "dataset": "riftlab-lpl-team-directory",
-  "updatedAt": "2026-09-09T04:45:00Z",
+  "updatedAt": "2026-09-09T03:00:00Z",
   "refreshPolicy": {
     "appTtlMinutes": 30,
     "sourceMonitorHours": 3,
