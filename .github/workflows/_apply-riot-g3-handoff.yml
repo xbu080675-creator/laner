@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   apply:
-    if: ${{ !contains(github.event.head_commit.message, '[g3-handoff-applied]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,10 +56,9 @@ jobs:
           new = '''                val event = currentEvent ?: continue
                 if (knownGames.isEmpty()) knownGames = fetchEventGames(event)
 
-                // During a between-games handoff Riot EventDetails already exposes every BO game id,
-                // even while the next game state is still `unstarted`.  The series score is a stronger
-                // signal for the expected game number than replaying the previous game's historical
-                // LiveStats window.  Bind that exact game id first, then wait for its first frame.
+                // EventDetails exposes every BO game id before the next game is marked in-progress.
+                // Use the authoritative series score to bind the expected next Riot game id first,
+                // then wait on that game's first LiveStats frame instead of replaying the previous game.
                 val expectedGameNumber = expectedGameNumber(LiveMatchTargetRegistry.snapshot(), knownGames)
                 val expectedGame = expectedGameNumber
                     ?.let { expected -> knownGames.firstOrNull { it.gameNumber == expected } }
@@ -127,14 +125,11 @@ jobs:
               raise SystemExit('helper anchor missing')
           text = text.replace(old, new, 1)
 
-          old = '''                        "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"
-'''
-          new = '''                        "Riot LiveStats · 已锁定下一小局 gameId，当前 10 秒窗口尚无有效帧；保持绑定并自适应回退"
-'''
+          old = '                        "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"\n'
+          new = '                        "Riot LiveStats · 已锁定下一小局 gameId，当前 10 秒窗口尚无有效帧；保持绑定并自适应回退"\n'
           if old not in text:
               raise SystemExit('diagnostic anchor missing')
           text = text.replace(old, new, 1)
-
           path.write_text(text)
 
           doc = Path('docs/development/2026/2026-09-13-riot-next-game-handoff-fix.md')
@@ -149,34 +144,33 @@ jobs:
 During AL vs BLG, Riot public Event `117155436343202202` had Game 3 in progress while Laner remained `BETWEEN GAMES · COMM · waiting G3`. The app had the correct series/event identity but did not hand off to the Riot G3 LiveStats game id quickly enough.
 
 ## Root cause
-Laner preferred state-driven discovery and historical-window probing. Between games, EventDetails already contains all BO game ids, but the next game may still be marked `unstarted` while the previous game remains readable forever as historical LiveStats. This allowed the previous game binding to survive and made the handoff depend on probing the next game's first frame.
+Laner preferred state-driven discovery and historical-window probing. EventDetails already contains all BO game ids, but the next game can still be marked `unstarted` while the previous game's historical LiveStats stays readable. That makes handoff depend on probing the first frame of the next game and can keep the old binding too long.
 
 ## Fix
-- Derive the expected next game number from the authoritative current series score: `sum(gameWins) + 1`.
-- Bind the corresponding Riot EventDetails game id before historical-window fallback, even if its state is still `unstarted`.
-- Keep that game id through temporary empty windows; the existing aligned adaptive cursor waits for the first valid frame.
-- Prefer the highest `InProgress` game if Riot state has already advanced.
-- Exclude `completed`, `unneeded`, and cancelled games from historical current-game discovery so old frames cannot re-select a finished game.
+- Derive expected next game as `sum(gameWins) + 1` from the current series target.
+- Bind that EventDetails Riot game id before historical-window fallback, even if state is still `unstarted`.
+- Keep the game id through temporary empty LiveStats windows and wait for its first valid frame.
+- Prefer the highest `InProgress` game when Riot state has already advanced.
+- Exclude completed/unneeded/cancelled games from historical current-game discovery.
 
 ## Scope / boundaries
-Only the App/Adapter Riot live-source selector changes. Core, UI, provider priority, MatchIdentityPolicy, and external APIs are unchanged. No GPL source code was copied.
+App/Adapter Riot live selection only. Core, UI, provider priority, MatchIdentityPolicy, and external API contracts are unchanged. No GPL source copied.
 
-## Validation gates
+## Validation
 - `python3 tools/check_core_boundary.py`
 - `python3 tools/check_repository_links.py`
 - `gradle :app:compileDebugKotlin`
 - `gradle :app:assembleDebug`
 
-Real-device acceptance remains required against a live between-games -> next-game transition.
+Real-device acceptance is still required on a live between-games -> next-game transition.
 
 ## Rollback
-Revert the final implementation commit produced from this branch.
+Revert the final implementation commit.
 
-## Status
-Implementation workflow must pass all listed gates before merge. Real-device live transition remains external acceptance.
+## Compliance
+The implementation remains in Adapter code and preserves the Core boundary.
 ''')
 
-          # remove one-shot workflow from the resulting implementation commit
           Path('.github/workflows/_apply-riot-g3-handoff.yml').unlink()
           PY
 
@@ -196,5 +190,5 @@ Implementation workflow must pass all listed gates before merge. Real-device liv
           git config user.name "PocketSpace"
           git config user.email "xbu080675@gmail.com"
           git add -A
-          git commit -m "fix(live): bind expected Riot game before window probe [g3-handoff-applied]"
+          git commit -m "fix(live): bind expected Riot game before window probe"
           git push origin HEAD:fix/riot-g3-handoff
