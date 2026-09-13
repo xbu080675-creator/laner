@@ -8,6 +8,7 @@
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
 - LNR-020 Block 1: engineering-frozen after `INC-LNR-020-001 / CLOSED`; compliance facts are prose, not task status tokens
 - LNR-021 Block 2: engineering-frozen after `INC-LNR-021-001 / CLOSED`; LNR-021 product status remains `WAITING EXTERNAL TEST`
+- LNR-022 Block 3: automated Watch Hub implementation is in delivery; Android external-app handoff remains `WAITING EXTERNAL TEST`
 - Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”.
 
 ## Task Status
@@ -26,11 +27,12 @@
 | LNR-019 | Global LIVE Snapshot / Timeline / Match HUD | WAITING EXTERNAL TEST |
 | LNR-020 | RiftScreen / Draft HUD Android Overlay | WAITING EXTERNAL TEST |
 | LNR-021 | Tactical HUD / LIVE Event Derivation | WAITING EXTERNAL TEST |
+| LNR-022 | Global Watch Hub / Android viewing handoff | WAITING EXTERNAL TEST |
 
 ## Block 1 / LNR-020 Frozen Truth
 - Original functional merge: PR #10 / `967e112d6efcf8e6daa86f0b007cedc39b63b04c`; post-merge main run `34706047380` PASS.
 - Compliance remediation merge: PR #12 / `452ab8f5df3f4536c5c7f39c4024dc51ebc38084`; exact-head run `34708127194` PASS; post-merge run `34708285172` PASS.
-- Closeout merge: PR #13 / `e92bb65b2469cbeb23e56a531890945880f99eba`; post-merge run `34708701976` PASS.
+- Closeout merge: PR #13 / `e92bb65b2469cbeb23e56a531890945880f99eba`; post-merge main run `34708701976` PASS.
 - Final factual-status correction: `87f90a89ad7a35fdb9717ef1003fa984bba4fdab`; main run `34708959768` PASS.
 - `INC-LNR-020-001 = CLOSED`; Block 1 engineering scope is frozen.
 - `LIVE-024~029` continue `WAITING EXTERNAL TEST`; `LIVE-012` remains TODO.
@@ -108,6 +110,17 @@ Current rules:
 - later v2 writes do not mutate the original v1 recovery copy;
 - pure v2 files do not claim lossless downgrade.
 
+## Block 3 / LNR-022 Watch Hub
+- fresh Constitution Preflight baseline: `main@2b9cf6ba39d3306ec89557451207aa30d29a7cc9`;
+- one platform-neutral `WatchPort` defines the boundary; Android package/deep-link/web details stay in `AndroidWatchPort`;
+- one global catalog contains Bilibili, Huya, LoL Esports, YouTube, Twitch and X; `MAINLAND/GLOBAL` is display metadata only and never selects a separate business flow;
+- opening a viewing destination starts/continues RiftScreen but never changes LIVE source arbitration or Provider selection;
+- overlay permission round-trip preserves the pending viewing destination and resumes it after permission is granted;
+- Android package visibility is scoped to the six known apps; `QUERY_ALL_PACKAGES` is not used;
+- inherited product-level Riot credential wording in `LiveAuthorityCard` was removed during Preflight remediation;
+- automated tests cover stable Watch destination identity and exact global catalog membership;
+- real device external-app handoff, browser fallback and overlay-permission return remain `WAITING EXTERNAL TEST`.
+
 ## LNR-021 Failure / Incident History
 ### Failure A — preserved
 - run `34709821178`: Architecture and Domain/Application PASS; Android production compile FAIL because `LiveMatchScreen.eventLabel()` did not exhaust new sealed events;
@@ -124,6 +137,7 @@ Current rules:
 ## Waiting External Test / Honest Gaps
 - `LIVE-014 / LIVE-015 / LIVE-030` automated implementation exists, but real Riot online triggering remains unproven;
 - Android Tactical HUD overlay permission/window/touch-through/orientation/source-loss behavior still needs device evidence;
+- `LIVE-031~034` automated Watch Hub exists, but Bilibili/Huya/LoL Esports/YouTube/Twitch/X external-app or browser handoff and permission round-trip still need Android device evidence;
 - official multi-kill / killer-victim / dragon subtype require future explicit Provider evidence;
 - `LIVE-009` Herald/Atakhan remains `IN PROGRESS`;
 - `LIVE-012` real Draft Provider remains `TODO`;
@@ -131,6 +145,6 @@ Current rules:
 - Cito remains externally unverified.
 
 ## Next
-The governance gate for Block 3 is open. The next permitted engineering block is **Block 3 — Watch Hub + player**. It must start with its own fresh Constitution Preflight from then-current main; no Block 3 implementation is included in the LNR-021 closeout.
+After LNR-022 passes its implementation Gate and independent Constitution review, the next permitted engineering block is **Block 4 — remaining PRE/POST features**.
 
 External/device evidence continues independently and must never be represented as CI PASS.

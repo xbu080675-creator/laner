@@ -39,6 +39,7 @@ import com.laner.core.application.LiveMatchContextService
 import com.laner.core.application.PostMatchService
 import com.laner.core.application.PostTimelineService
 import com.laner.core.application.PreMatchContextService
+import com.laner.core.application.WatchPort
 import com.laner.core.domain.MatchPhase
 
 /** Product shell preserves the legacy RiftLab visual/interaction contract. */
@@ -50,6 +51,7 @@ fun LanerRoot(
     liveMatchContextService: LiveMatchContextService,
     postMatchService: PostMatchService,
     postTimelineService: PostTimelineService,
+    watchPort: WatchPort,
     overlayPermissionGranted: Boolean,
     riftScreenRunning: Boolean,
     onRequestOverlayPermission: () -> Unit,
@@ -83,6 +85,7 @@ fun LanerRoot(
                     }
                     MatchPhase.LIVE_MATCH -> LiveMatchScreen(
                         liveMatchContextService = liveMatchContextService,
+                        watchPort = watchPort,
                         overlayPermissionGranted = overlayPermissionGranted,
                         riftScreenRunning = riftScreenRunning,
                         onRequestOverlayPermission = onRequestOverlayPermission,

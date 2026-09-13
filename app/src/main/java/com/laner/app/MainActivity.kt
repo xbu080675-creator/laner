@@ -10,9 +10,11 @@ import androidx.core.view.WindowCompat
 import com.laner.app.overlay.RiftScreenController
 import com.laner.app.ui.LanerRoot
 import com.laner.app.ui.LanerTheme
+import com.laner.app.watch.AndroidWatchPort
 
 class MainActivity : ComponentActivity() {
     private val riftScreenController by lazy { RiftScreenController(this) }
+    private val watchPort by lazy { AndroidWatchPort(this, riftScreenController) }
     private var overlayPermissionGranted by mutableStateOf(false)
     private var riftScreenRunning by mutableStateOf(false)
 
@@ -30,6 +32,7 @@ class MainActivity : ComponentActivity() {
                     liveMatchContextService = appGraph.liveMatchContextService,
                     postMatchService = appGraph.postMatchService,
                     postTimelineService = appGraph.postTimelineService,
+                    watchPort = watchPort,
                     overlayPermissionGranted = overlayPermissionGranted,
                     riftScreenRunning = riftScreenRunning,
                     onRequestOverlayPermission = {
@@ -57,6 +60,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         overlayPermissionGranted = riftScreenController.hasOverlayPermission()
+        watchPort.resumePendingIfReady()
         riftScreenRunning = riftScreenController.isRunning()
     }
 
