@@ -1,17 +1,17 @@
 package com.laner.core.application
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class WatchPortTest {
     @Test
     fun destination_requiresStableIdentity() {
-        assertIllegalArgument {
+        assertFailsWith<IllegalArgumentException> {
             WatchDestination("", "Bilibili", WatchRegion.MAINLAND)
         }
-        assertIllegalArgument {
+        assertFailsWith<IllegalArgumentException> {
             WatchDestination("bilibili", "", WatchRegion.MAINLAND)
         }
     }
@@ -37,14 +37,5 @@ class WatchPortTest {
 
         assertEquals(listOf("a", "b"), launched)
         assertTrue(port.destinations().map { it.region }.containsAll(WatchRegion.entries))
-    }
-
-    private fun assertIllegalArgument(block: () -> Unit) {
-        try {
-            block()
-            fail("Expected IllegalArgumentException")
-        } catch (_: IllegalArgumentException) {
-            // expected
-        }
     }
 }
