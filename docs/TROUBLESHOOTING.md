@@ -156,6 +156,31 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 
 设备错误码只用于定位，UI 不得绕过 Application 修正赛事事实。
 
+### `INC-LNR-022-002` — Watch Hub 产品资产被重设计
+首次发现：LNR-022 合入后独立产品一致性复查。
+
+**现象**：旧 RiftLab 全局左下角 `LIVE / ON AIR / 直播入口` 被改成 `RiftScreenControlCard` 内按钮组，旧的生命周期反馈、LIVE 对阵显示、独立 Mainland/Global 平台弹窗消失。
+
+**根因**：迁移只保留了 Watch destination/launch 功能，没有把“入口位置 + 状态反馈 + 交互方式”视为需求资产，导致在重铸架构时顺手重设计了产品表面。
+
+**修复**：恢复全局左下角 Watch Hub 与独立平台 Dialog；状态只从 canonical `ScheduledSeries + MatchLifecycleState` 映射，不恢复旧 Store，不读取 raw Provider。永久回归 `WatchHubPresentationMapperTest` 与 `AndroidWatchCatalogTest`。
+
+**排障路径**：`Watch 只能在 LIVE 卡片内找到 / 不显示 LIVE、ON AIR、对阵 → LanerRoot WatchHubSurface → WatchHubPresentationMapper → LiveMatchContext canonical state`。
+
+### `LNR-WATCH-RESUME-001` — 权限回跳在真正 launch 前假报 OPENED
+首次发现：`INC-LNR-022-002`。
+
+**现象**：`resumePendingIfReady()` 先安排 180ms delayed `open(spec)`，但旧实现立即返回 `OPENED`；后续 Activity 启动失败时上层已经收到成功语义。
+
+**修复**：权限恢复阶段返回 `RESUMING`；只有同步 `open(spec)` 成功才使用 `OPENED`。delayed open 失败记录 `[Laner:Watch] / LNR-WATCH-RESUME-001`。
+
+### `LNR-WATCH-LAUNCH-001/002` / `LNR-WATCH-PERMISSION-001/002` — Watch Android launch 异常被静默吞噬
+首次发现：`INC-LNR-022-002`，属于旧行为在新 Adapter 中的继承。
+
+**现象**：`ActivityNotFoundException` / `SecurityException` 只转 `false`，没有稳定日志；permission settings Activity 也缺少失败边界。
+
+**修复**：保留 Web/App fallback，但统一记录 `[Laner:Watch]` 与稳定错误码；permission Activity 无法打开时清除 pending destination 并显式 `UNSUPPORTED`，不崩溃、不伪报成功。
+
 ## POST_MATCH
 
 ### `LNR-POST-TEST-001` — 非法测试 ErrorCode 导致 POST Core 测试提前失败
@@ -165,4 +190,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。Block 1 / LNR-020 已工程冻结。Block 2 / LNR-021 的 `INC-LNR-021-001 = CLOSED`：remediation PR #17 与 docs-only closeout PR #18 均已合入，相关 exact-head 与 post-merge main Gate 全 PASS，最终证据见 `2026-09-13_LNR-021_constitution-closeout-final.md`。Block 2 engineering scope 已冻结；Block 3 治理门禁已解除但尚未开始。LNR-021 产品状态仍为 `WAITING EXTERNAL TEST`，真实 Riot online 与 Android overlay 行为继续外部补证。
+M1 Feature Migration。Block 1 / LNR-020 与 Block 2 / LNR-021 已完成工程冻结，各自产品状态继续保留 `WAITING EXTERNAL TEST`。Block 3 / LNR-022 已进入产品一致性整改 `INC-LNR-022-002`：旧 Watch Hub 产品资产正在从最新主线恢复，架构仍保持全球统一 Watch Port/Adapter；整改 exact-head Gate、PCR、merge、post-merge main Gate 未完成前不得进入 Block 4。Android 六平台 handoff 与权限往返仍为 `WAITING EXTERNAL TEST`。旧 Media3/WebView/VOD 继续由 `POST-013~018` 跟踪，不能丢失或误并入 LIVE Watch Hub。
