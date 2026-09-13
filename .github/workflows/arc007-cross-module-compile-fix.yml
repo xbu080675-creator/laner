@@ -38,27 +38,29 @@ jobs:
               'object OfficialHandbookGovernance2026 {'
           )
 
-          old_selection = '''        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)
-          val selectedId = when {
-              manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->
-                  manualSelectedTournamentId
-              targetEdition != null -> targetEdition.id
-              standingsState.selectedTournament != null && ordered.any { it.tournamentId == standingsState.selectedTournament.id } ->
-                  standingsState.selectedTournament.id
-              else -> ordered.lastOrNull()?.tournamentId.orEmpty()
-          }
-          '''
-          new_selection = '''        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)
-          val selectedTournament = standingsState.selectedTournament
-          val selectedId = when {
-              manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->
-                  manualSelectedTournamentId
-              targetEdition != null -> targetEdition.id
-              selectedTournament != null && ordered.any { it.tournamentId == selectedTournament.id } ->
-                  selectedTournament.id
-              else -> ordered.lastOrNull()?.tournamentId.orEmpty()
-          }
-          '''
+          old_selection = (
+              '        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)\n'
+              '        val selectedId = when {\n'
+              '            manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->\n'
+              '                manualSelectedTournamentId\n'
+              '            targetEdition != null -> targetEdition.id\n'
+              '            standingsState.selectedTournament != null && ordered.any { it.tournamentId == standingsState.selectedTournament.id } ->\n'
+              '                standingsState.selectedTournament.id\n'
+              '            else -> ordered.lastOrNull()?.tournamentId.orEmpty()\n'
+              '        }\n'
+          )
+          new_selection = (
+              '        val targetEdition = chooseTargetEdition(target, standingsState.tournaments)\n'
+              '        val selectedTournament = standingsState.selectedTournament\n'
+              '        val selectedId = when {\n'
+              '            manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->\n'
+              '                manualSelectedTournamentId\n'
+              '            targetEdition != null -> targetEdition.id\n'
+              '            selectedTournament != null && ordered.any { it.tournamentId == selectedTournament.id } ->\n'
+              '                selectedTournament.id\n'
+              '            else -> ordered.lastOrNull()?.tournamentId.orEmpty()\n'
+              '        }\n'
+          )
           replace_exact(
               'app/src/main/java/com/riftlab/app/data/TournamentEditionArchive.kt',
               old_selection,
@@ -71,18 +73,8 @@ jobs:
           if text.count(marker) != 1:
               raise SystemExit(f'{audit}: expected BUILD TESTING marker exactly once')
           text = text.replace(marker, '- 状态：PASS', 1)
-          text += '''
-
-## Compile Diagnostics 修复记录
-
-首次正式 `Compile Diagnostics`（run `34742260873`）已通过 Core boundary 与 Laner repository links 门禁，但 Gradle 返回非 0。诊断日志只暴露两类迁移后跨模块编译问题：
-
-- `OfficialHandbookGovernance2026` 已迁入 Core，但顶层对象仍为 `internal`；改为模块外可见的 `object`，规则逻辑不变。
-- `TournamentEditionArchive` 对 Core 公共 API `StandingsCenterState.selectedTournament` 使用跨模块 smart cast；改为先读取到局部 `val selectedTournament` 再判空，选择逻辑不变。
-
-本一次性修复 workflow 会在提交前重新执行 Core boundary、repository links、`:core:test` 与 `:app:assembleDebug`；只有全部通过才允许提交修复。
-'''
-          audit.write_text(text, encoding='utf-8')
+          appendix = "\n\n## Compile Diagnostics 修复记录\n\n首次正式 `Compile Diagnostics`（run `34742260873`）已通过 Core boundary 与 Laner repository links 门禁，但 Gradle 返回非 0。诊断日志只暴露两类迁移后跨模块编译问题：\n\n- `OfficialHandbookGovernance2026` 已迁入 Core，但顶层对象仍为 `internal`；改为模块外可见的 `object`，规则逻辑不变。\n- `TournamentEditionArchive` 对 Core 公共 API `StandingsCenterState.selectedTournament` 使用跨模块 smart cast；改为先读取到局部 `val selectedTournament` 再判空，选择逻辑不变。\n\n本一次性修复 workflow 会在提交前重新执行 Core boundary、repository links、`:core:test` 与 `:app:assembleDebug`；只有全部通过才允许提交修复。\n"
+          audit.write_text(text + appendix, encoding='utf-8')
           PY
 
           git diff --check
