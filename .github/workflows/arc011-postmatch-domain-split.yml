@@ -1,3 +1,4 @@
+# ARC011 verified migration runner
 name: ARC011 Post Match Domain Split
 
 on:
@@ -25,7 +26,6 @@ jobs:
           from pathlib import Path
           pkg = 'package com.riftlab.app.data'
 
-          # Completed series snapshot -> Core; StateFlow archive remains App.
           completed = Path('app/src/main/java/com/riftlab/app/data/CompletedGameArchive.kt')
           text = completed.read_text(encoding='utf-8')
           model_start = text.index('data class CompletedSeriesSnapshot(')
@@ -39,7 +39,6 @@ jobs:
           completed_core.write_text(pkg + '\n\n' + model + '\n', encoding='utf-8')
           completed.write_text(prefix + '\n\n' + runtime + '\n', encoding='utf-8')
 
-          # Match detail models -> Core; Coroutine/Mutex/Provider repository remains App.
           detail = Path('app/src/main/java/com/riftlab/app/data/MatchDetailRepository.kt')
           text = detail.read_text(encoding='utf-8')
           model_marker = '/** Stable identity shared by schedule, post-match and MVP/vote/BP providers. */'
@@ -54,7 +53,6 @@ jobs:
           detail_core.write_text(pkg + '\n\n' + models + '\n', encoding='utf-8')
           detail.write_text(prefix + '\n\n' + runtime + '\n', encoding='utf-8')
 
-          # Historical event result model -> Core; network/JSON provider remains App.
           history = Path('app/src/main/java/com/riftlab/app/data/TournamentEventHistoryProvider.kt')
           text = history.read_text(encoding='utf-8')
           model_start = text.index('internal data class TournamentEventHistorySnapshot(')
@@ -79,18 +77,12 @@ jobs:
           for path, required in checks.items():
               body = path.read_text(encoding='utf-8')
               for forbidden in ('android.', 'androidx.', 'kotlinx.coroutines', 'okhttp3.', 'org.json.', 'java.io.File'):
-                  if forbidden in body:
-                      raise SystemExit(f'{path}: forbidden dependency leaked into Core: {forbidden}')
+                  if forbidden in body: raise SystemExit(f'{path}: forbidden dependency leaked into Core: {forbidden}')
               for token in required:
-                  if body.count(token) != 1:
-                      raise SystemExit(f'{path}: expected exactly one {token}')
-
-          if completed.read_text(encoding='utf-8').count('object CompletedGameArchive') != 1:
-              raise SystemExit('CompletedGameArchive runtime missing')
-          if detail.read_text(encoding='utf-8').count('object MatchDetailRepository') != 1:
-              raise SystemExit('MatchDetailRepository runtime missing')
-          if history.read_text(encoding='utf-8').count('internal class TournamentEventHistoryProvider') != 1:
-              raise SystemExit('TournamentEventHistoryProvider runtime missing')
+                  if body.count(token) != 1: raise SystemExit(f'{path}: expected exactly one {token}')
+          if completed.read_text(encoding='utf-8').count('object CompletedGameArchive') != 1: raise SystemExit('CompletedGameArchive runtime missing')
+          if detail.read_text(encoding='utf-8').count('object MatchDetailRepository') != 1: raise SystemExit('MatchDetailRepository runtime missing')
+          if history.read_text(encoding='utf-8').count('internal class TournamentEventHistoryProvider') != 1: raise SystemExit('TournamentEventHistoryProvider runtime missing')
 
           readme = Path('core/README.md')
           rt = readme.read_text(encoding='utf-8')
@@ -101,15 +93,15 @@ jobs:
           readme.write_text(rt, encoding='utf-8')
 
           record = Path('docs/development/2026/2026-09-13_LNR-ARC-011_postmatch-domain-split.md')
+          if record.exists(): raise SystemExit(f'{record}: already exists')
           record.write_text(
               '# LNR-ARC-011 / 赛后与比赛详情领域模型迁入 Core\n\n'
               '- 日期：2026-09-13\n- 执行者：OpenAI / ChatGPT\n- 状态：PASS\n\n'
-              '## 目标\n\n'
-              '把赛后系列赛、比赛详情/MVP/投票/BP、历史赛事补全结果的纯领域模型与 StateFlow/Mutex/Provider/网络 JSON 实现分离；不改变任何比赛详情、赛后归档或历史数据行为。\n\n'
+              '## 目标\n\n把赛后系列赛、比赛详情/MVP/投票/BP、历史赛事补全结果的纯领域模型与 StateFlow/Mutex/Provider/网络 JSON 实现分离；不改变任何比赛详情、赛后归档或历史数据行为。\n\n'
               '## 迁移\n\n'
               '- `CompletedSeriesSnapshot` 迁入 Core；`CompletedGameArchive` StateFlow 运行时留 App。\n'
               '- `MatchDetailKey`、MVP/投票/BP 记录、`MatchDetailState` 迁入 Core；`MatchDetailRepository` 及 Provider/Mutex/协程留 App。\n'
-              '- `TournamentEventHistorySnapshot` 迁入 Core并仅解除顶层 `internal`；Riot Completed Events/LiveStats/JSON Provider 留 App。\n\n'
+              '- `TournamentEventHistorySnapshot` 迁入 Core 并仅解除顶层 `internal`；Riot Completed Events/LiveStats/JSON Provider 留 App。\n\n'
               '## 行为影响\n\n无功能、UI、数据源、排序、过滤或历史补全逻辑变化。\n\n'
               '## 验收\n\n- Core boundary PASS。\n- Laner repository links PASS。\n- `:core:test` PASS。\n- `:app:assembleDebug` PASS。\n',
               encoding='utf-8'
