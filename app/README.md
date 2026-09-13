@@ -57,9 +57,9 @@ ProviderMatchIdentityRepository
 
 LIVE Snapshot 当前可展示：双方经济、击杀总数、防御塔、龙、男爵，以及选手 level/KDA/CS/gold/champion（以上游真实字段为准）。缺失字段保持 null，UI 显示“未知”，不补 0。
 
-LNR-021 在 canonical Timeline snapshot 之上增加确定性事件派生：Kill delta、MultiKillWindow、TeamFightWindow、GoldLeadChange、Tower/Dragon/Baron delta。它们只使用已存在且可比较的事实字段；没有明确配对证据时不造 killer/victim，没有龙种证据时不猜龙种/龙魂/远古龙。
+LNR-021 在 canonical Timeline snapshot 之上增加确定性事件派生：Kill delta、MultiKillWindow、TeamFightWindow、GoldLeadChange、Tower/Dragon/Baron delta。它们只使用已存在且可比较的事实字段；没有明确配对证据时不造 killer/victim，没有龙种证据时不猜龙种/龙魂/远古龙。`TeamFightWindowEvent` 只有双方 kill delta 都可比较时才允许生成；任一侧 unknown 时不得补成 0。
 
-Cito online 继续 `DEFERRED / WAITING EXTERNAL TEST`；Riot Global 是当前真实 baseline，但 CI fixture 不等价于赛事现场 online PASS。
+Cito online 继续等待外部验证；Riot Global 是当前真实 baseline，但 CI fixture 不等价于赛事现场 online PASS。
 
 ## RiftScreen / Draft HUD / Tactical HUD
 
@@ -96,7 +96,9 @@ Draft HUD > Tactical HUD > normal RiftScreen
 ## Local persistence
 - LIVE State schema_version=1；
 - LIVE Timeline schema_version=2；LNR-021 新事件字段/类型进入 v2；
-- `JsonLiveTimelineRepository` 继续读取 v1，并在下一次写入时升级为 v2；不要求用户手动清缓存；
+- `JsonLiveTimelineRepository` 继续读取 v1，并在下一次写入时升级为 v2；
+- **首次已有 v1 文件被覆盖为 v2 前**，必须把原始 v1 内容原样写入并校验同目录 `.schema-v1.bak`；校验失败则迁移失败，主文件不得覆盖；
+- 后续 v2 写入不改写该 v1 recovery copy；新建纯 v2 文件不声明无损 downgrade；
 - canonical ID → SHA-256 稳定文件名；JSON 内复核完整 canonical ID；
 - sibling temp + atomic replace；corrupt/unsupported schema 显式失败；
 - Timeline 只保存标准 Snapshot/Event，不保存 raw Provider payload；
@@ -112,6 +114,7 @@ Riot credential 不进入 Git/日志/fixture。正式注入支持环境变量/Gr
 - `LNR-SRC-LIVE-007`：Gameplay Snapshot EventDetails/LiveStats 请求或解析失败。
 - `LNR-APP-LIVE-002`：snapshot canonical Match/Game/team validation 失败，不得写 Timeline。
 - `LNR-APP-LIVE-003`：Current LIVE Context Query 意外失败。
+- `LNR-APP-LIVE-004`：历史事实完整性故障 ID，指向 TeamFight unknown→0 事故；永久回归防止复发。
 - `LNR-OVR-WINDOW-001~004`：overlay add/update/remove/bounds 平台故障。
 - `LNR-OVR-REFRESH-001`：Overlay Presentation mapping 意外失败。
 
@@ -127,7 +130,7 @@ LNR-019：
 - run `34699837518`：Architecture PASS / Core test compile FAIL（测试错误使用未配置 coroutine/JUnit harness），失败已留档；
 - fix `f86fb251bebd5cb8f9b8791f36f5e1809de0c7b5`；
 - run `34699942180`：Architecture/Core/App/Android/APK upload 全 PASS；
-- real BLG vs AL online/device：`WAITING EXTERNAL TEST`。
+- real online/device：`WAITING EXTERNAL TEST`。
 
 LNR-020：
 - 原功能 PR #10 merge `967e112d6efcf8e6daa86f0b007cedc39b63b04c`；
@@ -135,10 +138,11 @@ LNR-020：
 - `INC-LNR-020-001` 已 CLOSED；Android overlay 真机行为仍为 `WAITING EXTERNAL TEST`。
 
 LNR-021：
-- Failure A run `34709821178`：Architecture/Core PASS；Android `compileDebugKotlin` 因 `LiveMatchScreen.eventLabel()` 未穷举新增 sealed event 而 FAIL；生产事件层不是失败面；
-- fix commit `403bba4e874ad37978179618e84dceaafb9f06f8` 补齐 `MultiKillWindowEvent / TeamFightWindowEvent` 展示分支；
-- implementation baseline run `34710012697` on `b83a83c0c8908b8da1755d306958352fbfe389cf`：Architecture/Core/App Unit/Android compile/APK upload 全 PASS；artifact `10303071228`；
-- wall-clock stale-card regression 后的最终 exact-head / PR / main Gate 以 LNR-021 开发记录为准。
+- Failure A run `34709821178`：Architecture/Core PASS；Android `compileDebugKotlin` 因 `LiveMatchScreen.eventLabel()` 未穷举新增 sealed event 而 FAIL；fix `403bba4e874ad37978179618e84dceaafb9f06f8`；
+- 原交付 final push `34712441374` / PR `34712444119` / post-merge main `34712560708` 全 Gate PASS；
+- `INC-LNR-021-001` 整改新增 `LiveEventDerivationSafetyRegressionTest`，锁定一侧 unknown、team counter regression、player counter regression、player row 缺失；
+- `JsonLiveTimelineMigrationRecoveryTest` 锁定 v1 recovery copy 创建、保持不变与 mismatch 阻断覆盖；
+- 事故整改最终 exact-head / PR / main Gate 必须在文档和记录冻结后重新执行，中途 CI 不能冒充最终证据。
 
 ## 故障定位
 PRE：`UI → GlobalSchedule/PreMatchContext → Port → Adapter`。
@@ -150,6 +154,8 @@ LIVE lifecycle：`LiveMatchContextService → LiveMatchStateService → RiotGlob
 LIVE gameplay：`LiveMatchContextService → LiveSnapshotService → RiotGlobalLiveSnapshotSource → LiveTimelineService → JsonLiveTimelineRepository`。
 
 LIVE event derivation：`LiveMatchContextService → GameTimeline → LiveEventDerivationService → LiveTimelineService.reconcileGeneratedEvents → JsonLiveTimelineRepository`。
+
+Timeline migration：`JsonLiveTimelineRepository.write → ensureV1RecoveryPoint → verified .schema-v1.bak → atomic v2 replace`。
 
 RiftScreen Window：`RiftScreenOverlayService → RiftScreenWindowController → OverlayWindowHost → LNR-OVR-WINDOW-*`。
 
