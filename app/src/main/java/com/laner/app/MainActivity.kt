@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.laner.app.overlay.RiftScreenController
@@ -21,19 +20,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
-        val lanerApplication = application as LanerApplication
+        val appGraph = (application as LanerApplication).graph()
         setContent {
-            var runtimeKey by remember { mutableStateOf(lanerApplication.runtimeRiotCredential()) }
-            val appGraph = remember(runtimeKey) {
-                if (runtimeKey.isBlank()) {
-                    lanerApplication.clearRuntimeRiotCredential()
-                } else {
-                    lanerApplication.setRuntimeRiotCredential(runtimeKey)
-                }
-                lanerApplication.graph()
-            }
-            val effectiveCredentialConfigured = runtimeKey.isNotBlank() || BuildConfig.LOL_ESPORTS_API_KEY.isNotBlank()
-
             LanerTheme {
                 LanerRoot(
                     scheduleService = appGraph.globalScheduleService,
@@ -42,17 +30,6 @@ class MainActivity : ComponentActivity() {
                     liveMatchContextService = appGraph.liveMatchContextService,
                     postMatchService = appGraph.postMatchService,
                     postTimelineService = appGraph.postTimelineService,
-                    riotCredentialConfigured = effectiveCredentialConfigured,
-                    runtimeCredentialActive = runtimeKey.isNotBlank(),
-                    onSaveRuntimeCredential = { value ->
-                        val normalized = value.trim().take(512)
-                        lanerApplication.setRuntimeRiotCredential(normalized)
-                        runtimeKey = normalized
-                    },
-                    onClearRuntimeCredential = {
-                        lanerApplication.clearRuntimeRiotCredential()
-                        runtimeKey = ""
-                    },
                     overlayPermissionGranted = overlayPermissionGranted,
                     riftScreenRunning = riftScreenRunning,
                     onRequestOverlayPermission = {

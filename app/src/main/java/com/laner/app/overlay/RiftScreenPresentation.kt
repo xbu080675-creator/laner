@@ -22,13 +22,13 @@ data class RiftScreenPresentation(
 /** Maps Application truth into display-only text. No Provider payload or business arbitration here. */
 object RiftScreenPresentationMapper {
     fun waiting(message: String): RiftScreenPresentation = RiftScreenPresentation(
-        title = "RIFTSCREEN · 等待比赛",
+        title = "等待数据",
         timer = "--:--",
         leftTeam = "—",
         rightTeam = "—",
         center = "VS",
-        metrics = "K —:— · T —:— · D —:—",
-        details = "GOLD —:— · BARON —:—",
+        metrics = "K —   T —   D —",
+        details = "GOLD — : —   LEAD —",
         source = "NO VERIFIED SOURCE",
         status = message,
     )
@@ -50,12 +50,7 @@ object RiftScreenPresentationMapper {
         val leftGold = snapshot?.blue?.gold
         val rightGold = snapshot?.red?.gold
         val center = if (leftGold != null && rightGold != null) {
-            val diff = leftGold - rightGold
-            when {
-                diff > 0 -> "$leftCode +${formatNumber(diff)}"
-                diff < 0 -> "$rightCode +${formatNumber(abs(diff))}"
-                else -> "EVEN"
-            }
+            formatSignedDiff(leftGold - rightGold)
         } else {
             "VS"
         }
@@ -72,28 +67,34 @@ object RiftScreenPresentationMapper {
             leftTeam = leftCode,
             rightTeam = rightCode,
             center = center,
-            metrics = "K ${value(snapshot?.blue?.kills)}:${value(snapshot?.red?.kills)} · T ${value(snapshot?.blue?.towers)}:${value(snapshot?.red?.towers)} · D ${value(snapshot?.blue?.dragons)}:${value(snapshot?.red?.dragons)}",
-            details = "GOLD ${valueNumber(leftGold)}:${valueNumber(rightGold)} · BARON ${value(snapshot?.blue?.barons)}:${value(snapshot?.red?.barons)}",
+            metrics = "K ${value(snapshot?.blue?.kills)}:${value(snapshot?.red?.kills)}   T ${value(snapshot?.blue?.towers)}:${value(snapshot?.red?.towers)}   D ${value(snapshot?.blue?.dragons)}:${value(snapshot?.red?.dragons)}",
+            details = "GOLD ${valueNumber(leftGold)} : ${valueNumber(rightGold)}   LEAD $center",
             source = provider,
             status = "${stateResolution.status.name} · ${snapshotResolution.status.name} · $timelineText",
         )
     }
 
     private fun lifecycleTitle(lifecycle: MatchLifecycleState, gameNumber: Int?): String = when (lifecycle) {
-        MatchLifecycleState.UNKNOWN -> "RIFTSCREEN · 状态未知"
-        MatchLifecycleState.PRE_EVENT -> "RIFTSCREEN · 赛事未开始"
-        MatchLifecycleState.EVENT_LIVE_PRE_GAME -> "RIFTSCREEN · 赛事已开始"
-        MatchLifecycleState.DRAFT -> "RIFTSCREEN · BP / DRAFT"
-        MatchLifecycleState.LOADING -> "RIFTSCREEN · 载入游戏"
+        MatchLifecycleState.UNKNOWN -> "状态未知"
+        MatchLifecycleState.PRE_EVENT -> "等待比赛"
+        MatchLifecycleState.EVENT_LIVE_PRE_GAME -> "等待本局"
+        MatchLifecycleState.DRAFT -> "BP / DRAFT"
+        MatchLifecycleState.LOADING -> "载入游戏"
         MatchLifecycleState.IN_GAME -> "LIVE${gameNumber?.let { " · G$it" } ?: ""}"
-        MatchLifecycleState.POST_GAME -> "RIFTSCREEN · 本局结束"
-        MatchLifecycleState.BETWEEN_GAMES -> "RIFTSCREEN · 场间"
-        MatchLifecycleState.SERIES_COMPLETE -> "RIFTSCREEN · 系列赛结束"
+        MatchLifecycleState.POST_GAME -> "本局结束"
+        MatchLifecycleState.BETWEEN_GAMES -> "等待本局"
+        MatchLifecycleState.SERIES_COMPLETE -> "系列赛结束"
     }
 
     private fun value(value: Int?): String = value?.toString() ?: "—"
 
     private fun valueNumber(value: Int?): String = value?.let(::formatNumber) ?: "—"
+
+    private fun formatSignedDiff(value: Int): String {
+        if (value == 0) return "EVEN"
+        val prefix = if (value > 0) "+" else "-"
+        return prefix + formatNumber(abs(value))
+    }
 
     private fun formatNumber(value: Int): String = if (value >= 1000) "%.1fK".format(value / 1000.0) else value.toString()
 
