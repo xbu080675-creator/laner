@@ -72,9 +72,8 @@ class RiftScreenOverlayView(
     }
 
     private val metrics = label("K —:—   T —:—   D —:—", 12f, 0xFFF3F5F8.toInt(), false)
-    private val goldLine = label("GOLD —:—   LEAD —", 11f, 0xFFF3F5F8.toInt(), false)
+    private val goldLine = label("GOLD — : —   LEAD —", 11f, 0xFFF3F5F8.toInt(), false)
     private val event = label("STATUS · 等待赛事事实", 10f, 0xFFA0A8B5.toInt(), false)
-    private val source = label("SOURCE · NO VERIFIED SOURCE", 9f, 0xFF7F8998.toInt(), false)
     private val hint = label("轻点切换尺寸 · 拖动可移动", 10f, 0xFF667386.toInt(), false)
     private val accent = View(context).apply { setBackgroundColor(0xFF43D6F1.toInt()) }
     private val teams = LinearLayout(context).apply {
@@ -116,8 +115,6 @@ class RiftScreenOverlayView(
         root.addView(goldLine)
         event.setPadding(0, dp(5), 0, 0)
         root.addView(event)
-        source.setPadding(0, dp(3), 0, 0)
-        root.addView(source)
         hint.setPadding(0, dp(7), 0, 0)
         root.addView(hint)
 
@@ -138,7 +135,6 @@ class RiftScreenOverlayView(
         metrics.text = presentation.metrics.replace(" · ", "   ")
         goldLine.text = presentation.details.replace(" · ", "   ")
         event.text = "STATUS · ${presentation.status}"
-        source.text = "SOURCE · ${presentation.source}"
 
         val live = presentation.timer != "--:--"
         val leadColor = if (live && presentation.center != "VS" && presentation.center != "EVEN") {
@@ -171,7 +167,6 @@ class RiftScreenOverlayView(
                 metrics.visibility = View.GONE
                 goldLine.visibility = View.GONE
                 event.visibility = View.GONE
-                source.visibility = View.GONE
                 hint.visibility = View.GONE
                 setWidth(228)
             }
@@ -183,7 +178,6 @@ class RiftScreenOverlayView(
                 metrics.visibility = View.VISIBLE
                 goldLine.visibility = View.GONE
                 event.visibility = View.GONE
-                source.visibility = View.GONE
                 hint.visibility = View.GONE
                 setWidth(308)
             }
@@ -195,7 +189,6 @@ class RiftScreenOverlayView(
                 metrics.visibility = View.VISIBLE
                 goldLine.visibility = View.VISIBLE
                 event.visibility = View.VISIBLE
-                source.visibility = View.VISIBLE
                 hint.visibility = View.VISIBLE
                 setWidth(348)
             }
