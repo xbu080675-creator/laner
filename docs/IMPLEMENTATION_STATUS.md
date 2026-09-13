@@ -7,7 +7,7 @@
 - Functional migration: `IN PROGRESS`
 - Legacy baseline: `xbu080675-creator/Rlftlab@0c5dcaad47853bedbf5f4abcff2ead41b81ffa43`
 - LNR-020 Block 1: engineering-frozen after `INC-LNR-020-001 / CLOSED`; compliance facts are prose, not task status tokens
-- LNR-021 Block 2: remediation merged and independently re-reviewed; `INC-LNR-021-001` is `CLOSURE READY`. Block 2 remains unfrozen until this closeout documentation PR and its post-merge main Gate complete.
+- LNR-021 Block 2: engineering-frozen after `INC-LNR-021-001 / CLOSED`; LNR-021 product status remains `WAITING EXTERNAL TEST`
 - Baseline SHA policy: long-lived status docs record stable task/PR merge/Gate anchors, not a self-referential “current main SHA”.
 
 ## Task Status
@@ -35,7 +35,7 @@
 - `INC-LNR-020-001 = CLOSED`; Block 1 engineering scope is frozen.
 - `LIVE-024~029` continue `WAITING EXTERNAL TEST`; `LIVE-012` remains TODO.
 
-## Block 2 / LNR-021 Current Truth
+## Block 2 / LNR-021 Frozen Truth
 
 ### Original delivery anchors
 - baseline before Block 2: `main@87f90a89ad7a35fdb9717ef1003fa984bba4fdab`;
@@ -47,17 +47,24 @@
 - docs closeout PR #16 merge: `c73d551925ba273d4caf6259ef621100c105b5de`;
 - closeout main run `34712899722`: same Gates PASS.
 
-### Constitution incident and remediation anchors
+### Constitution incident / remediation / closeout anchors
 - independent audit: `INC-LNR-021-001` confirmed 6 deviations;
-- remediation PR: #17;
-- remediation exact head: `a62df876bf21f6009ea4a7fc1c9227fd48e219b1`;
-- exact-head run `34732025919`: all five Gates PASS;
-- exact-head artifact `10309592107`, digest `sha256:5d99273cd141ecd3e374022e13daede52e20ee8c30e9865c949deda1618c1610`;
+- remediation PR #17 exact head: `a62df876bf21f6009ea4a7fc1c9227fd48e219b1`;
+- remediation exact-head run `34732025919`: all five Gates PASS;
+- remediation exact-head artifact `10309592107`, digest `sha256:5d99273cd141ecd3e374022e13daede52e20ee8c30e9865c949deda1618c1610`;
 - remediation merge: `2d7ff40034a8e834f20c02bef41f8c088e98f479`;
-- post-merge main run `34732179957`: all five Gates PASS;
-- main artifact `10309656271`, digest `sha256:bb185e9822c7e3e559906623e3bc272cbcfbe5bc879112b2988db6f63cb204cb`;
+- remediation post-merge main run `34732179957`: all five Gates PASS;
+- remediation main artifact `10309656271`, digest `sha256:bb185e9822c7e3e559906623e3bc272cbcfbe5bc879112b2988db6f63cb204cb`;
 - independent post-remediation read-only review: PASS for the six confirmed incident items and no new confirmed violation in remediation scope;
-- current incident certification: `CLOSURE READY`; formal `CLOSED / Block 2 engineering-frozen` waits only for the docs-only closeout PR and its post-merge main Gate.
+- closeout PR #18 exact head: `df58f5651fd241dc95137e0d40aa05e2e29850ee`;
+- closeout exact-head run `34732993654`: all five Gates PASS;
+- closeout exact-head artifact `10309788301`, digest `sha256:8adfed1f4683f71886a3684397b423645113279763417fc2569da98391da83b0`;
+- closeout merge: `38161578e04a523c9247c64c762f4dd983561a9d`;
+- closeout post-merge main run `34733073857`: `completed / success`, all five Gates PASS;
+- closeout main artifact `10309823348`, digest `sha256:ce9f7744a331587b869d46a13261019adeb2a4377615e67a676d73b4cff93926`;
+- final certification record: `docs/development/2026/2026-09-13_LNR-021_constitution-closeout-final.md`;
+- `INC-LNR-021-001 = CLOSED`;
+- Block 2 engineering scope is frozen. No freeze Tag is created because LNR-021 external/device Definition of Done is incomplete.
 
 ### Canonical event derivation
 ```text
@@ -109,9 +116,10 @@ Current rules:
 
 ### `INC-LNR-021-001`
 - independent Block 2 audit confirmed 6 deviations;
-- remediation code/tests/docs are merged and main Gate is green;
-- closure certification record: `docs/development/2026/2026-09-13_LNR-021_constitution-closeout.md`;
-- current status: `CLOSURE READY`; the incident becomes formally `CLOSED` only after the closeout docs PR and its post-merge main Gate complete.
+- remediation code/tests/docs merged and passed exact-head + post-merge main Gates;
+- docs-only closeout PR #18 merged and passed exact-head + post-merge main Gates;
+- immutable final evidence: `2026-09-13_LNR-021_constitution-closeout-final.md`;
+- status: `CLOSED`.
 
 ## Waiting External Test / Honest Gaps
 - `LIVE-014 / LIVE-015 / LIVE-030` automated implementation exists, but real Riot online triggering remains unproven;
@@ -123,9 +131,6 @@ Current rules:
 - Cito remains externally unverified.
 
 ## Next
-1. Finish the documentation-only `INC-LNR-021-001` closeout PR and exact-head Gate.
-2. Merge it and require post-merge main Gate PASS.
-3. Add the immutable final transport-evidence addendum; after that, `INC-LNR-021-001 = CLOSED` and Block 2 engineering scope is frozen.
-4. Only then start Block 3: Watch Hub + player.
+The governance gate for Block 3 is open. The next permitted engineering block is **Block 3 — Watch Hub + player**. It must start with its own fresh Constitution Preflight from then-current main; no Block 3 implementation is included in the LNR-021 closeout.
 
 External/device evidence continues independently and must never be represented as CI PASS.
