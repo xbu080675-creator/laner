@@ -1,0 +1,355 @@
+name: Apply Riot LiveStats Rework
+
+on:
+  push:
+    branches: [ feature/riot-livestats-window-rework ]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[riot-live-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/riot-livestats-window-rework
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Apply independent Riot LiveStats cursor rework
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          data_file = Path('app/src/main/java/com/riftlab/app/data/LolEsportsDataSources.kt')
+          text = data_file.read_text()
+
+          old = '''internal class LolEsportsLiveDataSource(
+              private val client: LolEsportsApiClient = LolEsportsApiClient()
+          ) : LiveMatchDataSource {
+
+              private val _status = MutableStateFlow('''
+          new = '''internal class LolEsportsLiveDataSource(
+              private val client: LolEsportsApiClient = LolEsportsApiClient()
+          ) : LiveMatchDataSource {
+
+              private val liveCursor = RiotLiveStatsCursor()
+
+              private val _status = MutableStateFlow('''
+          assert old in text, 'live source header anchor missing'
+          text = text.replace(old, new, 1)
+
+          old = '''                    previous = null
+                      lockedFromSchedule = false
+                  }
+                  if (registeredTarget != null && isExternalProviderTarget(registeredTarget)) {'''
+          new = '''                    previous = null
+                      lockedFromSchedule = false
+                      liveCursor.reset()
+                  }
+                  if (registeredTarget != null && isExternalProviderTarget(registeredTarget)) {'''
+          assert old in text, 'target-reset anchor missing'
+          text = text.replace(old, new, 1)
+
+          old = '''                if (currentGame == null || discovered.gameId != currentGameId) {
+                      currentGame = discovered
+                      currentGameId = discovered.gameId
+                      previous = null
+                  }'''
+          new = '''                if (currentGame == null || discovered.gameId != currentGameId) {
+                      currentGame = discovered
+                      currentGameId = discovered.gameId
+                      previous = null
+                      liveCursor.reset()
+                  }'''
+          assert old in text, 'game-switch anchor missing'
+          text = text.replace(old, new, 1)
+
+          old = '''            } catch (t: Throwable) {
+                  _status.value = LiveSourceStatus(
+                      phase = LiveSourcePhase.ERROR,
+                      message = "Riot LiveStats 暂时不可用：${t.message?.take(120) ?: t::class.java.simpleName}",
+                      eventId = currentEvent?.eventId.orEmpty(),
+                      gameId = currentGameId,
+                      lastUpdateEpochMs = System.currentTimeMillis()
+                  )
+                  delay(3_000)
+                  currentEvent = null
+                  knownGames = emptyList()
+                  currentGame = null
+                  currentGameId = ""
+                  previous = null
+                  lockedFromSchedule = false
+              }'''
+          new = '''            } catch (t: Throwable) {
+                  val windowMiss = t is RiotLiveWindowNotReadyException
+                  _status.value = LiveSourceStatus(
+                      phase = if (windowMiss) LiveSourcePhase.WAITING_FOR_MATCH else LiveSourcePhase.ERROR,
+                      message = if (windowMiss) {
+                          "Riot LiveStats · 当前 10 秒窗口尚无有效帧，保持 gameId 并自适应回退"
+                      } else {
+                          "Riot LiveStats 暂时不可用：${t.message?.take(120) ?: t::class.java.simpleName}"
+                      },
+                      eventId = currentEvent?.eventId.orEmpty(),
+                      gameId = currentGameId,
+                      lastUpdateEpochMs = System.currentTimeMillis()
+                  )
+                  delay(3_000)
+                  if (!windowMiss) {
+                      currentEvent = null
+                      knownGames = emptyList()
+                      currentGame = null
+                      currentGameId = ""
+                      previous = null
+                      lockedFromSchedule = false
+                      liveCursor.reset()
+                  }
+              }'''
+          assert old in text, 'error-reset anchor missing'
+          text = text.replace(old, new, 1)
+
+          old = '''    private suspend fun hasAnyLiveFrames(event: LiveEventRef, game: LiveGameRef): Boolean {
+              val now = Instant.now()
+              val lagsSeconds = longArrayOf(15, 30, 60, 120, 300, 600)
+              for (lag in lagsSeconds) {
+                  val cursorEvent = event.copy(startTimeIso = now.minusSeconds(lag).toString())
+                  val snapshot = runCatching { client.fetchLiveWindow(cursorEvent, game, null) }.getOrNull()
+                  if (snapshot != null && isMeaningful(snapshot)) return true
+              }
+              val fallback = runCatching { client.fetchLiveWindow(event.copy(startTimeIso = ""), game, null) }.getOrNull()
+              return fallback != null && isMeaningful(fallback)
+          }
+
+          private suspend fun fetchLatestSnapshot(
+              event: LiveEventRef,
+              game: LiveGameRef,
+              previous: LiveSnapshot?
+          ): LiveSnapshot {
+              var lastError: Throwable? = null
+              val now = Instant.now()
+              val lagsSeconds = longArrayOf(15, 30, 60, 120, 300, 600)
+
+              for (lag in lagsSeconds) {
+                  val cursorEvent = event.copy(startTimeIso = now.minusSeconds(lag).toString())
+                  try {
+                      val snapshot = client.fetchLiveWindow(cursorEvent, game, previous)
+                      if (isMeaningful(snapshot)) return snapshot
+                  } catch (t: Throwable) {
+                      lastError = t
+                  }
+              }
+
+              try {
+                  val fallback = client.fetchLiveWindow(event.copy(startTimeIso = ""), game, previous)
+                  if (isMeaningful(fallback)) return fallback
+              } catch (t: Throwable) {
+                  lastError = t
+              }
+
+              throw IOException("LiveStats game ${game.gameNumber} exists but no current meaningful frame yet", lastError)
+          }'''
+          new = '''    private suspend fun hasAnyLiveFrames(event: LiveEventRef, game: LiveGameRef): Boolean {
+              for (startingTime in liveCursor.candidates(Instant.now())) {
+                  val cursorEvent = event.copy(startTimeIso = startingTime)
+                  val snapshot = runCatching { client.fetchLiveWindow(cursorEvent, game, null) }.getOrNull()
+                  if (snapshot != null && isMeaningful(snapshot)) return true
+              }
+              val fallback = runCatching { client.fetchLiveWindow(event.copy(startTimeIso = ""), game, null) }.getOrNull()
+              return fallback != null && isMeaningful(fallback)
+          }
+
+          private suspend fun fetchLatestSnapshot(
+              event: LiveEventRef,
+              game: LiveGameRef,
+              previous: LiveSnapshot?
+          ): LiveSnapshot {
+              var lastError: Throwable? = null
+
+              for (startingTime in liveCursor.candidates(Instant.now())) {
+                  val cursorEvent = event.copy(startTimeIso = startingTime)
+                  try {
+                      val snapshot = client.fetchLiveWindow(cursorEvent, game, previous)
+                      if (isMeaningful(snapshot)) {
+                          liveCursor.onSuccess()
+                          return snapshot
+                      }
+                  } catch (t: Throwable) {
+                      lastError = t
+                  }
+              }
+
+              try {
+                  val fallback = client.fetchLiveWindow(event.copy(startTimeIso = ""), game, previous)
+                  if (isMeaningful(fallback)) {
+                      liveCursor.onSuccess()
+                      return fallback
+                  }
+              } catch (t: Throwable) {
+                  lastError = t
+              }
+
+              liveCursor.onMiss()
+              throw RiotLiveWindowNotReadyException(
+                  "LiveStats game ${game.gameNumber} exists but no current meaningful frame yet",
+                  lastError
+              )
+          }'''
+          assert old in text, 'cursor ladder anchor missing'
+          text = text.replace(old, new, 1)
+          data_file.write_text(text)
+
+          Path('app/src/main/java/com/riftlab/app/data/RiotLiveStatsCursor.kt').write_text('''package com.riftlab.app.data
+
+import java.io.IOException
+import java.time.Instant
+
+/**
+ * Riot LiveStats publishes frames on a 10-second time grid.  Keep the provider cursor on that
+ * grid and adapt the look-back distance instead of invalidating the current event/game binding
+ * when one window is temporarily empty.
+ *
+ * This is an independent implementation based on the observable Riot LiveStats protocol.  No
+ * GPL-licensed application code is copied into Laner.
+ */
+internal class RiotLiveStatsCursor {
+    private var preferredLagSeconds = DEFAULT_LAG_SECONDS
+    private var consecutiveMisses = 0
+    private var successesSinceAdjustment = 0
+
+    fun reset() {
+        preferredLagSeconds = DEFAULT_LAG_SECONDS
+        consecutiveMisses = 0
+        successesSinceAdjustment = 0
+    }
+
+    fun candidates(now: Instant): List<String> {
+        val lags = linkedSetOf(
+            preferredLagSeconds,
+            30L,
+            60L,
+            90L,
+            120L,
+            180L,
+            300L,
+            600L
+        )
+        return lags
+            .filter { it >= MIN_LAG_SECONDS }
+            .map { lag -> alignToTenSeconds(now.minusSeconds(lag)).toString() }
+    }
+
+    fun onSuccess() {
+        consecutiveMisses = 0
+        successesSinceAdjustment += 1
+        if (successesSinceAdjustment >= SUCCESS_WINDOW_BEFORE_TIGHTENING) {
+            preferredLagSeconds = (preferredLagSeconds - STEP_SECONDS).coerceAtLeast(MIN_LAG_SECONDS)
+            successesSinceAdjustment = 0
+        }
+    }
+
+    fun onMiss() {
+        successesSinceAdjustment = 0
+        consecutiveMisses += 1
+        if (consecutiveMisses >= MISSES_BEFORE_BACKOFF) {
+            preferredLagSeconds = (preferredLagSeconds + STEP_SECONDS).coerceAtMost(MAX_LAG_SECONDS)
+            consecutiveMisses = 0
+        }
+    }
+
+    internal fun preferredLagForDiagnostics(): Long = preferredLagSeconds
+
+    companion object {
+        private const val DEFAULT_LAG_SECONDS = 60L
+        private const val MIN_LAG_SECONDS = 20L
+        private const val MAX_LAG_SECONDS = 180L
+        private const val STEP_SECONDS = 10L
+        private const val SUCCESS_WINDOW_BEFORE_TIGHTENING = 10
+        private const val MISSES_BEFORE_BACKOFF = 2
+
+        internal fun alignToTenSeconds(value: Instant): Instant {
+            val epoch = value.epochSecond
+            val aligned = epoch - Math.floorMod(epoch, 10L)
+            return Instant.ofEpochSecond(aligned)
+        }
+    }
+}
+
+internal class RiotLiveWindowNotReadyException(
+    message: String,
+    cause: Throwable? = null
+) : IOException(message, cause)
+''')
+
+          docs = Path('docs/development/2026/2026-09-13-riot-livestats-window-rework.md')
+          docs.parent.mkdir(parents=True, exist_ok=True)
+          docs.write_text('''# Riot LiveStats window cursor rework — 2026-09-13
+
+## Scope
+
+Improve the existing global Riot LiveStats adapter without adding a second Riot provider and without changing UI/Core contracts.
+
+## Evidence
+
+A public live-lol-esports implementation demonstrates that Riot `feed.lolesports.com/livestats/v1/window/{gameId}` is consumed with a `startingTime` cursor aligned to a 10-second grid and a look-back delay. Laner already used the same official endpoint, but its discovery/read cursors were generated from arbitrary wall-clock seconds (15/30/60/...) and a temporary empty window reset the entire event/game binding.
+
+The external reference is GPL-3.0. Laner does **not** copy its source code. This change is an independent implementation of the observed protocol behavior.
+
+## Changes
+
+- Added `RiotLiveStatsCursor` in the App/Adapter layer.
+- Align every `startingTime` candidate to Riot's 10-second frame grid.
+- Start with a 60-second look-back, tighten after stable successful reads, and back off after repeated misses.
+- Reuse the same aligned cursor ladder for game discovery and normal reads.
+- Treat an empty/currently unavailable window as `WAITING_FOR_MATCH`; keep the resolved EventDetails/gameId binding instead of resetting it.
+- Keep the existing no-cursor request as the last compatibility fallback.
+- Core remains unchanged; `MatchIdentityPolicy` and the global provider router remain the acceptance gates.
+
+## Boundaries
+
+Network access remains in App/Adapter code. No Android/platform API was introduced into Core. No UI behavior or provider priority was changed.
+
+## Validation
+
+- `python3 tools/check_core_boundary.py`
+- `python3 tools/check_repository_links.py`
+- `gradle :app:compileDebugKotlin`
+- `gradle :app:assembleDebug`
+
+The workflow that applied this patch runs these gates before committing the implementation.
+''')
+
+          # Remove this one-shot workflow from the resulting implementation commit.
+          Path('.github/workflows/_apply-riot-livestats-rework.yml').unlink()
+          PY
+
+      - name: Verify architecture gates
+        run: |
+          python3 tools/check_core_boundary.py
+          python3 tools/check_repository_links.py
+
+      - name: Compile and build
+        run: |
+          gradle :app:compileDebugKotlin
+          gradle :app:assembleDebug
+
+      - name: Commit audited implementation
+        shell: bash
+        run: |
+          git config user.name "PocketSpace"
+          git config user.email "xbu080675@gmail.com"
+          git add -A
+          git commit -m "fix(live): align and adapt Riot LiveStats windows [riot-live-applied]"
+          git push origin HEAD:feature/riot-livestats-window-rework
