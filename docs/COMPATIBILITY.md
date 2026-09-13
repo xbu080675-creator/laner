@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-Laner 尚未进入运行时代码阶段，因此当前**没有任何正式运行环境被声明为 SUPPORTED**。
+Laner 已进入 Android 运行时代码与 APK 构建阶段。当前 CI 只能证明自动构建与自动测试；具体 Android 版本、ROM、设备和真实赛事数据源仍需对应层级的外部验证，不能整体宣称为 `SUPPORTED`。
 
 禁止把旧工程曾经运行过的平台、Android 版本、数据源或后端直接继承为 Laner 的正式支持结论。
 
@@ -33,6 +33,15 @@ Laner 尚未进入运行时代码阶段，因此当前**没有任何正式运行
 - Fallback；
 - 最后验证日期。
 
+## Laner 当前持久化兼容
+
+- LIVE Match State 当前 schema 为 v1；
+- LIVE Timeline 当前写入 schema 为 v2；
+- Timeline v1 读取与 v1 → v2 write-forward 有 Adapter 自动回归；
+- 首次覆盖 v1 前必须保留并校验 `.schema-v1.bak` 恢复副本；恢复点失败时不得覆盖；
+- 旧 v1-only 构建不能假定读取 v2，只有存在已校验的 v1 恢复副本时才可恢复升级前状态；
+- 新建的纯 v2 Timeline 不声明无损 downgrade。
+
 ## 旧工程数据
 
-旧数据是否迁移、如何迁移、是否需要兼容旧 Schema，必须在旧工程审计和新数据模型冻结后决定。当前状态：`NOT VERIFIED`。
+旧 RiftLab 历史数据不得默认直接导入 Laner。兼容导入由 LNR-018 / Migration Audit 单独验收，当前状态：`NOT VERIFIED`。
