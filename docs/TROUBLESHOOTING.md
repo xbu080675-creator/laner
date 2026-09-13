@@ -104,18 +104,20 @@ Roster Pool 不得替代首发；Starting evidence 必须校验日期、对阵�
 
 **影响**：事实完整性。该事件会进入持久化、HUD 和后续分析，因此不是 UI 占位问题。
 
-**根因**：实现把“没有可计算 delta”错误等同于“delta=0”，为了支持单侧高密度击杀窗口而越过了 `unknown != zero` 边界。
+**根因**：实现把“没有可计算 delta”错误等同于“delta=0”，为了支持单侧高密度击杀窗口而越过了 `unkown != zero` 边界。
 
-**修复**：`TeamFightWindowEvent` 只有在 blue/red 两侧 kill delta 都非 null、窗口 <=20s 且累计 >=3 时才生成；任一侧 unknown 则不生成 TeamFightWindow。已知一侧的 aggregate KillEvent 仍可单独保留。
+***修复**：`TeamFightWindowEvent` 只有在 blue/red 两侧 kill delta 都非 null、窗口 <=20s 且累计 >=3 时才生成；任一侧 unknown 则不生成 TeamFightWindow。已知一侧的 aggregate KillEvent 仍可单独保留。
 
 **永久回归**：`LiveEventDerivationSafetyRegressionTest.oneSidedUnknownKillDeltaDoesNotBecomeZeroInTeamFightWindow`；同文件同时覆盖 team counter regression、player counter regression 与 player row 缺失退化。
+
+**整改证据**：PR #17 exact-head run `34732025919` PASS；merge `2d7ff40034a8e834f20c02bef41f8c088e98f479` 后 main run `34732179957` PASS。
 
 **排障路径**：`Tactical 团战窗口出现不可信 +0 → 查 canonical snapshot 两侧 kill counter 是否都可比较 → LiveEventDerivationService → LNR-APP-LIVE-004 回归`。
 
 ### LNR-021 Timeline v1→v2 migration recovery
-`JsonLiveTimelineRepository` 读取 v1、写 v2。首次覆盖已有 v1 文件前，必须生成并验证同目录 `.schema-v1.bak`，内容与升级前 v1 完全一致；若已有 recovery copy 与当前 v1 不一致，迁移必须失败且不得覆盖主文件。
+`JsonLiveTimelineRepository` 读取 v1、写 v2。首次覆盖已有 v1 文件前，必须完整 decode 原 v1、校验 canonical GameId、原子生成同目录 `.schema-v1.bak`、比对内容，再完整 decode recovery 并复核 GameId；只有全部成功才允许覆盖为 v2。已有 recovery 与当前 v1 不一致、wrong-identity v1 或 malformed v1 都必须阻断覆盖。
 
-永久回归：`JsonLiveTimelineMigrationRecoveryTest`。该恢复点只保证恢复“升级前 v1”；新建的纯 v2 Timeline 不声明无损 downgrade。
+永久回归：`JsonLiveTimelineMigrationRecoveryTest` 覆盖 successful recovery、backup 不变、mismatched recovery、wrong identity、malformed v1。该恢复点只保证恢复“升级前 v1”；新建的纯 v2 Timeline 不声明无损 downgrade。
 
 ### LNR-021 Tactical stale-card 防护
 Tactical HUD 同时使用：
@@ -163,4 +165,4 @@ LNR-020 合规整改新增。所有 RiftScreen / Draft HUD / Dock / Tactical HUD
 首次发现：LNR-015 / run `34695777894`。Application 已允许 POST historical facts，但 Domain Timeline 仍只允许 LIVE。修复后 Domain 允许 LIVE/POST factual sources，继续拒绝 PRE/AI；run `34695924994` PASS。
 
 ## 当前阶段
-M1 Feature Migration。Block 1 / LNR-020 已冻结。Block 2 / LNR-021 的功能交付历史保持不变，但 `INC-LNR-021-001` 正在整改；事故关闭前 Block 2 不冻结，Block 3 不启动。真实 Riot online 与 Android overlay 行为继续 `WAITING EXTERNAL TEST`。
+M1 Feature Migration。Block 1 / LNR-020 已工程冻结。Block 2 / LNR-021 的六项 `INC-LNR-021-001` 整改已通过 PR #17 合入主线，remediation exact-head run `34732025919` 与 post-merge main run `34732179957` 全 Gate PASS；独立复查结论为 `CLOSURE READY`。在 docs-only closeout PR 与其 post-merge main Gate 完成前，Block 2 仍不冻结、Block 3 仍不启动。真实 Riot online 与 Android overlay 行为继续 `WAITING EXTERNAL TEST`。
