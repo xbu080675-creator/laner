@@ -1,0 +1,38 @@
+name: Relink Laner repository endpoints
+
+on:
+  push:
+    branches:
+      - refactor/riftlab-architecture
+    paths:
+      - 'tools/relink_laner_repository.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  relink:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor/riftlab-architecture
+          fetch-depth: 0
+      - name: Apply exact repository relink
+        run: python3 tools/relink_laner_repository.py
+      - name: Verify no active legacy links remain
+        run: python3 tools/check_repository_links.py
+      - name: Commit relinked runtime endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "laner-architecture-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app scripts tools
+          if git diff --cached --quiet; then
+            echo "No relink changes"
+            exit 0
+          fi
+          git commit -m "LNR-ARC-006: relink runtime endpoints to Laner"
+          git push origin HEAD:refactor/riftlab-architecture
