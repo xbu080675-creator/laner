@@ -103,16 +103,21 @@ Block 2 已完成工程交付、独立宪法复查、六项整改与 docs-only c
 
 历史 Failure A 继续保留：run `34709821178` 的 Core 已 PASS，但 Android production compile 因 `LiveMatchScreen.eventLabel()` 未穷举新增 sealed event 失败；fix `403bba4e874ad37978179618e84dceaafb9f06f8`，Troubleshooting `LNR-UI-LIVE-004`。
 
-## 当前推进顺序
-1. **Block 3：Watch Hub + 播放器** — 已解除治理门禁，但尚未开始；启动时必须从届时最新 main 做 fresh Constitution Preflight。
-2. Block 3 完成后按固定节奏独立复查工程宪法；有偏离则先记录、整改、重新认证，再进入 Block 4。
-3. 第 4 块：赛前/赛后剩余功能。
-4. 第 5 块：OTA + 设置 + 主题/缓存/诊断。
-5. 第 6 块：Local AI / OCR。
-6. 第 7 块：全量回归。
-7. 第 8 块：Migration Audit / release closure。
+### LNR-022 — Global Watch Hub / Android Viewing Handoff
+状态：`WAITING EXTERNAL TEST`
 
-LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
+Block 3 从 `main@2b9cf6ba39d3306ec89557451207aa30d29a7cc9` 完成 fresh Constitution Preflight。实现一个平台中立 `WatchPort`、单一全球 Watch Catalog，以及 Android `AndroidWatchPort` Adapter；Bilibili、虎牙、LoL Esports、YouTube、Twitch、X 共用同一条观赛流程。`MAINLAND/GLOBAL` 仅为展示元数据，不进入赛事业务路由。观赛入口可触发 RiftScreen，悬浮窗权限往返保留 pending destination；直播平台跳转永远不改变赛事 Provider 选择与 LIVE authority。
+
+自动化覆盖 stable destination contract 与六平台 catalog。Android 真机外部 App/浏览器 handoff、权限设置返回、具体客户端 deep-link 行为必须外部验证，因此状态保持 `WAITING EXTERNAL TEST`。
+
+## 当前推进顺序
+1. **Block 4：赛前/赛后剩余功能** — 必须在 LNR-022 implementation Gate + 独立 Constitution Review 通过后，从届时最新 main fresh Preflight 开始。
+2. 第 5 块：OTA + 设置 + 主题/缓存/诊断。
+3. 第 6 块：Local AI / OCR。
+4. 第 7 块：全量回归。
+5. 第 8 块：Migration Audit / release closure。
+
+LNR-020 Android 真机补证、LNR-019/LNR-021 Riot online 补证、LNR-022 Android Watch handoff 补证继续独立回填，不阻塞下一工程切片，也不得被 CI 冒充 PASS。
 
 用户已明确后续每个大版本均采用同样节奏：**完成版本 → 复查工程宪法 → 记录偏离 → 先整改 → 再进入下一版本**。历史过错只作为证据和回归输入，不得沿用为新实现惯性；整改本身不得制造新的过错。
 
