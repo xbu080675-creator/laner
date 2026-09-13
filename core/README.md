@@ -8,13 +8,13 @@
 
 - 标准化赛事、队伍、选手、赛程和实时快照数据。
 - Adapter 通过 Port 返回的领域对象。
-- 纯 Kotlin/JDK 可表达的时间与标识信息。
+- 纯 Kotlin/JDK 可表达的时间、标识、协议参数与安全校验信息。
 
 ## 输出
 
 - 稳定领域模型。
 - `ScheduleDataSource`、`StandingsDataSource`、`TeamDataSource`、`LiveMatchDataSource`、`AiInsightEngine` 等 Port 契约。
-- 不含平台副作用的领域判断结果与覆盖率报告。
+- 不含平台副作用的领域判断、协议校验、安全决策与覆盖率报告。
 
 ## 依赖
 
@@ -37,6 +37,8 @@
 - `DataSources.kt` 中的 Port。
 - `ComprehensiveData*` 数据图与覆盖率契约。
 - `LocalLiveInsightEngine` 的确定性本地解释实现。
+- `MatchIdentityPolicy` / `LiveMatchTargetRegistry` / `LiveFrameIdentityGate` 的比赛身份规则。
+- `OpenClawSecurityPolicy` / `RiftClawContract` / `RiftClawInjectionGuard` 的 localhost 协议与纯安全校验规则。
 
 ## 日志
 

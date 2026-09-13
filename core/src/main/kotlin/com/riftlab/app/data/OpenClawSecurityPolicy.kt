@@ -15,7 +15,7 @@ import java.net.URI
  *
  * This file intentionally does not provide a generic "execute" escape hatch.
  */
-internal object OpenClawSecurityPolicy {
+object OpenClawSecurityPolicy {
 
     enum class Capability {
         GATEWAY_HEALTH,
