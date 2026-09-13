@@ -2,7 +2,7 @@
 
 - 日期：2026-09-13
 - 执行者：OpenAI / ChatGPT
-- 状态：BUILD TESTING
+- 状态：PASS
 
 ## 目标
 
@@ -11,6 +11,7 @@
 ## Baseline
 
 - 前置提交：`f1e831d79b5329fc9c64d34071e94dd17eb8dc0b`
+- 迁移提交：`abc409b351c46613e5d667a6b5ad750845ef69cd`
 - `LplChampionshipPoints.kt` 原位置：`app/src/main/java/com/riftlab/app/data/`
 - `Worlds2026QualifiedTeams.kt` 原位置：`app/src/main/java/com/riftlab/app/data/`
 
@@ -44,9 +45,9 @@
 
 ## 验收
 
-- `tools/check_core_boundary.py` 必须 PASS。
-- `tools/check_repository_links.py` 必须 PASS。
-- `:core:test` 必须 PASS。
-- `:app:assembleDebug` 必须 PASS。
-
-未取得正式 Compile Diagnostics 结果前，本记录保持 `BUILD TESTING`。
+正式 `Compile Diagnostics` run `34742857973` 已完成并 PASS：
+- Core boundary PASS。
+- Laner repository links PASS。
+- `:core:test` PASS。
+- `:app:assembleDebug` PASS。
+- 最终 `Fail when compile failed` PASS，确认 Gradle 实际退出码为 0。
