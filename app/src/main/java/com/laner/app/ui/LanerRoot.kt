@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.laner.app.BuildConfig
+import com.laner.app.stream.StreamPlatform
 import com.laner.core.application.CompetitionStructureService
 import com.laner.core.application.GlobalScheduleService
 import com.laner.core.application.LiveMatchContextService
@@ -55,49 +57,61 @@ fun LanerRoot(
     onRequestOverlayPermission: () -> Unit,
     onStartRiftScreen: () -> Unit,
     onStopRiftScreen: () -> Unit,
+    onWatchPlatform: (StreamPlatform) -> Unit,
 ) {
     var selectedPhase by remember { mutableStateOf(MatchPhase.LIVE_MATCH) }
 
     Scaffold(containerColor = RiftBg) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            LanerHeader()
-            PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
-            AnimatedContent(
-                targetState = selectedPhase,
-                modifier = Modifier.weight(1f),
-                transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
-                label = "laner-phase",
-            ) { phase ->
-                when (phase) {
-                    MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
-                        CompetitionStructurePanel(
-                            service = competitionStructureService,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            Column(Modifier.fillMaxSize()) {
+                LanerHeader()
+                PhaseTabs(selected = selectedPhase, onSelect = { selectedPhase = it })
+                AnimatedContent(
+                    targetState = selectedPhase,
+                    modifier = Modifier.weight(1f),
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                    label = "laner-phase",
+                ) { phase ->
+                    when (phase) {
+                        MatchPhase.PRE_MATCH -> Column(Modifier.fillMaxSize()) {
+                            CompetitionStructurePanel(
+                                service = competitionStructureService,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            PreMatchScreen(
+                                scheduleService = scheduleService,
+                                preMatchContextService = preMatchContextService,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        MatchPhase.LIVE_MATCH -> LiveMatchScreen(
+                            liveMatchContextService = liveMatchContextService,
+                            overlayPermissionGranted = overlayPermissionGranted,
+                            riftScreenRunning = riftScreenRunning,
+                            onRequestOverlayPermission = onRequestOverlayPermission,
+                            onStartRiftScreen = onStartRiftScreen,
+                            onStopRiftScreen = onStopRiftScreen,
+                            modifier = Modifier.fillMaxSize(),
                         )
-                        Spacer(Modifier.height(10.dp))
-                        PreMatchScreen(
+                        MatchPhase.POST_MATCH -> PostMatchScreen(
                             scheduleService = scheduleService,
-                            preMatchContextService = preMatchContextService,
-                            modifier = Modifier.weight(1f),
+                            postMatchService = postMatchService,
+                            postTimelineService = postTimelineService,
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
-                    MatchPhase.LIVE_MATCH -> LiveMatchScreen(
-                        liveMatchContextService = liveMatchContextService,
-                        overlayPermissionGranted = overlayPermissionGranted,
-                        riftScreenRunning = riftScreenRunning,
-                        onRequestOverlayPermission = onRequestOverlayPermission,
-                        onStartRiftScreen = onStartRiftScreen,
-                        onStopRiftScreen = onStopRiftScreen,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    MatchPhase.POST_MATCH -> PostMatchScreen(
-                        scheduleService = scheduleService,
-                        postMatchService = postMatchService,
-                        postTimelineService = postTimelineService,
-                        modifier = Modifier.fillMaxSize(),
-                    )
                 }
             }
+
+            BroadcastHubLauncher(
+                liveMatchContextService = liveMatchContextService,
+                onWatch = onWatchPlatform,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 18.dp, bottom = 18.dp)
+                    .zIndex(10f),
+            )
         }
     }
 }
