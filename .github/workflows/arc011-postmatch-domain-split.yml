@@ -1,0 +1,145 @@
+name: ARC011 Post Match Domain Split
+
+on:
+  push:
+    branches:
+      - tmp/arc011
+    paths:
+      - '.github/workflows/arc011-postmatch-domain-split.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split post-match domain models from runtime adapters
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          pkg = 'package com.riftlab.app.data'
+
+          # Completed series snapshot -> Core; StateFlow archive remains App.
+          completed = Path('app/src/main/java/com/riftlab/app/data/CompletedGameArchive.kt')
+          text = completed.read_text(encoding='utf-8')
+          model_start = text.index('data class CompletedSeriesSnapshot(')
+          runtime_marker = '/**\n * Post-match archive.'
+          runtime_start = text.index(runtime_marker)
+          prefix = text[:model_start].rstrip()
+          model = text[model_start:runtime_start].rstrip()
+          runtime = text[runtime_start:].rstrip()
+          completed_core = Path('core/src/main/kotlin/com/riftlab/app/data/CompletedSeriesSnapshot.kt')
+          if completed_core.exists(): raise SystemExit(f'{completed_core}: already exists')
+          completed_core.write_text(pkg + '\n\n' + model + '\n', encoding='utf-8')
+          completed.write_text(prefix + '\n\n' + runtime + '\n', encoding='utf-8')
+
+          # Match detail models -> Core; Coroutine/Mutex/Provider repository remains App.
+          detail = Path('app/src/main/java/com/riftlab/app/data/MatchDetailRepository.kt')
+          text = detail.read_text(encoding='utf-8')
+          model_marker = '/** Stable identity shared by schedule, post-match and MVP/vote/BP providers. */'
+          runtime_marker = '/**\n * Match detail has its own selection state.'
+          model_start = text.index(model_marker)
+          runtime_start = text.index(runtime_marker)
+          prefix = text[:model_start].rstrip()
+          models = text[model_start:runtime_start].rstrip()
+          runtime = text[runtime_start:].rstrip()
+          detail_core = Path('core/src/main/kotlin/com/riftlab/app/data/MatchDetailModels.kt')
+          if detail_core.exists(): raise SystemExit(f'{detail_core}: already exists')
+          detail_core.write_text(pkg + '\n\n' + models + '\n', encoding='utf-8')
+          detail.write_text(prefix + '\n\n' + runtime + '\n', encoding='utf-8')
+
+          # Historical event result model -> Core; network/JSON provider remains App.
+          history = Path('app/src/main/java/com/riftlab/app/data/TournamentEventHistoryProvider.kt')
+          text = history.read_text(encoding='utf-8')
+          model_start = text.index('internal data class TournamentEventHistorySnapshot(')
+          provider_start = text.index('internal class TournamentEventHistoryProvider')
+          prefix = text[:model_start].rstrip()
+          model = text[model_start:provider_start].rstrip().replace(
+              'internal data class TournamentEventHistorySnapshot(',
+              'data class TournamentEventHistorySnapshot(',
+              1
+          )
+          provider = text[provider_start:].rstrip()
+          history_core = Path('core/src/main/kotlin/com/riftlab/app/data/TournamentEventHistorySnapshot.kt')
+          if history_core.exists(): raise SystemExit(f'{history_core}: already exists')
+          history_core.write_text(pkg + '\n\n' + model + '\n', encoding='utf-8')
+          history.write_text(prefix + '\n\n' + provider + '\n', encoding='utf-8')
+
+          checks = {
+              completed_core: ['data class CompletedSeriesSnapshot'],
+              detail_core: ['data class MatchDetailKey', 'data class OfficialMvpRecord', 'data class VoteOptionRecord', 'data class OfficialVoteRecord', 'data class DraftPickRecord', 'data class MatchDetailState'],
+              history_core: ['data class TournamentEventHistorySnapshot'],
+          }
+          for path, required in checks.items():
+              body = path.read_text(encoding='utf-8')
+              for forbidden in ('android.', 'androidx.', 'kotlinx.coroutines', 'okhttp3.', 'org.json.', 'java.io.File'):
+                  if forbidden in body:
+                      raise SystemExit(f'{path}: forbidden dependency leaked into Core: {forbidden}')
+              for token in required:
+                  if body.count(token) != 1:
+                      raise SystemExit(f'{path}: expected exactly one {token}')
+
+          if completed.read_text(encoding='utf-8').count('object CompletedGameArchive') != 1:
+              raise SystemExit('CompletedGameArchive runtime missing')
+          if detail.read_text(encoding='utf-8').count('object MatchDetailRepository') != 1:
+              raise SystemExit('MatchDetailRepository runtime missing')
+          if history.read_text(encoding='utf-8').count('internal class TournamentEventHistoryProvider') != 1:
+              raise SystemExit('TournamentEventHistoryProvider runtime missing')
+
+          readme = Path('core/README.md')
+          rt = readme.read_text(encoding='utf-8')
+          anchor = '- `TournamentEdition*` 年度赛事档案模型，以及 `TournamentResearch*` 纯赛事研究模型/推导器与 schema。\n'
+          addition = '- `CompletedSeriesSnapshot`、`MatchDetail*`、`TournamentEventHistorySnapshot` 等赛后/历史赛事领域模型。\n'
+          if rt.count(anchor) != 1: raise SystemExit('core README ARC010 anchor missing')
+          if addition not in rt: rt = rt.replace(anchor, anchor + addition, 1)
+          readme.write_text(rt, encoding='utf-8')
+
+          record = Path('docs/development/2026/2026-09-13_LNR-ARC-011_postmatch-domain-split.md')
+          record.write_text(
+              '# LNR-ARC-011 / 赛后与比赛详情领域模型迁入 Core\n\n'
+              '- 日期：2026-09-13\n- 执行者：OpenAI / ChatGPT\n- 状态：PASS\n\n'
+              '## 目标\n\n'
+              '把赛后系列赛、比赛详情/MVP/投票/BP、历史赛事补全结果的纯领域模型与 StateFlow/Mutex/Provider/网络 JSON 实现分离；不改变任何比赛详情、赛后归档或历史数据行为。\n\n'
+              '## 迁移\n\n'
+              '- `CompletedSeriesSnapshot` 迁入 Core；`CompletedGameArchive` StateFlow 运行时留 App。\n'
+              '- `MatchDetailKey`、MVP/投票/BP 记录、`MatchDetailState` 迁入 Core；`MatchDetailRepository` 及 Provider/Mutex/协程留 App。\n'
+              '- `TournamentEventHistorySnapshot` 迁入 Core并仅解除顶层 `internal`；Riot Completed Events/LiveStats/JSON Provider 留 App。\n\n'
+              '## 行为影响\n\n无功能、UI、数据源、排序、过滤或历史补全逻辑变化。\n\n'
+              '## 验收\n\n- Core boundary PASS。\n- Laner repository links PASS。\n- `:core:test` PASS。\n- `:app:assembleDebug` PASS。\n',
+              encoding='utf-8'
+          )
+          PY
+          git diff --check
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK 36
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Enforce architecture gates
+        run: |
+          python3 tools/check_core_boundary.py
+          python3 tools/check_repository_links.py
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+      - name: Verify full build
+        run: gradle :core:test :app:assembleDebug --stacktrace --no-daemon
+      - name: Commit verified migration
+        shell: bash
+        run: |
+          git config user.name 'PocketSpace'
+          git config user.email 'xbu080675@gmail.com'
+          rm -f .github/workflows/arc011-postmatch-domain-split.yml
+          git add -A
+          git diff --cached --quiet && { echo 'No ARC011 changes to commit'; exit 1; }
+          git commit -m 'LNR-ARC-011: move post-match domain models into Core'
+          git push origin HEAD:tmp/arc011
