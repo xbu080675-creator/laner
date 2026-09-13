@@ -294,12 +294,13 @@ object TournamentEditionArchiveStore {
             )
 
         val targetEdition = chooseTargetEdition(target, standingsState.tournaments)
+        val selectedTournament = standingsState.selectedTournament
         val selectedId = when {
             manualSelectedTournamentId.isNotBlank() && ordered.any { it.tournamentId == manualSelectedTournamentId } ->
                 manualSelectedTournamentId
             targetEdition != null -> targetEdition.id
-            standingsState.selectedTournament != null && ordered.any { it.tournamentId == standingsState.selectedTournament.id } ->
-                standingsState.selectedTournament.id
+            selectedTournament != null && ordered.any { it.tournamentId == selectedTournament.id } ->
+                selectedTournament.id
             else -> ordered.lastOrNull()?.tournamentId.orEmpty()
         }
         val selectedRecord = ordered.firstOrNull { it.tournamentId == selectedId }

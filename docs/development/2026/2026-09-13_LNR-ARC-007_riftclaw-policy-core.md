@@ -2,7 +2,7 @@
 
 - 日期：2026-09-13
 - 执行者：OpenAI / ChatGPT
-- 状态：BUILD TESTING
+- 状态：PASS
 
 ## 目标
 
@@ -50,3 +50,13 @@
 - `:app:assembleDebug` 必须 PASS，确认 app 到 Core 的二进制接线真实成立。
 
 未取得 CI 结果前，本记录保持 `BUILD TESTING`。
+
+
+## Compile Diagnostics 修复记录
+
+首次正式 `Compile Diagnostics`（run `34742260873`）已通过 Core boundary 与 Laner repository links 门禁，但 Gradle 返回非 0。诊断日志只暴露两类迁移后跨模块编译问题：
+
+- `OfficialHandbookGovernance2026` 已迁入 Core，但顶层对象仍为 `internal`；改为模块外可见的 `object`，规则逻辑不变。
+- `TournamentEditionArchive` 对 Core 公共 API `StandingsCenterState.selectedTournament` 使用跨模块 smart cast；改为先读取到局部 `val selectedTournament` 再判空，选择逻辑不变。
+
+本一次性修复 workflow 会在提交前重新执行 Core boundary、repository links、`:core:test` 与 `:app:assembleDebug`；只有全部通过才允许提交修复。
