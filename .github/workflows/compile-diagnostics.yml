@@ -9,7 +9,9 @@ on:
       - 'core/**'
       - 'app/build.gradle.kts'
       - 'app/src/main/java/**/*.kt'
+      - 'scripts/**'
       - 'tools/check_core_boundary.py'
+      - 'tools/check_repository_links.py'
 
 jobs:
   compile:
@@ -25,6 +27,8 @@ jobs:
         run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - name: Enforce Core boundary
         run: python3 tools/check_core_boundary.py
+      - name: Enforce Laner repository links
+        run: python3 tools/check_repository_links.py
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.6.0'
