@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
                     preMatchContextService = appGraph.preMatchContextService,
                     competitionStructureService = appGraph.competitionStructureService,
                     liveMatchContextService = appGraph.liveMatchContextService,
+                    watchHubContextService = appGraph.watchHubContextService,
                     postMatchService = appGraph.postMatchService,
                     postTimelineService = appGraph.postTimelineService,
                     watchPort = watchPort,
