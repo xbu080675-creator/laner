@@ -43,7 +43,7 @@ import com.laner.core.domain.MatchLifecycleState
 import com.laner.core.domain.ScheduleState
 import com.laner.core.domain.ScheduledSeries
 
-internal data class WatchHubPresentation(
+data class WatchHubPresentation(
     val gameLive: Boolean,
     val eventActive: Boolean,
     val matchup: String,
