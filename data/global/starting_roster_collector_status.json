@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-23T10:01:50Z",
+  "updatedAt": "2026-09-23T14:53:07Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
-    "英雄联盟赛事: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/5756404150:empty;reader:m.weibo.cn/u/5756404150:empty]",
+    "英雄联盟赛事: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/5756404150:ReadTimeout;reader:m.weibo.cn/u/5756404150:empty]",
     "LCK: browser_stage=LCK: browser_posts=0 cached_media=0",
     "LCK: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:HTTPError,twitter.com:HTTPError]",
     "LEC: browser_stage=LEC: browser_posts=0 cached_media=0",
-    "LEC: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:HTTPError,twitter.com:HTTPError]",
+    "LEC: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:ReadTimeout,twitter.com:HTTPError]",
     "LCS: browser_stage=LCS: browser_posts=0 cached_media=0",
     "LCS: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:HTTPError,twitter.com:HTTPError]",
     "LCP: browser_stage=LCP: browser_posts=0 cached_media=0",
     "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:HTTPError,twitter.com:HTTPError]",
-    "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:empty]",
+    "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:ReadTimeout]",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
@@ -44,8 +44,8 @@
     "BLG电子竞技俱乐部: trace ocr adapter=LPL_DAILY_ROSTER lang=eng+chi_sim psm=11 size=1600x1600->1600x1600 words=7 text='fe pip ah CAC (durex 杜 斯'",
     "BLG电子竞技俱乐部: trace ocr adapter=LPL_DAILY_ROSTER lang=eng+chi_sim psm=11 size=1920x1080->1920x1080 words=19 text='Dees erL ee fk inal SL an + Ble aa yer NG + bgp = 4g 起 Ml pay'",
     "BLG电子竞技俱乐部: transport=browser:posts=1",
-    "JDG京东电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6174976862:empty;reader:m.weibo.cn/u/6174976862:empty]",
-    "NIP电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6420953344:empty;reader:m.weibo.cn/u/6420953344:empty]",
+    "JDG京东电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6174976862:empty;reader:m.weibo.cn/u/6174976862:HTTPError]",
+    "NIP电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6420953344:empty;reader:m.weibo.cn/u/6420953344:HTTPError]",
     "WE电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/1869429662:empty;reader:m.weibo.cn/u/1869429662:empty]"
   ]
 }
