@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-04T17:49:48Z",
+  "updatedAt": "2026-10-04T20:50:50Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -11,10 +11,10 @@
     "LEC: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:HTTPError,twitter.com:HTTPError]",
     "LCS: browser_stage=LCS: browser_posts=0 cached_media=0",
     "LCS: browser_stage=LCS: match_search_begin source=LEAGUE_SOCIAL league=LCS targets=2",
-    "LCS: browser_stage=LCS: match_search query='2026-10-04 LYON vs TLAW starting lineup' hits=0",
-    "LCS: browser_stage=LCS: match_search query='2026-10-04 LYON vs TLAW starting roster' hits=0",
     "LCS: browser_stage=LCS: match_search query='2026-10-04 TLAW vs LYON starting lineup' hits=0",
     "LCS: browser_stage=LCS: match_search query='2026-10-04 TLAW vs LYON starting roster' hits=0",
+    "LCS: browser_stage=LCS: match_search query='2026-10-04 LYON vs TLAW starting lineup' hits=0",
+    "LCS: browser_stage=LCS: match_search query='2026-10-04 LYON vs TLAW starting roster' hits=0",
     "LCS: browser_stage=LCS: match_search query='2026-10-05 MU vs Z5 starting lineup' hits=0",
     "LCS: browser_stage=LCS: match_search query='2026-10-05 MU vs Z5 starting roster' hits=0",
     "LCS: browser_stage=LCS: match_search query='2026-10-05 Z5 vs MU starting lineup' hits=0",
@@ -55,7 +55,7 @@
     "BLG电子竞技俱乐部: trace ocr adapter=LPL_DAILY_ROSTER lang=eng+chi_sim psm=11 size=1920x1080->1920x1080 words=19 text='Dees erL ee fk inal SL an + Ble aa yer NG + bgp = 4g 起 Ml pay'",
     "BLG电子竞技俱乐部: transport=browser:posts=1",
     "JDG京东电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6174976862:empty;reader:m.weibo.cn/u/6174976862:empty]",
-    "NIP电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6420953344:empty;reader:m.weibo.cn/u/6420953344:HTTPError]",
+    "NIP电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/6420953344:empty;reader:m.weibo.cn/u/6420953344:empty]",
     "WE电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/1869429662:empty;reader:m.weibo.cn/u/1869429662:empty]"
   ]
 }
