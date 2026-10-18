@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-18T05:15:15Z",
+  "updatedAt": "2026-10-18T09:40:02Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -28,7 +28,9 @@
     "LEC: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=1080x1440->1080x1440 words=41 text='i or Ags ce F ao =| ) as es y ¢ no fie ange ‘ { i 4 \\\\ Orange yrange, is Py | Orange \\\\ b 4 Jrange H 4 — a ven UR i N ZA LOLESPORTS.COM id'",
     "LEC: transport=x_syndication:posts=6",
     "LCS: browser_stage=LCS: browser_posts=0 cached_media=0",
-    "LCS: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/9 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
+    "LCS: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/7 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
+    "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=687x687->687x687 words=5 text='ao aa mtd 2 5'",
+    "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=687x687->687x687 words=5 text='ao aa mtd 2 5'",
     "LCS: transport=x_syndication:posts=6",
     "LCP: browser_stage=LCP: browser_posts=0 cached_media=0",
     "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:empty,twitter.com:empty]",
