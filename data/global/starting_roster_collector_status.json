@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-18T13:39:04Z",
+  "updatedAt": "2026-10-18T17:00:30Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -28,9 +28,7 @@
     "LEC: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=2048x1366->2048x1366 words=39 text='‘ | 7 eee ual 1, “ VW if i On, Orange XN d Oran ~ Ong. St a range doange | a = A —— AY — 4 > “aa = => — £ ae Be =! ='",
     "LEC: transport=x_syndication:posts=6",
     "LCS: browser_stage=LCS: browser_posts=0 cached_media=0",
-    "LCS: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/7 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
-    "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=687x687->687x687 words=5 text='ao aa mtd 2 5'",
-    "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=687x687->687x687 words=5 text='ao aa mtd 2 5'",
+    "LCS: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/9 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
     "LCS: transport=x_syndication:posts=6",
     "LCP: browser_stage=LCP: browser_posts=0 cached_media=0",
     "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:empty | x_reader_failed:x.com:empty,twitter.com:empty]",
