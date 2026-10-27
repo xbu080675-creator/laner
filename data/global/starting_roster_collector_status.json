@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-27T16:53:21Z",
+  "updatedAt": "2026-10-27T21:10:10Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -45,7 +45,7 @@
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=65 text='Bracket Update OCT 27 ADV 1ST /2ND <= i / GN YW ADVANCES: 3RD /4TH/5TH BOs 2-1 / / 9 IN VS Be 2 @® m vs る 2:2 ES 에 6TH/7TH/ 8TH EY 回 VS Tl = / / BOS ELIMINATED lg2 / / ⑯ Kk @ ® IWvs is & ELIMINATED = 바 vs @ G / / ELIMINA…'",
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=123 text=\"Bracket Update = 0 _— October 27 TODAY'S UPDATE BOI 1-0 ROUND 2 BOs 250 BOI 0-0 ROUND 1 GP 때 27 NON 合 & 메 o-1 MMO & | W GEN 1-0 IG <= 2-0MM 들 | WON 1-0 6 ⑯ => HE 1-0 1S @ 950 때 1-0 HE = BOI 1-1 本 | マン 1 0-1 K == 9 168 1-…\"",
     "LCP: transport=x_syndication:posts=6",
-    "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:ReadTimeout;reader:m.weibo.cn/u/2099708877:empty]",
+    "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:empty]",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=10",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=10",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=10",
