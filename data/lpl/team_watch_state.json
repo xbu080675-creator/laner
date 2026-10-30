@@ -2,11 +2,13 @@
   "schemaVersion": 1,
   "initialized": true,
   "initializedAt": "2026-09-09T02:02:31Z",
-  "lastRunAt": "2026-10-22T11:56:56Z",
+  "lastRunAt": "2026-10-30T18:01:52Z",
   "seen": {
     "AL": [],
     "BLG": [],
-    "TES": [],
+    "TES": [
+      "5627743d115fa890be9e7bab"
+    ],
     "JDG": [],
     "LGD": [],
     "EDG": [],
@@ -27,6 +29,17 @@
       "title": "WBG英雄联盟分部的微博_微博",
       "url": "https://www.weibo.com/tbgclub",
       "published": "Wed, 21 Oct 2026 23:29:00 GMT",
+      "autoApplied": false,
+      "changes": [],
+      "needsReview": true
+    },
+    {
+      "id": "5627743d115fa890be9e7bab",
+      "team": "TES",
+      "detectedAt": "2026-10-30T18:01:52Z",
+      "title": "滔搏电子竞技俱乐部的微博_微博",
+      "url": "https://www.weibo.com/5449734852",
+      "published": "Fri, 30 Oct 2026 08:31:00 GMT",
       "autoApplied": false,
       "changes": [],
       "needsReview": true
