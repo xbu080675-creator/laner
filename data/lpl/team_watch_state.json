@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "initialized": true,
   "initializedAt": "2026-09-09T02:02:31Z",
-  "lastRunAt": "2026-10-30T18:01:52Z",
+  "lastRunAt": "2026-11-11T17:11:32Z",
   "seen": {
     "AL": [],
     "BLG": [],
@@ -10,7 +10,9 @@
       "5627743d115fa890be9e7bab"
     ],
     "JDG": [],
-    "LGD": [],
+    "LGD": [
+      "27f011d7dc7d509a837d5edb"
+    ],
     "EDG": [],
     "TT": [],
     "IG": [],
@@ -40,6 +42,17 @@
       "title": "滔搏电子竞技俱乐部的微博_微博",
       "url": "https://www.weibo.com/5449734852",
       "published": "Fri, 30 Oct 2026 08:31:00 GMT",
+      "autoApplied": false,
+      "changes": [],
+      "needsReview": true
+    },
+    {
+      "id": "27f011d7dc7d509a837d5edb",
+      "team": "LGD",
+      "detectedAt": "2026-11-11T17:11:32Z",
+      "title": "LGD电子竞技俱乐部的微博_微博",
+      "url": "https://www.weibo.com/teamlgd",
+      "published": "Mon, 09 Nov 2026 23:13:00 GMT",
       "autoApplied": false,
       "changes": [],
       "needsReview": true
