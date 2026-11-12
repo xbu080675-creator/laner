@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-11T21:34:59Z",
+  "updatedAt": "2026-11-12T02:31:30Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -34,7 +34,7 @@
     "LCP: browser_stage=LCP: match_search query='2026-11-12 NTH vs SGW starting lineup' hits=0",
     "LCP: browser_stage=LCP: match_search query='2026-11-12 NTH vs SGW 首发' hits=0",
     "LCP: browser_stage=LCP: match_search_posts=0 merged_posts=0",
-    "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:empty | x_reader_failed:x.com:empty,twitter.com:empty]",
+    "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:empty,twitter.com:empty]",
     "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:empty]",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=10",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=10",
