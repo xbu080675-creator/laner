@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-19T07:49:14Z",
+  "updatedAt": "2026-11-19T16:54:34Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -34,14 +34,11 @@
     "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=1080x1350->1080x1350 words=5 text='wi Eu OPTIC | &'",
     "LCS: transport=x_syndication:posts=6",
     "LCP: browser_stage=LCP: browser_posts=0 cached_media=0",
-    "LCP: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/18 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
+    "LCP: adapter=MATCH_TARGET_LINEUP ocr_budget posts=6/16 images_per_post<=2 timeout=10s basis=LOW_CONFIDENCE,LOW_CONFIDENCE,LOW_CONFIDENCE",
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=53 text='” ud ーー * mm A | ーー Pe < 1239 ed iN NN 후 이네 a = 746 [ ¥ の < 」 그가 » 上 / ks a Oy. Mey 6 제 | a, = sf x 4 テコ Lo BAe \\\\ whe . 6 . 4 0 체 0 매트'",
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=53 text='” ud ーー * mm A | ーー Pe < 1239 ed iN NN 후 이네 a = 746 [ ¥ の < 」 그가 » 上 / ks a Oy. Mey 6 제 | a, = sf x 4 テコ Lo BAe \\\\ whe . 6 . 4 0 체 0 매트'",
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=53 text='” ud ーー * mm A | ーー Pe < 1239 ed iN NN 후 이네 a = 746 [ ¥ の < 」 그가 » 上 / ks a Oy. Mey 6 제 | a, = sf x 4 テコ Lo BAe \\\\ whe . 6 . 4 0 체 0 매트'",
     "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=53 text='” ud ーー * mm A | ーー Pe < 1239 ed iN NN 후 이네 a = 746 [ ¥ の < 」 그가 » 上 / ks a Oy. Mey 6 제 | a, = sf x 4 テコ Lo BAe \\\\ whe . 6 . 4 0 체 0 매트'",
-    "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1600x2000->1600x2000 words=14 text=\"i ンーー 도, . '& > Ea & Ww eol 性 as — 二\"",
-    "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1080x1350->1080x1350 words=53 text='” ud ーー * mm A | ーー Pe < 1239 ed iN NN 후 이네 a = 746 [ ¥ の < 」 그가 » 上 / ks a Oy. Mey 6 제 | a, = sf x 4 テコ Lo BAe \\\\ whe . 6 . 4 0 체 0 매트'",
-    "LCP: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng+chi_sim+jpn+kor psm=11 size=1600x2000->1600x2000 words=14 text=\"i ンーー 도, . '& > Ea & Ww eol 性 as — 二\"",
     "LCP: transport=x_syndication:posts=6",
     "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:empty]",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
