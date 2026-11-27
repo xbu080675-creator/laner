@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-27T05:07:30Z",
+  "updatedAt": "2026-11-27T15:07:05Z",
   "sourceCount": 10,
   "freshEvidence": 0,
   "diagnostics": [
@@ -32,7 +32,7 @@
     "LCS: trace ocr adapter=MATCH_TARGET_LINEUP lang=eng psm=11 size=561x106->561x106 words=11 text='498%, ce DSG scarra @ and 16 others followed you 2m'",
     "LCS: transport=x_syndication:posts=6",
     "LCP: browser_stage=LCP: browser_posts=0 cached_media=0",
-    "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:empty | x_reader_failed:x.com:empty,twitter.com:empty]",
+    "LCP: X_SYNDICATION RuntimeError: x_all_routes_failed[syndication:429:1.5s | syndication:429:3.0s | syndication:429:4.5s | x_reader_failed:x.com:empty,twitter.com:empty]",
     "iG电子竞技俱乐部: fetch RuntimeError: weibo_all_routes_failed[mobile:empty | desktop:non_json:200:text/html | reader:reader:weibo.com/u/2099708877:empty;reader:m.weibo.cn/u/2099708877:empty]",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
     "BLG电子竞技俱乐部: browser_stage=BLG电子竞技俱乐部: rejected_common_media=9",
